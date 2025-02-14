@@ -1,0 +1,6 @@
+docstrings
+hasattr
+isinstance
+issubset
+pycache
+pyproject
