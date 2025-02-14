@@ -5,14 +5,15 @@
 ## Key Features
 
 - **Structured CLI Framework**: Allows nested command groups, extending the `Typer` library.
-- **Dynamic Command Registery**: Commands and groups can be composed and retrieved modularly at runtime to assemble the main application. 
-- **Automatic Plugin Discovery**: Supports internal (built-in) and external (third-party) plugins in a uniform process.  
-- **Plugin Caching**: Reduces startup time by avoiding redundant discovery operations in each application call.  
+- **Dynamic Command Registery**: Commands and groups can be composed and retrieved modularly at runtime to assemble the main application.
+- **Automatic Plugin Discovery**: Supports internal (built-in) and external (third-party) plugins in a uniform process.
+- **Plugin Caching**: Reduces startup time by avoiding redundant discovery operations in each application call.
 
 
 ## Installation
 
 Climera is a standalone package that can be installed via pip:
+
 ```sh
 pip install climera
 ```
@@ -44,6 +45,7 @@ if __name__ == "__main__":
 ```
 
 Run:
+
 ```sh
 python cli.py setup init
 ```
@@ -62,7 +64,7 @@ def custom_setup():
     print("Custom setup logic executed!")
 ```
 
-The main application scans installed plugins and registers their commands automatically: 
+The main application scans installed plugins and registers their commands automatically:
 
 ```python
 # cli.py
@@ -96,6 +98,7 @@ my_plugin = "my_plugin.commands"
 ```
 
 Once installed:
+
 ```sh
 pip install my_plugin
 ```
@@ -105,7 +108,7 @@ The plugin will be discovered automatically.
 
 ## Plugin Caching
 
-To prevent unnecessary rediscovery each time the applicaiton is called, plugins are cached.  
+To prevent unnecessary rediscovery each time the application is called, plugins are cached.
 
 Forcing a manual refresh:
 
@@ -115,6 +118,5 @@ python cli.py --reload-plugins
 
 
 ## License
-Climera is licensed under the GNU [License](LICENSE).
- 
 
+Climera is licensed under the GNU [License](LICENSE).
