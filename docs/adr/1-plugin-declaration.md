@@ -54,7 +54,7 @@ Secondary considerations include:
 
   ```python
   def register_commands(cli):
-      cli.command("hello")(hello_function)
+      cli.command("my-command-1")(plugin_function)
   ```
 
 - Resource metadata is only available after loading the module.
@@ -82,12 +82,14 @@ Secondary considerations include:
 ### Option 3: Hybrid Approach (Entry Points + `pyproject.toml`)
 
 - Entry points are used for plugin discovery, ensuring dynamic registration:
+
   ```toml
   [project.entry-points."khimera.plugins"]
   my_plugin = "my_plugin"
   ```
 
 - Structured metadata is retrieved from `pyproject.toml`:
+
   ```toml
   [tool.my_client_app]
   commands = ["command_1"]
