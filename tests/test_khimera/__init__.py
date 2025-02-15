@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 test_climera
-===============
+============
 
-Tests for the climera package.
+Tests for the khimera package.
 
 Modules
 -------
@@ -12,7 +12,7 @@ Modules
 
 See Also
 --------
-climera
+khimera
 
 Notes
 -----

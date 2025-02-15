@@ -1,10 +1,10 @@
-// Workspace-Specific Settings for Climera
+// Workspace-Specific Settings for Khimera
 {
 	// Folders Included in the Workspace
 	"folders": [
 		{
 			// Project
-				"name": "climera",
+				"name": "khimera",
 				"path": "."
 			}
 	],
@@ -12,7 +12,7 @@
 	// Workspace Settings
 	"settings": {
 		// Python Environment
-		"python.defaultInterpreterPath": "${userHome}/miniconda3/envs/climera/bin/python",
+		"python.defaultInterpreterPath": "${userHome}/miniconda3/envs/khimera/bin/python",
 		"python.terminal.activateEnvironment": true,
 		"terminal.integrated.inheritEnv": false, // user setting, here to remember if troubleshooting
 

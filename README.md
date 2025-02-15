@@ -1,6 +1,6 @@
-# Climera
+# Khimera
 
-**Climera** is a Python library designed for structured CLI management with modular and dynamic command registration, nested CLI structures, and automatic discovery of internal and external plugins.
+**Khimera** is a Python library designed for structured CLI management with modular and dynamic command registration, nested CLI structures, and automatic discovery of internal and external plugins.
 
 ## Key Features
 
@@ -12,10 +12,10 @@
 
 ## Installation
 
-Climera is a standalone package that can be installed via pip:
+Khimera is a standalone package that can be installed via pip:
 
 ```sh
-pip install climera
+pip install khimera
 ```
 
 ## Usage
@@ -26,7 +26,7 @@ Initialize the main application:
 
 ```python
 # cli.py
-from climera import CliApp
+from khimera import CliApp
 
 app = CliApp()
 ```
@@ -57,7 +57,7 @@ Plugins register their commands using the `@register_plugin_command` decorator:
 
 ```python
 # external_plugin.py
-from climera import register_plugin_command
+from khimera import register_plugin_command
 
 @register_plugin_command("setup", "custom-tool")
 def custom_setup():
@@ -68,7 +68,7 @@ The main application scans installed plugins and registers their commands automa
 
 ```python
 # cli.py
-from climera.plugin_loader import discover_plugins
+from khimera.plugin_loader import discover_plugins
 
 discover_plugins()
 ```
@@ -83,7 +83,7 @@ The application can integrate both internal and external plugins uniformly.
 Built-in plugins can be disabled or replaced at runtime:
 
 ```python
-from climera import disable_plugin
+from khimera import disable_plugin
 
 disable_plugin("setup")
 ```
@@ -93,7 +93,7 @@ disable_plugin("setup")
 Third-party plugins register themselves via `pyproject.toml`:
 
 ```toml
-[project.entry-points."climera.plugins"]
+[project.entry-points."khimera.plugins"]
 my_plugin = "my_plugin.commands"
 ```
 
@@ -119,4 +119,4 @@ python cli.py --reload-plugins
 
 ## License
 
-Climera is licensed under the GNU [License](LICENSE).
+Khimera is licensed under the GNU [License](LICENSE).
