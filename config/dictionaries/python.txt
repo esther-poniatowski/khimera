@@ -1,6 +1,12 @@
+abstractmethod
+dataclass
 docstrings
+getattr
 hasattr
 isinstance
 issubset
+pathlib
 pycache
 pyproject
+setattr
+varnames
