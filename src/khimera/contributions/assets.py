@@ -18,8 +18,13 @@ See Also
 khimera.plugins.core.Contrib
     Abstract base class representing a contribution to a plugin instance.
 khimera.plugins.core.CategorySpec
-    Abstract base class for defining constraints and validations for contributions in a plugin model.
+    Abstract base class for defining constraints and validations for contributions in a plugin
+    model.
+pathlib.Path
+    Object-oriented filesystem paths.
+
 """
+from importlib.resources import files, as_file
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -32,20 +37,83 @@ class Asset(Contrib):
 
     Arguments
     ---------
-    path : str or Path
-        Path to the resource file, relative to the plugin's directory.
+    package : str
+        Name of the package where the resource is located. It can be one of the following:
+
+        - String representing a package name
+        - Module object
+        - Omitted, in which case it defaults to the caller's module
+
+        Common scenarios:
+
+        - If resources are directly in the package root, use the package name as specified in
+          `pyproject.toml` (e.g.  `"my_package"`).
+        - If resources are in a subdirectory, use dot notation to specify the subdirectory (e.g.
+          `"my_package.resources"`).
+
+    file_path : str
+        Path to the resource file, relative to the package root.
 
     Notes
     -----
+    Resources cannot be loaded directly by resolving their absolute path on the client's filesystem.
+    Indeed, during the installation of the plugin, the storage of the package resources depend on
+    the packaging tool used (e.g., `setuptools`). The `importlib.resources` module provides a way to
+    access the resources in a platform-independent way.
+
+    Examples
+    --------
+    Consider the following directory structure for the plugin package:
+
+    ```
+    my_package/
+    ├── __init__.py
+    ├── assets/
+    │   └── logo.png
+    └── plugin.py
+    ```
+
+    In the plugin specification, add a contribution for the `logo.png` file in the `assets`
+    directory:
+
+    >>> asset = Asset(name="logo", package="my_package", file_path="assets/logo.png")
+
+    In the host application, access the resource file:
+
+    >>> with asset.get_path() as path:
+    ...     print(path)
+    ...     # Use the path to access the resource file
+
+    See Also
+    --------
+    importlib.resources
 
     """
-    def __init__(self, name: str, path: str | Path, description: Optional[str] = None):
+    def __init__(self, name: str, file_path : Optional[str], package : Optional[str], description: Optional[str] = None):
         super().__init__(name=name, description=description)
-        self.path = path
+        self.file_path = file_path
+        self.package = package or self.__module__ # default to the caller's module
 
     def get_path(self) -> Path:
-        """Get the absolute path to the resource file in the actual filesystem."""
-        return Path(self.path)
+        """
+        Create a context manager to access the resource file. When used in a `with` statement, it
+        provides a `pathlib.Path` object representing the resource.
+
+        Returns
+        -------
+        Path
+            Path to the resource file.
+
+        Notes
+        -----
+        This implementation ensures that :
+
+        - If the resource is already on the file system, it is accessed directly.
+        - If the resource is not on the file system (e.g., in a zip file), it is extracted to a
+          temporary location, and the context manager cleans up any temporary files or directories
+          after the resource was extracted.
+        """
+        return as_file(files(self.package).joinpath(self.file_path))
 
 
 class AssetSpec(CategorySpec[Asset]):
