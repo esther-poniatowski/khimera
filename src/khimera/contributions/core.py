@@ -10,6 +10,8 @@ Classes
 -------
 Contrib
     Base class representing a contribution to a plugin instance.
+ContribList
+    List of contributions in a plugin instance.
 Spec
     Base class representing constraints and validations for contributions in a plugin model.
 CategorySpec
@@ -58,6 +60,7 @@ if TYPE_CHECKING:
 
 from khimera.utils.factories import TypeConstrainedList
 
+
 # --- Contributions --------------------------------------------------------------------------------
 
 class Contrib(ABC):
@@ -71,20 +74,28 @@ class Contrib(ABC):
         Unique name of the contribution in the plugin instance.
     description : str, optional
         Description of the contribution.
+    plugin : Plugin, optional
+        Plugin instance to which the contribution is attached. Useful during registration and
+        retrieval processes.
 
     Notes
     -----
-    For simplicity and consistency, the `MetaDada` sub-class is treated as a contribution in the
+    For simplicity and consistency, the `MetaData` sub-class is treated as a contribution in the
     plugins, although they are rather used to describe the plugin itself.
     """
     def __init__(self, name: str, description: Optional[str] = None):
         self.name = name
         self.description = description
+        self.plugin = None
 
     @property
     def category(self) -> Type:
         """Category of the contribution."""
         return type(self)
+
+    def attach(self, plugin_name: str) -> None:
+        """Attach the contribution to a plugin instance."""
+        self.plugin = plugin_name
 
 ContribList = TypeConstrainedList[Contrib]
 """List of contributions in a plugin instance."""
@@ -165,7 +176,7 @@ class CategorySpec(Spec, Generic[C]):
     -----
     For contributions that are involved at precise integration points in the host application's
     execution flow (e.g., hooks), the host application can define strict and precise constraints to
-    ensure the plugin's contributions integrates seamlessly with the host application's logics. For
+    ensure the plugin's contributions integrate seamlessly with the host application's logics. For
     instance, the host application can require that plugins provide a unique hook, with determined
     inputs and outputs, to be executed at a specific point in the application's workflow.
 
