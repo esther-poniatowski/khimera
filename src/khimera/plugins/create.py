@@ -10,17 +10,18 @@ Classes
 -------
 Plugin
     Represents the contributions of a plugin.
+Contributions
+    Type for a list of contributions of a plugin.
 
 See Also
 --------
 khimera.plugins.core
 khimera.plugins.declare
 """
-from typing import List, Optional, Type, Union, overload
+from typing import Optional, Type, Dict
 
-from khimera.utils.factories import TypeConstrainedDict
-from khimera.plugins.core import Contrib
-from khimera.plugins.variants import MetaData
+from khimera.utils.factories import TypeConstrainedDict, TypeConstrainedList
+from khimera.contributions.core import Contrib, ContribList
 from khimera.plugins.declare import PluginModel
 
 
@@ -34,7 +35,7 @@ class Plugin:
         Plugin model specifying the expected structure and contributions of the plugin.
     name : str
         Name of the plugin.
-    contributions : Dict[str, List[Contrib]]
+    contributions : Dict[str, ContribList]
         Contributions of the plugin for each specification field in the plugin model.
         Keys: Names of the specification fields declared in the plugin model.
         Values: Contribution(s) for each field. If the specification sets expects one unique
@@ -83,7 +84,6 @@ class Plugin:
     - Any type of contribution can be provided to the plugin, regardless of the expected category of
       the corresponding spec in the model.
     """
-
     def __init__(self,
                 model : PluginModel,
                 name: str,
@@ -93,7 +93,7 @@ class Plugin:
         self.model = model
         self.name = name
         self.version = version
-        self.contributions = TypeConstrainedDict(str, List[Contrib]) # storage for contributions
+        self.contributions = TypeConstrainedDict(str, ContribList) # automatic type checking
         for key, value in kwargs.items(): # add immediate contents of kwargs
             self.add(key=key, contrib=value)
 
@@ -111,12 +111,18 @@ class Plugin:
             Key of the specification field in the plugin model.
         contrib : Contrib
             Contribution to add to the plugin.
+
+        Raise
+        -----
+        TypeError
+            If the `contrib` argument is not a subclass of `Contrib`. Automatically raised by the
+            `TypeConstrainedList` class when adding the contribution to the list of contributions.
         """
         if key not in self.contributions: # initialize storage for the field
-            self.contributions[key] = []
+            self.contributions[key] = TypeConstrainedList(Contrib) # automatic type checking
         self.contributions[key].append(contrib)
 
-    def get(self, key: str) -> List[Contrib]:
+    def get(self, key: str) -> ContribList:
         """
         Get the contributions of the plugin for a specific field.
 
@@ -127,12 +133,12 @@ class Plugin:
 
         Returns
         -------
-        List[Contrib]
+        ContribList
             Contributions of the plugin stored for the specified field.
         """
         return self.contributions.get(key, [])
 
-    def filter(self, category: Optional[Type[Contrib]] = None) -> TypeConstrainedDict[str, List[Contrib]]:
+    def filter(self, category: Optional[Type[Contrib]] = None) -> Dict[str, ContribList]:
         """
         Get the contributions of the plugin, optionally filtered by category.
 
@@ -144,7 +150,7 @@ class Plugin:
 
         Returns
         -------
-        TypeConstrainedDict[str, List[Contrib]]
+        TypeConstrainedDict[str, ContribList]
             Contributions of the plugin, filtered by category if provided.
         """
         if category:

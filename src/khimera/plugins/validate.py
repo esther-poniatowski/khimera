@@ -6,6 +6,10 @@ khimera.plugins.create
 
 Validate the contributions of a plugin against its model.
 
+Classes
+-------
+PluginValidator
+    Validates the contributions of a plugin instance against its model.
 
 See Also
 --------
@@ -17,8 +21,7 @@ khimera.plugins.create
 from typing import List
 
 from khimera.utils.factories import TypeConstrainedDict
-from khimera.plugins.core import Contrib, Spec
-from khimera.plugins.declare import PluginModel
+from khimera.contributions.core import ContribList
 from khimera.plugins.create import Plugin
 
 
@@ -39,7 +42,7 @@ class PluginValidator:
     not_unique : List[str]
         Names of the fields are expected to admit a unique contribution in the model, but contain
         more than one contribution in the plugin instance.
-    invalid : TypeConstrainedDict[str, List[Contrib]]
+    invalid : TypeConstrainedDict[str, ContribList]
         Invalid contributions for each specification field in the plugin model, which do not satisfy
         pass the `validate` method of the corresponding `Spec` instance.
         Keys: Names of the specification fields declared in the plugin model.
@@ -53,7 +56,7 @@ class PluginValidator:
         self.missing : List[str] = []
         self.unknown : List[str] = []
         self.not_unique : List[str] = []
-        self.invalid = TypeConstrainedDict[str, List[Contrib]]()
+        self.invalid = TypeConstrainedDict(str, ContribList)
         self.deps_unsatisfied : List[str] = []
 
     def check_required(self) -> None:
@@ -61,11 +64,11 @@ class PluginValidator:
         specs = self.model.filter(self, required=True)
         for key in specs:
             if key not in self.plugin.contributions:
-                self.invalid[key].append(None)
+                self.missing.append(key)
 
     def check_unique(self) -> None:
         """Check if contributions are unique where required."""
-        specs = self.model.filter(self, unique=True)
+        specs = self.model.filter(unique=True)
         for key, spec in specs.items():
             if key in self.plugin.contributions and len(self.plugin.contributions[key]) > 1:
                 self.not_unique.append(key)
@@ -83,7 +86,6 @@ class PluginValidator:
             for item in contribs: # item: candidate contribution
                 if not spec.validate(item):
                     self.invalid[key].append(item)
-
 
     def check_dependencies(self) -> None:
         """Check if all dependencies are satisfied in the plugin instance."""
