@@ -68,7 +68,7 @@ class Plugin:
     Provide a specific static resource processed by the host application ('input_file' spec key in
     the model):
 
-    >>> plugin.add('input_file', Asset(name='my_input', path='path/to/input/file'))
+    >>> plugin.add('input_file', Asset(name='my_input', package="my_package", file_path="assets/logo.png"))
 
     Notes
     -----
@@ -121,6 +121,7 @@ class Plugin:
         """
         if key not in self.contributions: # initialize storage for the field
             self.contributions[key] = TypeConstrainedList(Contrib) # automatic type checking
+        contrib.attach(self.name) # keep track of the plugin providing the contribution
         self.contributions[key].append(contrib)
 
     def get(self, key: str) -> ContribList:
