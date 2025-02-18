@@ -18,10 +18,9 @@ See Also
 """
 from abc import ABC, abstractmethod
 import importlib.metadata
-from typing import Optional, Dict
-import warnings
+from typing import Optional, List
 
-from khimera.utils.factories import TypeConstrainedDict
+from khimera.utils.factories import TypeConstrainedList
 from khimera.plugins.declare import PluginModel
 from khimera.plugins.create import Plugin
 
@@ -32,35 +31,70 @@ class PluginFinder(ABC):
 
     Attributes
     ----------
-    plugins : Dict[str, Plugin]
-        Discovered plugins.
-        Keys: Names of the plugins. Values: Plugin instances.
+    plugins : TypeConstrainedList[Plugin]
+        All the discovered plugins.
+
+    Examples
+    --------
+    Initialize a plugin finder to discover plugins from the `pyproject.toml` files:
+
+    >>> finder = EntryPointsFinderPyproject(app_name='myapp')
+
+    Discover the plugins provided by the installed packages for the host application:
+
+    >>> finder.discover()
+
+    Filter the discovered plugins by model:
+
+    >>> plugins = finder.filter(model=MyPluginModel)
+    >>> print(plugins)
+    [Plugin(name='myplugin', version='0.1.0', ...), ...]
+
+    Get a specific plugin by name and version:
+
+    >>> plugin = finder.get(name='myplugin', version='0.1.0')
+    >>> print(plugin)
+    Plugin(name='myplugin', version='0.1.0', ...)
+
+    Notes
+    -----
+    The plugin discovery mechanism is designed to be comprehensive and to collet as many plugins as
+    possible before selecting them, validating them, or resolving conflicts between them.
+
+    To do so, all the plugins are stored in a list rather than a dictionary. Thus, plugins are not
+    named, which allows to store multiple plugins of the same name but different versions.
     """
     def __init__(self):
-        self.plugins = TypeConstrainedDict(str, Plugin) # automatic type checking
+        self.plugins = TypeConstrainedList(Plugin) # automatic type checking
 
     @abstractmethod
     def discover(self):
         """Discovers plugins by implementing the discovery strategy."""
         pass
 
-    def register(self, plugin: Plugin) -> None:
+    def filter(self, model : PluginModel) -> List[Plugin]:
         """
-        Default registering behavior. Override this method to customize the registration process.
+        Filter the discovered plugins by model.
 
-        Warnings
-        --------
-        UserWarning
-            If the plugin is not an instance of the 'Plugin' class (no `name` attribute).
-            If the plugin name is already registered.
+        Arguments
+        ---------
+        model : PluginModel
+            Plugin model specifying the expected structure and contributions of the plugins.
+            If not provided, all the plugins are considered regardless of the model they adhere to.
         """
-        if not isinstance(plugin, Plugin):
-            warnings.warn("Ignored plugin: not instance of 'Plugin' class.", UserWarning)
-        if plugin.name in self.plugins:
-            warnings.warn(f"Ignored plugin: name '{plugin.name}' already registered.", UserWarning)
-        self.plugins[plugin.name] = plugin
+        return [plugin for plugin in self.plugins if plugin.model == model]
 
-    def get(self, name : str, version : Optional[str]) -> Optional[Plugin]:
+    def store(self, plugin: Plugin) -> None:
+        """
+        Stores a discovered plugin.
+
+        Notes
+        -----
+        Type checking is performed automatically by the `TypeConstrainedList` class.
+        """
+        self.plugins.append(plugin)
+
+    def get(self, name : str, version : Optional[str]) -> Optional[Plugin | List[Plugin]]:
         """
         Get a plugin by name, and optionally by model.
 
@@ -73,25 +107,17 @@ class PluginFinder(ABC):
 
         Returns
         -------
-        Plugin
-            Plugin instance if found, otherwise None.
+        Plugin | List[Plugin] | None
+            Plugins matching the name and version, or None if no plugin is found.
+            If plugins correctly follow the name and version conventions, a single plugin should be
+            retrieved.
         """
-        plugin = self.plugins.get(name)
-        if version and not plugin.version == version:
-            return None
-        return plugin
+        found = [plugin for plugin in self.plugins if plugin.name == name and (version is None or plugin.version == version)]
+        return found[0] if len(found) == 1 else found or None
 
-    def filter(self, model : PluginModel) -> Dict[str, Plugin]:
-        """
-        Filter the discovered plugins by model.
-
-        Arguments
-        ---------
-        model : PluginModel
-            Plugin model specifying the expected structure and contributions of the plugins.
-            If not provided, all the plugins are considered regardless of the model they adhere to.
-        """
-        return {name: plugin for name, plugin in self.plugins.items() if plugin.model == model}
+    def __iter__(self):
+        """Iterates over the discovered plugins."""
+        return iter(self.plugins)
 
 
 class EntryPointsFinderPyproject(PluginFinder):
@@ -118,7 +144,6 @@ class EntryPointsFinderPyproject(PluginFinder):
     def __init__(self,
                 app_name: str,
                 entry_point_group: Optional[str] = None,
-                model : PluginModel = None,
                 ):
         super().__init__()
         self.app_name = app_name
@@ -129,7 +154,7 @@ class EntryPointsFinderPyproject(PluginFinder):
         entry_points = self.get_entry_points()
         for entry_point in entry_points:
             plugin = entry_point.load() # expected: `Plugin` instance
-            self.register(plugin) # automatic checks
+            self.store(plugin)
 
     def get_entry_points(self):
         """Finds all installed plugins that declare an entry point for the host application."""
