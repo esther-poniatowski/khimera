@@ -49,19 +49,21 @@ See Also
 --------
 """
 from abc import ABC, abstractmethod
-from typing import Optional, Type, TypeVar, Generic
+from collections import UserList
+from typing import Optional, Type, TypeVar, Generic, List
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from khimera.plugins.create import Plugin # only imported for type checking
 
+from khimera.utils.factories import TypeConstrainedList
 
-# --- Base Classes ---------------------------------------------------------------------------------
-
+# --- Contributions --------------------------------------------------------------------------------
 
 class Contrib(ABC):
     """
-    Base class representing a field to a plugin instance.
+    Base class representing a component in a plugin, conceived as a 'contribution' to the main
+    application.
 
     Attributes
     ----------
@@ -69,6 +71,11 @@ class Contrib(ABC):
         Unique name of the contribution in the plugin instance.
     description : str, optional
         Description of the contribution.
+
+    Notes
+    -----
+    For simplicity and consistency, the `MetaDada` sub-class is treated as a contribution in the
+    plugins, although they are rather used to describe the plugin itself.
     """
     def __init__(self, name: str, description: Optional[str] = None):
         self.name = name
@@ -79,6 +86,11 @@ class Contrib(ABC):
         """Category of the contribution."""
         return type(self)
 
+ContribList = TypeConstrainedList[Contrib]
+"""List of contributions in a plugin instance."""
+
+
+# --- Specifications -------------------------------------------------------------------------------
 
 C = TypeVar('C', bound=Contrib)
 """Type variable for a contribution to a plugin instance."""
@@ -151,16 +163,18 @@ class CategorySpec(Spec, Generic[C]):
 
     Notes
     -----
-    For contributions that might be involved in the host application's execution flow at precise
-    integration points (e.g., hooks, metadata, assets), the host application can define strict and
-    precise constraints that should be respected by the plugin's contributions to integrate
-    seamlessly with the host application.
+    For contributions that are involved at precise integration points in the host application's
+    execution flow (e.g., hooks), the host application can define strict and precise constraints to
+    ensure the plugin's contributions integrates seamlessly with the host application's logics. For
+    instance, the host application can require that plugins provide a unique hook, with determined
+    inputs and outputs, to be executed at a specific point in the application's workflow.
 
     For contributions that do not directly intervene in the host application's logics (e.g.,
     commands, API extensions) but are rather used by the client code or the user, the host
-    application can define *general* constraints that should be respected by all the contributions
-    of this category, independently of the specific usage they will have once integrated in the host
-    application.
+    application can define more general constraints that should be respected by all the
+    contributions of this category, independently of the specific usage they will have once
+    integrated in the host application. For instance, the host application can require that all the
+    commands provided by plugins are nested in a specific namespace.
     """
     CONTRIB_TYPE : Type[C]
 
