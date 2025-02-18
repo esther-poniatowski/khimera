@@ -36,19 +36,25 @@ class PluginValidator:
     model : PluginModel
         Plugin model to validate against (referenced in the plugin instance).
     missing : List[str]
-        Names of the fields that are required in the model, but are missing in the plugin instance.
+        Fields that are required in the model, but are missing in the plugin instance.
+        Names are present in the model, but not in the plugin instance.
     unknown : List[str]
-        Names of the fields in the plugin instance which are not expected by the model.
+        Fields in the plugin instance which are not expected by the model.
+        Names are present in the plugin instance, but not in the model.
     not_unique : List[str]
-        Names of the fields are expected to admit a unique contribution in the model, but contain
-        more than one contribution in the plugin instance.
+        Fields that are expected to admit a unique contribution in the model, but contain more than
+        one contribution in the plugin instance.
+        Names are present in both the model and the plugin instance.
     invalid : TypeConstrainedDict[str, ContribList]
         Invalid contributions for each specification field in the plugin model, which do not satisfy
         pass the `validate` method of the corresponding `Spec` instance.
-        Keys: Names of the specification fields declared in the plugin model.
-        Values: Invalid contribution(s) for each field.
+        Keys: Names of the fields present both in the model and the plugin instance.
+        Values: Invalid contribution(s) from the plugin instance.
     deps_unsatisfied : List[str]
-        Names of the dependencies that are not satisfied in the plugin instance.
+        Dependencies (`DependencySpec` fields in the model) that are not satisfied in the plugin
+        instance.
+        Names are present in the model only, since they are pure rules which do not expect to be
+        filled by contributions in the plugin instance.
     """
     def __init__(self, plugin: Plugin):
         self.plugin = plugin
@@ -108,3 +114,26 @@ class PluginValidator:
         self.check_rules()
         self.check_dependencies()
         return not (self.missing or self.unknown or self.not_unique or self.invalid or self.deps_unsatisfied)
+
+    def extract(self) -> Plugin:
+        """
+        Extract the valid contributions from the plugin instance.
+
+        Return
+        ------
+        Plugin
+            Plugin instance with only the valid contributions.
+
+        Warning
+        -------
+        This correction does not guarantee that the resulting plugin instance is valid, as it does
+        not provide missing contributions nor satisfy the dependencies.
+        """
+        valid = self.plugin.copy()
+        for key in self.invalid: # keys in plugin instance
+            valid.contributions.pop(key) # remove invalid contributions
+        for key in self.unknown: # keys in plugin instance
+            valid.contributions.pop(key) # remove unknown contributions
+        for key in self.not_unique: # keys in plugin instance
+            valid.contributions[key] = [valid.contributions[key][0]] # keep the first contribution
+        return valid

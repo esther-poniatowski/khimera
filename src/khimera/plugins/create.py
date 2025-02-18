@@ -18,7 +18,8 @@ See Also
 khimera.plugins.core
 khimera.plugins.declare
 """
-from typing import Optional, Type, Dict
+from typing import Optional, Type, Dict, Self
+import copy
 
 from khimera.utils.factories import TypeConstrainedDict, TypeConstrainedList
 from khimera.contributions.core import Contrib, ContribList
@@ -156,3 +157,18 @@ class Plugin:
         if category:
             return {key: contribs for key, contribs in self.contributions.items() if any(isinstance(item, category) for item in contribs)}
         return self.contributions
+
+    def copy(self) -> Self:
+        """
+        Create a deep copy of the plugin, creating copies of all its nested contributions.
+
+        Returns
+        -------
+        Plugin
+            Copy of the plugin instance.
+
+        See Also
+        --------
+        copy.deepcopy
+        """
+        return copy.deepcopy(self)
