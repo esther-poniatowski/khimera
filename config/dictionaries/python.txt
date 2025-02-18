@@ -4,7 +4,9 @@ docstrings
 getattr
 hasattr
 isinstance
+issubclass
 issubset
+joinpath
 pathlib
 pycache
 pyproject
