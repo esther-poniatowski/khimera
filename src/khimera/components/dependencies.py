@@ -11,6 +11,8 @@ Classes
 DependencySpec
     Specialization of `Spec` enforcing dependencies between several components in the plugin,
     ensuring that structural or functional relationships are maintained.
+PredicateDependency
+    Default dependency specification for a single dependent and dependency component.
 
 See Also
 --------
@@ -21,12 +23,14 @@ khimera.plugins.create.Plugin
     plugin model.
 """
 from abc import ABC, abstractmethod
-from typing import Optional, Callable, TYPE_CHECKING
+from typing import Optional, Callable, Iterable, TYPE_CHECKING
 
 from khimera.components.core import Spec
 if TYPE_CHECKING:
     from khimera.plugins.create import Plugin # only imported for type checking
 
+
+# --- Base Class for Dependency Specifications -----------------------------------------------------
 
 class DependencySpec(Spec):
     """
@@ -34,19 +38,21 @@ class DependencySpec(Spec):
 
     Attributes
     ----------
-    fields : Tuple[str], optional
+    fields : Iterable[str], optional
         Arbitrary number of field names in the model that are involved in the dependency
         relationship.
     """
-    def __init__(self, name: str, *fields, description: Optional[str] = None):
+    def __init__(self, name: str, fields : Iterable[str], description: Optional[str] = None):
         super().__init__(name=name, description=description)
-        self.fields = fields
+        self.fields = tuple(fields)
 
     @abstractmethod
     def validate(self, plugin: 'Plugin') -> bool:
         """Validate the dependencies globally in the plugin instance."""
         pass
 
+
+# --- Default Dependency Specification ------------------------------------------------------------
 
 class PredicateDependency(DependencySpec) :
     """
@@ -58,7 +64,7 @@ class PredicateDependency(DependencySpec) :
         Validation rule, that admits any number of `ComponentSet` (named by their fields) and
         returns a boolean indicating whether the dependencies are satisfied.
     fields : Tuple[str], optional
-        Arbitrary number of field names in the model that contain the dependent and dependency
+        Arbitrary number of field names in the model that contain dependent and dependency
         components.
 
     Examples
@@ -79,11 +85,13 @@ class PredicateDependency(DependencySpec) :
     instance, it could iterate over the components in several fields in parallel and check the
     dependencies for each combination.
     """
-    def __init__(self, name: str, predicate: Callable[..., bool], *fields, description: Optional[str] = None):
-        super().__init__(name=name, *fields, description=description)
+    def __init__(self, name: str, predicate: Callable[..., bool], fields : Iterable[str], description: Optional[str] = None):
+        super().__init__(name=name, fields=fields, description=description)
         self.predicate = predicate
 
     def validate(self, plugin: 'Plugin') -> bool:
         """Validate the dependencies globally in the plugin instance."""
         components = {field: plugin.components.get(field) for field in self.fields}
+        if None in components.values():
+            return False
         return self.predicate(**components)

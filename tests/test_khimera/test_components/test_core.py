@@ -12,7 +12,7 @@ khimera.components.core
 """
 import pytest
 
-from khimera.components.core import Component, ComponentSet, FieldSpec, DependencySpec
+from khimera.components.core import Component, ComponentSet, FieldSpec
 
 
 # --- Mock Classes ---------------------------------------------------------------------------------
@@ -29,14 +29,6 @@ class MockFieldSpec(FieldSpec[MockContrib]):
     def validate(self, contrib: MockContrib) -> bool:
         """Simple validation: return True if name is non-empty."""
         return bool(contrib.name)
-
-
-class MockDependencySpec(DependencySpec[MockContrib]):
-    """Mock subclass of `DependencySpec` for testing."""
-
-    def validate(self, plugin) -> bool:
-        """Simple validation: return True if plugin has all required dependencies."""
-        return all(dep in plugin.components for dep in self.dependencies)
 
 
 # --- Tests for Component ----------------------------------------------------------------------------
@@ -88,12 +80,12 @@ def test_spec_initialization():
     assert field.description == description
 
 
+# --- Tests for FieldSpec -----------------------------------------------------------------------
+
 def test_spec_category():
     field = MockFieldSpec(name="test_spec")
     assert field.category == MockContrib
 
-
-# --- Tests for FieldSpec -----------------------------------------------------------------------
 
 @pytest.mark.parametrize(
     "required, unique",
@@ -115,27 +107,3 @@ def test_category_spec_validation(contrib_name, expected):
     field = MockFieldSpec(name="test_spec")
     contrib = MockContrib(name=contrib_name)
     assert field.validate(contrib) == expected
-
-
-# ---- Tests for DependencySpec --------------------------------------------------------------------
-
-def test_dependency_spec_initialization():
-    name = "dependency_spec"
-    field = MockDependencySpec(name=name, dependency1=MockContrib, dependency2=MockContrib)
-    assert field.name == name
-    assert "dependency1" in field.dependencies
-    assert "dependency2" in field.dependencies
-
-
-def test_dependency_spec_validation():
-    class MockPlugin:
-        def __init__(self, components):
-            self.components = components
-
-    field = MockDependencySpec(name="dependency_spec", dependency1=MockContrib, dependency2=MockContrib)
-
-    plugin_with_deps = MockPlugin(components={"dependency1": MockContrib(name="dep1"), "dependency2": MockContrib(name="dep2")})
-    plugin_missing_deps = MockPlugin(components={"dependency1": MockContrib(name="dep1")})
-
-    assert field.validate(plugin_with_deps) is True
-    assert field.validate(plugin_missing_deps) is False
