@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-test_khimera.test_contributions.test_commands
+test_khimera.test_components.test_commands
 =============================================
 
-Tests for the contribution and specification classes for commands.
+Tests for the component and specification classes for commands.
 
 See Also
 --------
-khimera.contributions.commands
+khimera.components.commands
 """
 import pytest
-from khimera.contributions.commands import Command, CommandSpec
+from khimera.components.commands import Command, CommandSpec
 
 import pytest
-from khimera.contributions.commands import Command, CommandSpec
+from khimera.components.commands import Command, CommandSpec
 
 
-# --- Tests for Command (Contrib) ------------------------------------------------------------------
+# --- Tests for Command (Component) ------------------------------------------------------------------
 
 def test_command_initialization():
     """Test initialization of Command."""

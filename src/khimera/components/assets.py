@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-khimera.contributions.
+khimera.components.
 ========================
 
 Classes for defining static resources (assets) in plugin models and instances.
@@ -15,10 +15,10 @@ AssetSpec
 
 See Also
 --------
-khimera.plugins.core.Contrib
-    Abstract base class representing a contribution to a plugin instance.
+khimera.plugins.core.Component
+    Abstract base class representing a component to a plugin instance.
 khimera.plugins.core.FieldSpec
-    Abstract base class for defining constraints and validations for contributions in a plugin
+    Abstract base class for defining constraints and validations for components in a plugin
     model.
 pathlib.Path
     Object-oriented filesystem paths.
@@ -28,10 +28,10 @@ from importlib.resources import files, as_file
 from pathlib import Path
 from typing import Optional, Tuple
 
-from khimera.contributions.core import Contrib, FieldSpec
+from khimera.components.core import Component, FieldSpec
 
 
-class Asset(Contrib):
+class Asset(Component):
     """
     Represents a static resource to provide to the host application.
 
@@ -77,7 +77,7 @@ class Asset(Contrib):
     └── plugin.py
 
 
-    In the plugin specification, add a contribution for the `logo.png` file in the `assets`
+    In the plugin specification, add a component for the `logo.png` file in the `assets`
     directory:
 
     >>> asset = Asset(name="logo", package="my_package", file_path="assets/logo.png")
@@ -135,7 +135,7 @@ class AssetSpec(FieldSpec[Asset]):
     By default, assets are not required but they are unique, implying that the host application
     expects a single asset per name.
     """
-    CONTRIB_TYPE = Asset
+    COMPONENT_TYPE = Asset
 
     def __init__(self, name: str, file_ext: Optional[Tuple[str]] = None, required: bool = False, unique: bool = True, description: Optional[str] = None):
         super().__init__(name=name, required=required, unique=unique, description=description)

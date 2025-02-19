@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-test_khimera.test_contributions.test_hooks
+test_khimera.test_components.test_hooks
 ==========================================
 
-Tests for the contribution and specification classes for hooks.
+Tests for the component and specification classes for hooks.
 
 See Also
 --------
-khimera.contributions.hooks
+khimera.components.hooks
 """
 import pytest
 from typing import Dict, Any
-from khimera.contributions.hooks import Hook, HookSpec
+from khimera.components.hooks import Hook, HookSpec
 
 
-# --- Tests for Hook (Contrib) ---------------------------------------------------------------------
+# --- Tests for Hook (Component) ---------------------------------------------------------------------
 
 def test_hook_initialization():
     """Test initialization of Hook."""

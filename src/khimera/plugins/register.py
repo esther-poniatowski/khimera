@@ -19,10 +19,10 @@ import warnings
 from khimera.utils.factories import TypeConstrainedDict, TypeConstrainedList
 from khimera.plugins.declare import PluginModel
 from khimera.plugins.create import Plugin
-from khimera.contributions.core import Contrib, ContribList
+from khimera.components.core import Component, ComponentSet
 from khimera.plugins.validate import PluginValidator
 
-E = TypeVar('E', bound=Plugin | Contrib)
+E = TypeVar('E', bound=Plugin | Component)
 """Type variable for elements in the registry."""
 
 
@@ -77,24 +77,24 @@ class ConflictResolver:
 
 class PluginRegistry:
     """
-    Stores and manage plugins, resolve conflicts and provide contributions retrieval.
+    Stores and manage plugins, resolve conflicts and provide components retrieval.
 
     Attributes
     ----------
     resolver : ConflictResolver
         Strategy to resolve conflicts when registering plugins.
     validator : PluginValidator
-        Validator to check the plugin structure and contributions against its model.
+        Validator to check the plugin structure and components against its model.
     enable_by_default : bool
         Whether to enable plugins by default when registering them.
     plugins : Dict[str, Plugin]
         Registered plugins by name.
     enabled : List[str]
-        List of enabled plugins, whose contributions are available in the registry.
-    contributions : Dict[str, ContribList]
-        Mapping of contribution keys to the actual contributions provided by the plugins.
+        List of enabled plugins, whose components are available in the registry.
+    components : Dict[str, ComponentSet]
+        Mapping of component keys to the actual components provided by the plugins.
         Keys: Contribution key, as specified in the plugin model.
-        Values: List of contributions registered under this key across all plugins.
+        Values: List of components registered under this key across all plugins.
 
     Examples
     --------
@@ -102,7 +102,7 @@ class PluginRegistry:
 
     >>> registry = PluginRegistry()
 
-    Define a plugin with two contributions:
+    Define a plugin with two components:
 
     >>> plugin = Plugin('my_plugin', '1.0.0')
     >>> def plugin_hook(arg) -> bool:
@@ -116,7 +116,7 @@ class PluginRegistry:
     >>> print(registry.plugins)
     {'my_plugin': Plugin(name='my_plugin', version='1.0.0', ...)}
 
-    Get all the contributions under a specific key:
+    Get all the components under a specific key:
 
     >>> hooks = registry.get('hook')
     >>> print(hooks)
@@ -138,7 +138,7 @@ class PluginRegistry:
         self.enable_by_default = enable_by_default
         self.plugins = TypeConstrainedDict(str, Plugin)
         self.enabled : List[str] = []
-        self.contributions = TypeConstrainedDict(str, ContribList)
+        self.components = TypeConstrainedDict(str, ComponentSet)
 
     def register(self, plugin: Plugin):
         """
@@ -157,7 +157,7 @@ class PluginRegistry:
 
     def enable(self, name: str) -> None:
         """
-        Enable all the contributions of the plugin from the registry.
+        Enable all the components of the plugin from the registry.
 
         Arguments
         ---------
@@ -166,19 +166,19 @@ class PluginRegistry:
 
         Notes
         -----
-        Enabling a plugin consists in making all its contributions available in the registry.
-        Contributions are unpacked from the plugin and stored in the registered contributions under
+        Enabling a plugin consists in making all its components available in the registry.
+        Components are unpacked from the plugin and stored in the registered components under
         the same key. If the key does not exist, it is created.
         """
         plugin = self.plugins[name]
-        for key, contribs in plugin.contributions.items():
-            if key not in self.contributions:
-                self.contributions[key] = TypeConstrainedList(Contrib)
-            self.contributions[key].extend(contribs)
+        for key, contribs in plugin.components.items():
+            if key not in self.components:
+                self.components[key] = TypeConstrainedList(Component)
+            self.components[key].extend(contribs)
 
     def disable(self, name: str) -> None:
         """
-        Disable all the contributions of the plugin from the registry.
+        Disable all the components of the plugin from the registry.
 
         Arguments
         ---------
@@ -187,27 +187,27 @@ class PluginRegistry:
 
         Notes
         -----
-        Disabling a plugin consists in removing all its contributions from the registry.
-        Contributions are still stored in the plugin instance, but are not available for retrieval.
+        Disabling a plugin consists in removing all its components from the registry.
+        Components are still stored in the plugin instance, but are not available for retrieval.
         """
-        for key in self.plugins[name].contributions:
-            self.contributions[key] = [contrib for contrib in self.contributions[key] if contrib.plugin != name]
+        for key in self.plugins[name].components:
+            self.components[key] = [contrib for contrib in self.components[key] if contrib.plugin != name]
 
-    def get(self, key: str, name: Optional[str]) -> List[Contrib]:
+    def get(self, key: str, name: Optional[str]) -> List[Component]:
         """
-        Retrieve all contributions under a specific key.
+        Retrieve all components under a specific key.
 
         Arguments
         ---------
         key : str
             Contribution key (general category) to retrieve.
         name : str, optional
-            Name of the specific contribution to retrieve.
+            Name of the specific component to retrieve.
 
         Returns
         -------
-        ContribList
-            All the contributions registered under this key, and matching the name if provided.
+        ComponentSet
+            All the components registered under this key, and matching the name if provided.
         """
-        contribs = self.contributions[key]
+        contribs = self.components[key]
         return [contrib for contrib in contribs if name is None or contrib.name == name]

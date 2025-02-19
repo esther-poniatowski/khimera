@@ -4,12 +4,12 @@
 khimera.plugins.create
 ======================
 
-Validate the contributions of a plugin against its model.
+Validate the components of a plugin against its model.
 
 Classes
 -------
 PluginValidator
-    Validates the contributions of a plugin instance against its model.
+    Validates the components of a plugin instance against its model.
 
 See Also
 --------
@@ -21,13 +21,13 @@ khimera.plugins.create
 from typing import List
 
 from khimera.utils.factories import TypeConstrainedDict
-from khimera.contributions.core import ContribList
+from khimera.components.core import ComponentSet
 from khimera.plugins.create import Plugin
 
 
 class PluginValidator:
     """
-    Validates the contributions of a plugin instance against its model.
+    Validates the components of a plugin instance against its model.
 
     Attributes
     ----------
@@ -42,19 +42,19 @@ class PluginValidator:
         Fields in the plugin instance which are not expected by the model.
         Names are present in the plugin instance, but not in the model.
     not_unique : List[str]
-        Fields that are expected to admit a unique contribution in the model, but contain more than
-        one contribution in the plugin instance.
+        Fields that are expected to admit a unique component in the model, but contain more than
+        one component in the plugin instance.
         Names are present in both the model and the plugin instance.
-    invalid : TypeConstrainedDict[str, ContribList]
-        Invalid contributions for each specification field in the plugin model, which do not satisfy
+    invalid : TypeConstrainedDict[str, ComponentSet]
+        Invalid components for each specification field in the plugin model, which do not satisfy
         pass the `validate` method of the corresponding `Spec` instance.
         Keys: Names of the fields present both in the model and the plugin instance.
-        Values: Invalid contribution(s) from the plugin instance.
+        Values: Invalid component(s) from the plugin instance.
     deps_unsatisfied : List[str]
         Dependencies (`DependencySpec` fields in the model) that are not satisfied in the plugin
         instance.
         Names are present in the model only, since they are pure rules which do not expect to be
-        filled by contributions in the plugin instance.
+        filled by components in the plugin instance.
     """
     def __init__(self, plugin: Plugin):
         self.plugin = plugin
@@ -62,46 +62,46 @@ class PluginValidator:
         self.missing : List[str] = []
         self.unknown : List[str] = []
         self.not_unique : List[str] = []
-        self.invalid = TypeConstrainedDict(str, ContribList)
+        self.invalid = TypeConstrainedDict(str, ComponentSet)
         self.deps_unsatisfied : List[str] = []
 
     def check_required(self) -> None:
-        """Check if all required contributions are present in the plugin instance."""
-        specs = self.model.filter(self, required=True)
-        for key in specs:
-            if key not in self.plugin.contributions:
+        """Check if all required components are present in the plugin instance."""
+        fields = self.model.filter(self, required=True)
+        for key in fields:
+            if key not in self.plugin.components:
                 self.missing.append(key)
 
     def check_unique(self) -> None:
-        """Check if contributions are unique where required."""
-        specs = self.model.filter(unique=True)
-        for key, spec in specs.items():
-            if key in self.plugin.contributions and len(self.plugin.contributions[key]) > 1:
+        """Check if components are unique where required."""
+        fields = self.model.filter(unique=True)
+        for key, field in fields.items():
+            if key in self.plugin.components and len(self.plugin.components[key]) > 1:
                 self.not_unique.append(key)
 
     def check_unknown(self) -> None:
-        """Check if contributions are unknown."""
-        for key in self.plugin.contributions:
-            if key not in self.model.specs:
+        """Check if components are unknown."""
+        for key in self.plugin.components:
+            if key not in self.model.fields:
                 self.unknown.append(key)
 
     def check_rules(self) -> None:
-        """Validate the contributions of the plugin instance against the rules of the model."""
-        for key, contribs in self.plugin.contributions.items(): # key: spec name, contribs: list
-            spec = self.model.get(key)
-            for item in contribs: # item: candidate contribution
-                if not spec.validate(item):
+        """Validate the components of the plugin instance against the rules of the model."""
+        for key, contribs in self.plugin.components.items(): # key: field name, contribs: list
+            field = self.model.get(key)
+            for item in contribs: # item: candidate component
+                if not field.validate(item):
                     self.invalid[key].append(item)
 
     def check_dependencies(self) -> None:
         """Check if all dependencies are satisfied in the plugin instance."""
-        for key, spec in self.model.dependencies.items():
-            if not spec.validate(self.plugin):
+        for key, field in self.model.dependencies.items():
+            if not field.validate(self.plugin):
                 self.deps_unsatisfied.append(key)
 
     def validate(self) -> bool:
         """
-        Validate the contributions of the plugin instance against its model.
+        Validate the components of the plugin instance against its model.
 
         Returns
         -------
@@ -117,23 +117,23 @@ class PluginValidator:
 
     def extract(self) -> Plugin:
         """
-        Extract the valid contributions from the plugin instance.
+        Extract the valid components from the plugin instance.
 
         Return
         ------
         Plugin
-            Plugin instance with only the valid contributions.
+            Plugin instance with only the valid components.
 
         Warning
         -------
         This correction does not guarantee that the resulting plugin instance is valid, as it does
-        not provide missing contributions nor satisfy the dependencies.
+        not provide missing components nor satisfy the dependencies.
         """
         valid = self.plugin.copy()
         for key in self.invalid: # keys in plugin instance
-            valid.contributions.pop(key) # remove invalid contributions
+            valid.components.pop(key) # remove invalid components
         for key in self.unknown: # keys in plugin instance
-            valid.contributions.pop(key) # remove unknown contributions
+            valid.components.pop(key) # remove unknown components
         for key in self.not_unique: # keys in plugin instance
-            valid.contributions[key] = [valid.contributions[key][0]] # keep the first contribution
+            valid.components[key] = [valid.components[key][0]] # keep the first component
         return valid

@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-test_khimera.test_contributions.test_api
+test_khimera.test_components.test_api
 ========================================
 
-Tests for the contribution and specification classes for API extensions.
+Tests for the component and specification classes for API extensions.
 
 See Also
 --------
-khimera.contributions.api
+khimera.components.api
 """
 import pytest
 from types import FunctionType
 from collections.abc import Callable
 
-from khimera.contributions.api import APIExtension, APIExtensionSpec
+from khimera.components.api import APIExtension, APIExtensionSpec
 
-# --- Tests for APIExtension (Contrib) -------------------------------------------------------------
+# --- Tests for APIExtension (Component) -------------------------------------------------------------
 
 def test_api_extension_initialization():
     """Test initialization of APIExtension."""
@@ -38,7 +38,7 @@ def test_api_extension_spec_initialization():
     valid_types = (Callable,)
     required = True
     unique = False
-    description = "test spec description"
+    description = "test field description"
     api_extension_spec = APIExtensionSpec(name=name, valid_types=valid_types, required=required, unique=unique, description=description)
     assert api_extension_spec.name == name
     assert api_extension_spec.valid_types == valid_types

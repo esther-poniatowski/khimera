@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-test_khimera.test_contributions.test_core
+test_khimera.test_components.test_core
 =========================================
 
-Tests for the core contribution and specification classes.
+Tests for the core component and specification classes.
 
 See Also
 --------
-khimera.contributions.core
+khimera.components.core
 """
 import pytest
 
-from khimera.contributions.core import Contrib, ContribList, FieldSpec, DependencySpec
+from khimera.components.core import Component, ComponentSet, FieldSpec, DependencySpec
 
 
 # --- Mock Classes ---------------------------------------------------------------------------------
 
-class MockContrib(Contrib):
-    """Mock subclass of `Contrib` for testing."""
+class MockContrib(Component):
+    """Mock subclass of `Component` for testing."""
     pass
 
 
 class MockFieldSpec(FieldSpec[MockContrib]):
     """Mock subclass of `FieldSpec` for testing."""
-    CONTRIB_TYPE = MockContrib
+    COMPONENT_TYPE = MockContrib
 
     def validate(self, contrib: MockContrib) -> bool:
         """Simple validation: return True if name is non-empty."""
@@ -36,15 +36,15 @@ class MockDependencySpec(DependencySpec[MockContrib]):
 
     def validate(self, plugin) -> bool:
         """Simple validation: return True if plugin has all required dependencies."""
-        return all(dep in plugin.contributions for dep in self.dependencies)
+        return all(dep in plugin.components for dep in self.dependencies)
 
 
-# --- Tests for Contrib ----------------------------------------------------------------------------
+# --- Tests for Component ----------------------------------------------------------------------------
 
 def test_contrib_initialization():
-    """Test initialization of a `Contrib` object and its attributes."""
+    """Test initialization of a `Component` object and its attributes."""
     name = "test_contrib"
-    description = "Test contribution"
+    description = "Test component"
     contrib = MockContrib(name=name, description=description)
     assert contrib.name == name
     assert contrib.description == description
@@ -52,7 +52,7 @@ def test_contrib_initialization():
 
 
 def test_contrib_attach():
-    """Test attaching a `Contrib` object to a plugin."""
+    """Test attaching a `Component` object to a plugin."""
     plugin_name = "test_plugin"
     contrib = MockContrib(name="test_contrib")
     contrib.attach(plugin_name=plugin_name)
@@ -60,15 +60,15 @@ def test_contrib_attach():
 
 
 def test_contrib_category():
-    """Test getting the category of a `Contrib` object."""
+    """Test getting the category of a `Component` object."""
     contrib = MockContrib(name="test_contrib")
     assert contrib.category == MockContrib
 
 
 def test_contrib_list():
-    """Test appending and accessing `Contrib` objects in a `ContribList`."""
+    """Test appending and accessing `Component` objects in a `ComponentSet`."""
     name1, name2 = "contrib1", "contrib2"
-    contrib_list = ContribList()
+    contrib_list = ComponentSet()
     contrib1 = MockContrib(name=name1)
     contrib2 = MockContrib(name=name2)
     contrib_list.append(contrib1)
@@ -82,15 +82,15 @@ def test_contrib_list():
 
 def test_spec_initialization():
     name = "test_spec"
-    description = "Test spec"
-    spec = MockFieldSpec(name=name, description=description)
-    assert spec.name == name
-    assert spec.description == description
+    description = "Test field"
+    field = MockFieldSpec(name=name, description=description)
+    assert field.name == name
+    assert field.description == description
 
 
 def test_spec_category():
-    spec = MockFieldSpec(name="test_spec")
-    assert spec.category == MockContrib
+    field = MockFieldSpec(name="test_spec")
+    assert field.category == MockContrib
 
 
 # --- Tests for FieldSpec -----------------------------------------------------------------------
@@ -101,10 +101,10 @@ def test_spec_category():
 )
 def test_category_spec_initialization(required, unique):
     name = "test_spec"
-    spec = MockFieldSpec(name=name, required=required, unique=unique)
-    assert spec.name == name
-    assert spec.required == required
-    assert spec.unique == unique
+    field = MockFieldSpec(name=name, required=required, unique=unique)
+    assert field.name == name
+    assert field.required == required
+    assert field.unique == unique
 
 
 @pytest.mark.parametrize(
@@ -112,30 +112,30 @@ def test_category_spec_initialization(required, unique):
     [("valid_contrib", True), ("", False)]
 )
 def test_category_spec_validation(contrib_name, expected):
-    spec = MockFieldSpec(name="test_spec")
+    field = MockFieldSpec(name="test_spec")
     contrib = MockContrib(name=contrib_name)
-    assert spec.validate(contrib) == expected
+    assert field.validate(contrib) == expected
 
 
 # ---- Tests for DependencySpec --------------------------------------------------------------------
 
 def test_dependency_spec_initialization():
     name = "dependency_spec"
-    spec = MockDependencySpec(name=name, dependency1=MockContrib, dependency2=MockContrib)
-    assert spec.name == name
-    assert "dependency1" in spec.dependencies
-    assert "dependency2" in spec.dependencies
+    field = MockDependencySpec(name=name, dependency1=MockContrib, dependency2=MockContrib)
+    assert field.name == name
+    assert "dependency1" in field.dependencies
+    assert "dependency2" in field.dependencies
 
 
 def test_dependency_spec_validation():
     class MockPlugin:
-        def __init__(self, contributions):
-            self.contributions = contributions
+        def __init__(self, components):
+            self.components = components
 
-    spec = MockDependencySpec(name="dependency_spec", dependency1=MockContrib, dependency2=MockContrib)
+    field = MockDependencySpec(name="dependency_spec", dependency1=MockContrib, dependency2=MockContrib)
 
-    plugin_with_deps = MockPlugin(contributions={"dependency1": MockContrib(name="dep1"), "dependency2": MockContrib(name="dep2")})
-    plugin_missing_deps = MockPlugin(contributions={"dependency1": MockContrib(name="dep1")})
+    plugin_with_deps = MockPlugin(components={"dependency1": MockContrib(name="dep1"), "dependency2": MockContrib(name="dep2")})
+    plugin_missing_deps = MockPlugin(components={"dependency1": MockContrib(name="dep1")})
 
-    assert spec.validate(plugin_with_deps) is True
-    assert spec.validate(plugin_missing_deps) is False
+    assert field.validate(plugin_with_deps) is True
+    assert field.validate(plugin_missing_deps) is False

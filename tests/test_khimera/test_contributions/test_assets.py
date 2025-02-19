@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-test_khimera.test_contributions.test_assets
+test_khimera.test_components.test_assets
 ===========================================
 
-Tests for the contribution and specification classes for assets.
+Tests for the component and specification classes for assets.
 
 See Also
 --------
-khimera.contributions.assets
+khimera.components.assets
 """
 import pytest
 from pathlib import Path
 import sys # for manipulating sys.path
 import shutil # for copying directories
 
-from khimera.contributions.assets import Asset, AssetSpec
+from khimera.components.assets import Asset, AssetSpec
 
 # -- Mock Package and File for testing -------------------------------------------------------------
 
@@ -23,7 +23,7 @@ mock_package = "test_package"
 mock_file = "test_file.txt"
 
 
-# --- Tests for Asset (Contrib) --------------------------------------------------------------------
+# --- Tests for Asset (Component) --------------------------------------------------------------------
 
 def test_asset_initialization():
     """Test initialization of Asset."""
@@ -110,7 +110,7 @@ def test_assetspec_initialization():
     file_ext = (".txt", ".pdf")
     required = True
     unique = False
-    description = "Test asset spec"
+    description = "Test asset field"
     asset_spec = AssetSpec(name=name, file_ext=file_ext, required=required, unique=unique, description=description)
     assert asset_spec.name == name
     assert asset_spec.file_ext == file_ext

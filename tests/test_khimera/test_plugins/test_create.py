@@ -14,10 +14,8 @@ import pytest
 from typing import Type
 
 from khimera.plugins.create import Plugin
-import pytest
-from khimera.plugins.create import Plugin
-from khimera.contributions.core import FieldSpec
-from khimera.contributions.commands import CommandSpec
+from khimera.components.core import FieldSpec, Component
+from khimera.plugins.declare import PluginModel
 
 
 # --- Mock classes for testing ---------------------------------------------------------------------
@@ -27,32 +25,50 @@ class MockSpec(FieldSpec):
     def __init__(self, name: str):
         self.name = name
 
+    def validate(self, contrib) -> bool:
+        """Implement abstract method for validation."""
+        return True
+
+@pytest.fixture
+def mock_model():
+    """Fixture for a mock model."""
+    model = PluginModel(name="test_model")
+    model.add(MockSpec(name="test_spec"))
+    return model
+
+class MockContrib(Component):
+    """Mock component class for testing."""
+    def __init__(self, name: str):
+        self.name = name
+
 
 # --- Tests for Plugin -----------------------------------------------------------------------------
 
-def test_plugin_initialization():
+def test_plugin_initialization(mock_model):
     """Test initialization of Plugin."""
-    model = MockSpec(name="test_model")
     name = "my_plugin"
     version = "1.0.0"
-    plugin = Plugin(model=model, name=name, version=version)
+    plugin = Plugin(model=mock_model, name=name, version=version)
     assert plugin.name == name
     assert plugin.version == version
-    assert plugin.model == model
-    assert len(plugin.contributions) == 0
+    assert plugin.model == mock_model
+    assert len(plugin.components) == 0
 
-def test_add_contribution():
-    model = MockSpec(name="test_model")
-    plugin = Plugin(model=model)
+@pytest.mark.parametrize("field_name, expected_field_exists", [
+    ("test_spec", True),
+    ("new_spec", False)
+])
+def test_add_component(mock_model, field_name, expected_field_exists):
+    """Test adding a component to a plugin in various fields."""
+    plugin = Plugin(name="test_plugin", model=mock_model)
+    contrib = MockContrib(name="test_contrib")
+    plugin.add(field_name, contrib)
+    assert field_name in plugin.components
+    assert len(plugin.components[field_name]) == 1
+    assert plugin.components[field_name][0] == contrib
+    assert (field_name in mock_model.fields) == expected_field_exists
 
-    command_spec = CommandSpec(name="test_command")
-    plugin.add("commands", command_spec)
-
-    assert "commands" in plugin.contributions
-    assert len(plugin.contributions["commands"]) == 1
-    assert plugin.contributions["commands"][0] == command_spec
-
-def test_add_duplicate_contribution():
+def test_add_duplicate_component():
     model = MockSpec(name="test_model")
     plugin = Plugin(model=model)
 
@@ -62,7 +78,7 @@ def test_add_duplicate_contribution():
     with pytest.raises(AttributeError):
         plugin.add("commands", command_spec)
 
-def test_get_contribution():
+def test_get_component():
     model = MockSpec(name="test_model")
     plugin = Plugin(model=model)
 
@@ -73,7 +89,7 @@ def test_get_contribution():
     assert len(retrieved) == 1
     assert retrieved[0] == command_spec
 
-def test_filter_contributions():
+def test_filter_components():
     model = MockSpec(name="test_model")
     plugin = Plugin(model=model)
 

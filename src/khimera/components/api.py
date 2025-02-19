@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-khimera.contributions.api
+khimera.components.api
 =========================
 
 Classes for defining API extensions in plugin models and instances.
@@ -15,17 +15,17 @@ APIExtensionSpec
 
 See Also
 --------
-khimera.plugins.core.Contrib
-    Abstract base class representing a contribution to a plugin instance.
+khimera.plugins.core.Component
+    Abstract base class representing a component to a plugin instance.
 khimera.plugins.core.FieldSpec
-    Abstract base class for defining constraints and validations for contributions in a plugin model.
+    Abstract base class for defining constraints and validations for components in a plugin model.
 """
 from typing import Callable, Optional, Type, Tuple
 
-from khimera.contributions.core import Contrib, FieldSpec
+from khimera.components.core import Component, FieldSpec
 
 
-class APIExtension(Contrib):
+class APIExtension(Component):
     """
     Represents an API extension (function, class) to enrich the host application.
 
@@ -86,7 +86,7 @@ class APIExtensionSpec(FieldSpec[APIExtension]):
     Usually the `unique` attribute is set to `False` since multiple extensions can be provided, and
     the host application identifies all of them in a general list associated with the spec name.
     """
-    CONTRIB_TYPE = APIExtension
+    COMPONENT_TYPE = APIExtension
 
     def __init__(self, name: str,
                  valid_types: Optional[Tuple[Type, ...]] = None,

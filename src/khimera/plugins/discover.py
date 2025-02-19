@@ -79,7 +79,7 @@ class PluginFinder(ABC):
         Arguments
         ---------
         model : PluginModel
-            Plugin model specifying the expected structure and contributions of the plugins.
+            Plugin model specifying the expected structure and components of the plugins.
             If not provided, all the plugins are considered regardless of the model they adhere to.
         """
         return [plugin for plugin in self.plugins if plugin.model == model]

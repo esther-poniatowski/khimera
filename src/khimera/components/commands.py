@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-khimera.contributions.commands
+khimera.components.commands
 ==============================
 
 Classes for defining new commands in plugin models and instances.
@@ -15,17 +15,17 @@ CommandSpec
 
 See Also
 --------
-khimera.plugins.core.Contrib
-    Abstract base class representing a contribution to a plugin instance.
+khimera.plugins.core.Component
+    Abstract base class representing a component to a plugin instance.
 khimera.plugins.core.FieldSpec
-    Abstract base class for defining constraints and validations for contributions in a plugin model.
+    Abstract base class for defining constraints and validations for components in a plugin model.
 """
 from typing import Callable, Optional, Set
 
-from khimera.contributions.core import Contrib, FieldSpec
+from khimera.components.core import Component, FieldSpec
 
 
-class Command(Contrib):
+class Command(Component):
     """
     Represents a command in the host application's CLI, optionally nested in a predefined
     sub-command group.
@@ -68,9 +68,9 @@ class CommandSpec(FieldSpec[Command]):
     commands themselves.
     Usually the `unique` attribute is set to `False` since multiple commands can be nested in the
     same group, and the host application identifies all of them in a general list associated with
-    the spec name.
+    the field name.
     """
-    CONTRIB_TYPE = Command
+    COMPONENT_TYPE = Command
 
     def __init__(self, name: str,
                  groups: Optional[Set[str]] = None,

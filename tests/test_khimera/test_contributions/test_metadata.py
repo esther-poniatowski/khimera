@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-test_khimera.test_contributions.test_metadata
+test_khimera.test_components.test_metadata
 =============================================
 
-Tests for the contribution and specification classes for metadata.
+Tests for the component and specification classes for metadata.
 
 See Also
 --------
-khimera.contributions.metadata
+khimera.components.metadata
 """
 import pytest
-from khimera.contributions.metadata import MetaData, MetaDataSpec
+from khimera.components.metadata import MetaData, MetaDataSpec
 
-# --- Tests for Metadata (Contrib) -----------------------------------------------------------------
+# --- Tests for Metadata (Component) -----------------------------------------------------------------
 
 def test_metadata_initialization():
     """Test initialization of MetaData."""
@@ -30,7 +30,7 @@ def test_metadata_spec_initialization():
     valid_type = str
     required = True
     unique = False
-    description = "test spec description"
+    description = "test field description"
     metadata_spec = MetaDataSpec(name=name, valid_type=valid_type, required=required, unique=unique, description=description)
     assert metadata_spec.name == name
     assert metadata_spec.valid_type == valid_type

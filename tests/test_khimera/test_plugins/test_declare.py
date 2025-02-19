@@ -14,18 +14,18 @@ import pytest
 from typing import Type
 
 from khimera.plugins.declare import PluginModel
-from khimera.contributions.core import Spec, Contrib, FieldSpec, DependencySpec
+from khimera.components.core import Spec, Component, FieldSpec, DependencySpec
 
 
 # --- Mock classes for testing ---------------------------------------------------------------------
 
-class MockContrib(Contrib):
-    """Mock contribution class for testing."""
+class MockContrib(Component):
+    """Mock component class for testing."""
     pass
 
 class MockFieldSpec(FieldSpec):
     """Mock category specification class for testing."""
-    CONTRIB_TYPE = MockContrib
+    COMPONENT_TYPE = MockContrib
 
     def validate(self, contrib: MockContrib) -> bool:
         """Implement abstract method for validation."""
@@ -48,55 +48,55 @@ def test_plugin_model_initialization():
     model = PluginModel(name=name, version=version)
     assert model.name == name
     assert model.version == version
-    assert len(model.specs) == 0
+    assert len(model.fields) == 0
     assert len(model.dependencies) == 0
 
 @pytest.mark.parametrize("spec_class, spec_name, spec_attr", [
-    (MockFieldSpec, "test_spec", "specs"),
+    (MockFieldSpec, "test_spec", "fields"),
     (MockDependencySpec, "test_dep", "dependencies")
 ])
 def test_add_spec(spec_class: Type[Spec], spec_name: str, spec_attr: str):
     """Test adding a specification to a plugin model."""
     model = PluginModel(name="test_model")
-    spec = spec_class(name=spec_name)
-    model.add(spec)
+    field = spec_class(name=spec_name)
+    model.add(field)
     assert spec_name in getattr(model, spec_attr)
-    assert getattr(model, spec_attr)[spec_name] == spec
+    assert getattr(model, spec_attr)[spec_name] == field
 
 def test_add_duplicate_spec():
     """Test adding a duplicate specification to a plugin model."""
     model = PluginModel(name="test_model")
-    spec = MockFieldSpec(name="test_spec")
-    model.add(spec)
+    field = MockFieldSpec(name="test_spec")
+    model.add(field)
     with pytest.raises(KeyError):
-        model.add(spec)
+        model.add(field)
 
 def test_add_invalid_spec():
     """Test adding an invalid specification to a plugin model."""
     model = PluginModel(name="test_model")
     with pytest.raises(TypeError):
-        model.add("not a spec")
+        model.add("not a field")
 
 def test_all_specs_property():
-    """Test the all_specs property of a plugin model."""
+    """Test the specs property of a plugin model."""
     model = PluginModel(name="test_model")
     cat_spec = MockFieldSpec(name="cat_spec")
     dep_spec = MockDependencySpec(name="dep_spec")
     model.add(cat_spec)
     model.add(dep_spec)
-    all_specs = model.all_specs
-    assert len(all_specs) == 2
-    assert "cat_spec" in all_specs and "dep_spec" in all_specs
+    specs = model.specs
+    assert len(specs) == 2
+    assert "cat_spec" in specs and "dep_spec" in specs
 
 @pytest.mark.parametrize("spec_class, spec_name, spec_attr", [
-    (MockFieldSpec, "test_spec", "specs"),
+    (MockFieldSpec, "test_spec", "fields"),
     (MockDependencySpec, "test_dep", "dependencies")
 ])
 def test_remove_spec(spec_class: Type[Spec], spec_name: str, spec_attr: str):
     """Test removing a specification from a plugin model."""
     model = PluginModel(name="test_model")
-    spec = spec_class(name=spec_name)
-    model.add(spec)
+    field = spec_class(name=spec_name)
+    model.add(field)
     model.remove(spec_name)
     assert spec_name not in getattr(model, spec_attr)
 
@@ -110,9 +110,9 @@ def test_get_existing_spec():
     """Test getting an existing specification from a plugin model."""
     name = "test_spec"
     model = PluginModel(name="test_model")
-    spec = MockFieldSpec(name=name)
-    model.add(spec)
-    assert model.get(name) == spec
+    field = MockFieldSpec(name=name)
+    model.add(field)
+    assert model.get(name) == field
 
 def test_get_nonexistent_spec():
     """Test getting a nonexistent specification from a plugin model."""
@@ -120,7 +120,7 @@ def test_get_nonexistent_spec():
     assert model.get("nonexistent") is None
 
 def test_filter_by_category():
-    """Test filtering specs by category."""
+    """Test filtering fields by category."""
     model = PluginModel(name="test_model")
     spec1 = MockFieldSpec(name="spec1")
     spec2 = MockFieldSpec(name="spec2")
@@ -131,7 +131,7 @@ def test_filter_by_category():
     assert "spec1" in filtered and "spec2" in filtered
 
 def test_filter_by_unique():
-    """Test filtering specs by uniqueness."""
+    """Test filtering fields by uniqueness."""
     model = PluginModel(name="test_model")
     spec1 = MockFieldSpec(name="spec1", unique=True)
     spec2 = MockFieldSpec(name="spec2", unique=False)
@@ -142,7 +142,7 @@ def test_filter_by_unique():
     assert "spec1" in filtered
 
 def test_filter_by_required():
-    """Test filtering specs by requirement."""
+    """Test filtering fields by requirement."""
     model = PluginModel(name="test_model")
     spec1 = MockFieldSpec(name="spec1", required=True)
     spec2 = MockFieldSpec(name="spec2", required=False)
@@ -153,13 +153,13 @@ def test_filter_by_required():
     assert "spec1" in filtered
 
 def test_filter_with_custom_filter():
-    """Test filtering specs with a custom filter function."""
+    """Test filtering fields with a custom filter function."""
     model = PluginModel(name="test_model")
     spec1 = MockFieldSpec(name="spec1")
     spec2 = MockFieldSpec(name="spec2")
     model.add(spec1)
     model.add(spec2)
-    custom_filter = lambda spec: spec.name == "spec1"
+    custom_filter = lambda field: field.name == "spec1"
     filtered = model.filter(custom_filter=custom_filter)
     assert len(filtered) == 1
     assert "spec1" in filtered
@@ -170,5 +170,5 @@ def test_method_chaining():
     spec1 = MockFieldSpec(name="spec1")
     spec2 = MockFieldSpec(name="spec2")
     model.add(spec1).add(spec2).remove("spec1")
-    assert "spec1" not in model.specs
-    assert "spec2" in model.specs
+    assert "spec1" not in model.fields
+    assert "spec2" in model.fields

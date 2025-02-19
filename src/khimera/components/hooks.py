@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-khimera.contributions.hooks
+khimera.components.hooks
 ===========================
 
 Classes for defining hooks in plugin models and instances.
@@ -15,18 +15,18 @@ HookSpec
 
 See Also
 --------
-khimera.plugins.core.Contrib
-    Abstract base class representing a contribution to a plugin instance.
+khimera.plugins.core.Component
+    Abstract base class representing a component to a plugin instance.
 khimera.plugins.core.FieldSpec
-    Abstract base class for defining constraints and validations for contributions in a plugin model.
+    Abstract base class for defining constraints and validations for components in a plugin model.
 """
 from collections import OrderedDict
 import inspect
 from typing import Any, Callable, Union, Optional, Type, Dict, Tuple, List
 
-from khimera.contributions.core import Contrib, FieldSpec
+from khimera.components.core import Component, FieldSpec
 
-class Hook(Contrib):
+class Hook(Component):
     """
     Represents a hook to be executed by the host application.
 
@@ -69,13 +69,13 @@ class HookSpec(FieldSpec[Hook]):
 
     Examples
     --------
-    Declare a hook spec with expected inputs and output type:
+    Declare a hook field with expected inputs and output type:
 
     >>> hook_spec = HookSpec(name="on_event",
     ...                      arg_types={"name": str, "value": int},
     ...                      output_type=bool)
 
-    Create valid and invalid hook contributions:
+    Create valid and invalid hook components:
 
     >>> def valid_hook(name: str, value: int) -> bool:
     ...     return isinstance(value, int)
@@ -84,14 +84,14 @@ class HookSpec(FieldSpec[Hook]):
     >>> valid_contrib = Hook(name="valid_hook", callable=valid_hook)
     >>> invalid_contrib = Hook(name="invalid_hook", callable=invalid_hook)
 
-    Validate the contributions against the hook spec:
+    Validate the components against the hook field:
 
     >>> print(hook_spec.validate(valid_contrib))
     True
     >>> print(hook_spec.validate(invalid_contrib))
     False
     """
-    CONTRIB_TYPE = Hook
+    COMPONENT_TYPE = Hook
 
     def __init__(self,
                  name: str,

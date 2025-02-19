@@ -9,7 +9,7 @@ Standardized interface for declaring plugin models, on the host application side
 Classes
 -------
 PluginModel
-    Represents the expected structure and contributions of a plugin.
+    Represents the expected structure and components of a plugin.
 
 See Also
 --------
@@ -17,12 +17,12 @@ See Also
 from typing import Optional, Type, Dict, Callable, Self
 
 from khimera.utils.factories import TypeConstrainedDict
-from khimera.contributions.core import Spec, Contrib, DependencySpec, FieldSpec
+from khimera.components.core import Spec, Component, DependencySpec, FieldSpec
 
 
 class PluginModel:
     """
-    Represents a plugin model specifying the expected structure and contributions of a plugin.
+    Represents a plugin model specifying the expected structure and components of a plugin.
 
     Attributes
     ----------
@@ -30,11 +30,11 @@ class PluginModel:
         Name of the model.
     version : str, optional
         Version of the model.
-    specs : Dict[str, FieldSpec]
-        Specifications for single or multiple contributions of the same category in the plugin
+    fields : Dict[str, FieldSpec]
+        Specifications for single or multiple components of the same category in the plugin
         model.
     dependencies : Dict[str, DependencySpec]
-        Specifications enforcing dependencies between several contributions in the plugin model.
+        Specifications enforcing dependencies between several components in the plugin model.
 
     Examples
     --------
@@ -86,7 +86,7 @@ class PluginModel:
 
     Implementation
     --------------
-    Dependency specs are treated separately from category specs (two distinct attributes) since they
+    Dependency fields are treated separately from category fields (two distinct attributes) since they
     do not share the same properties and constraints. However, they can be declared via the same
     `add` method and retrieved via the same `get` method.
     """
@@ -95,21 +95,21 @@ class PluginModel:
         self.name = name
         self.version = version
         # Initialize model's specifications
-        self.specs = TypeConstrainedDict(str, FieldSpec)
+        self.fields = TypeConstrainedDict(str, FieldSpec)
         self.dependencies = TypeConstrainedDict(str, DependencySpec)
 
     @property
-    def all_specs(self) -> Dict[str, Spec]:
-        """All specifications in the plugin model (combined category and dependency specs)."""
-        return {**self.specs, **self.dependencies}
+    def specs(self) -> Dict[str, Spec]:
+        """All specifications in the plugin model (combined category and dependency fields)."""
+        return {**self.fields, **self.dependencies}
 
-    def add(self, spec: Spec) -> Self:
+    def add(self, field: Spec) -> Self:
         """
         Declares a `Spec` in the plugin model.
 
         Arguments
         ---------
-        spec : Spec
+        field : Spec
             Specification to declare in the plugin model. The name is used as the key in the model.
 
         Returns
@@ -123,27 +123,27 @@ class PluginModel:
             If the spec is not a subclass of `Spec` supported by the plugin model (either
             `FieldSpec` or `DependencySpec`).
         KeyError
-            If a spec with the same name is already declared in the plugin model
+            If a field with the same name is already declared in the plugin model
             (category and dependency specs are unique by name).
         """
-        if not isinstance(spec, (FieldSpec, DependencySpec)): # before accessing `name` attribute
-            raise TypeError(f"Unsupported spec type: '{type(spec)}' (must be a subclass of 'Spec': either 'FieldSpec' or 'DependencySpec')")
-        if spec.name in self.all_specs:
-            raise KeyError(f"Spec '{spec.name}' already declared in the plugin model")
-        if isinstance(spec, FieldSpec):
-            self.specs[spec.name] = spec
-        else: # isinstance(spec, DependencySpec)
-            self.dependencies[spec.name] = spec
+        if not isinstance(field, (FieldSpec, DependencySpec)): # before accessing `name` attribute
+            raise TypeError(f"Unsupported field type: '{type(field)}' (must be a subclass of 'Spec': either 'FieldSpec' or 'DependencySpec')")
+        if field.name in self.specs:
+            raise KeyError(f"Spec '{field.name}' already declared in the plugin model")
+        if isinstance(field, FieldSpec):
+            self.fields[field.name] = field
+        else: # isinstance(field, DependencySpec)
+            self.dependencies[field.name] = field
         return self
 
     def remove(self, name: str) -> Self:
         """
-        Remove a spec from the plugin model by name.
+        Remove a field from the plugin model by name.
 
         Arguments
         ---------
         name : str
-            Name of the spec to remove from the plugin model.
+            Name of the field to remove from the plugin model.
 
         Returns
         -------
@@ -153,10 +153,10 @@ class PluginModel:
         Raises
         ------
         KeyError
-            If the spec with the given name is not found in the plugin model.
+            If the field with the given name is not found in the plugin model.
         """
-        if name in self.specs:
-            del self.specs[name]
+        if name in self.fields:
+            del self.fields[name]
         elif name in self.dependencies:
             del self.dependencies[name]
         else:
@@ -165,28 +165,28 @@ class PluginModel:
 
     def get(self, name: str) -> Spec | None:
         """Get a `Spec` from the plugin model by name. None if not present in the model."""
-        return self.all_specs.get(name)
+        return self.specs.get(name)
 
     def filter(self,
-               category: Optional[Type[Contrib]] = None,
+               category: Optional[Type[Component]] = None,
                unique: Optional[bool] = None,
                required: Optional[bool] = None,
                custom_filter: Optional[Callable[[FieldSpec], bool]] = None
               ) -> Dict[str, FieldSpec]:
         """
-        Filter the specs in the plugin model based on various criteria.
+        Filter the fields in the plugin model based on various criteria.
 
         Arguments
         ---------
-        category : Type[Contrib], optional
-            Category of the specs to retain. If not provided, all categories are considered.
+        category : Type[Component], optional
+            Category of the fields to retain. If not provided, all categories are considered.
         unique : bool, optional
-            If True, retain only specs that admit a unique contribution.
-            If False, retain only specs that admit multiple contributions.
+            If True, retain only fields that admit a unique component.
+            If False, retain only fields that admit multiple components.
             If None (default), this criterion is not applied.
         required : bool, optional
-            If True, retain only required specs.
-            If False, retain only optional specs.
+            If True, retain only required fields.
+            If False, retain only optional fields.
             If None (default), this criterion is not applied.
         custom_filter : Callable[[FieldSpec], bool], optional
             Custom function for more complex filtering logic.
@@ -201,8 +201,8 @@ class PluginModel:
         --------
         Filter with a custom function:
 
-        >>> def custom_filter(spec: FieldSpec) -> bool:
-        ...     return spec.name.startswith('test_')
+        >>> def custom_filter(field: FieldSpec) -> bool:
+        ...     return field.name.startswith('test_')
         >>> model.filter(custom_filter=custom_filter)
 
         Notes
@@ -210,12 +210,12 @@ class PluginModel:
         Dependency specs are not considered since they do not share the same
         filtering properties as category specs.
         """
-        def meets_criteria(spec: FieldSpec) -> bool:
+        def meets_criteria(field: FieldSpec) -> bool:
             return (
-                (category is None or spec.CONTRIB_TYPE == category) and
-                (unique is None or spec.unique == unique) and
-                (required is None or spec.required == required) and
-                (custom_filter is None or custom_filter(spec))
+                (category is None or field.COMPONENT_TYPE == category) and
+                (unique is None or field.unique == unique) and
+                (required is None or field.required == required) and
+                (custom_filter is None or custom_filter(field))
             )
 
-        return {name: spec for name, spec in self.specs.items() if meets_criteria(spec)}
+        return {name: field for name, field in self.fields.items() if meets_criteria(field)}
