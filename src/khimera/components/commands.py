@@ -4,14 +4,14 @@
 khimera.components.commands
 ==============================
 
-Classes for defining new commands in plugin models and instances.
+Classes defining new commands in plugin models and instances.
 
 Classes
 -------
 Command
     Represents a command in the host application's CLI.
 CommandSpec
-    Declare the constraints that the commands of the plugins must satisfy.
+    Declare constraints that the commands of the plugins must satisfy.
 
 See Also
 --------
@@ -49,7 +49,7 @@ class Command(Component):
 
 class CommandSpec(FieldSpec[Command]):
     """
-    Declare the constraints that the commands of the plugins must satisfy to be accepted by the host
+    Declare constraints that the commands of the plugins must satisfy to be accepted by the host
     application's CLI.
 
     Attributes
@@ -64,11 +64,11 @@ class CommandSpec(FieldSpec[Command]):
     Notes
     -----
     Because new commands are not involved in the host application's execution flow, the constraints
-    are related to the general CLI structure rather than to predefined and strict properties of the
+    are related to the general CLI structure rather than to strict predefined properties of the
     commands themselves.
-    Usually the `unique` attribute is set to `False` since multiple commands can be nested in the
-    same group, and the host application identifies all of them in a general list associated with
-    the field name.
+
+    Usually the `unique` attribute is set to `False` since multiple commands can be nested in a
+    single field collecting commands for a specific sub-command group.
     """
     COMPONENT_TYPE = Command
 

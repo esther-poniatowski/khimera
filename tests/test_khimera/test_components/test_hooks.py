@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 test_khimera.test_components.test_hooks
-==========================================
+=======================================
 
 Tests for the component and specification classes for hooks.
 

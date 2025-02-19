@@ -4,7 +4,7 @@
 khimera.components.api
 =========================
 
-Classes for defining API extensions in plugin models and instances.
+Classes defining API extensions in plugin models and instances.
 
 Classes
 -------
@@ -80,11 +80,11 @@ class APIExtensionSpec(FieldSpec[APIExtension]):
     Notes
     -----
     Because new extensions are not involved in the host application's execution flow, the
-    constraints are related to the general structure of the API rather than to predefined and strict
+    constraints are related to the general structure of the API rather than to strict predefined
     properties of the extensions themselves.
 
-    Usually the `unique` attribute is set to `False` since multiple extensions can be provided, and
-    the host application identifies all of them in a general list associated with the spec name.
+    Usually the `unique` attribute is set to `False` since multiple extensions can be provided for a
+    single general field which collects extensions.
     """
     COMPONENT_TYPE = APIExtension
 

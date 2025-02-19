@@ -4,7 +4,7 @@
 khimera.components.
 ========================
 
-Classes for defining static resources (assets) in plugin models and instances.
+Classes defining static resources (assets) in plugin models and instances.
 
 Classes
 -------
@@ -22,11 +22,11 @@ khimera.plugins.core.FieldSpec
     model.
 pathlib.Path
     Object-oriented filesystem paths.
-
 """
 from importlib.resources import files, as_file
 from pathlib import Path
 from typing import Optional, Tuple
+from types import ModuleType
 
 from khimera.components.core import Component, FieldSpec
 
@@ -37,11 +37,9 @@ class Asset(Component):
 
     Arguments
     ---------
-    package : str
-        Name of the package where the resource is located. It can be one of the following:
-
-        - String representing a package name
-        - Module object
+    package : str | ModuleType, optional
+        Name of the package where the resource is located. It can be either a string representing a
+        package name or a module object (e.g., `__name__`).
 
         Common scenarios:
 
@@ -70,11 +68,11 @@ class Asset(Component):
 
     .. code-block:: none
 
-    my_package/
-    ├── __init__.py
-    ├── assets/
-    │   └── logo.png
-    └── plugin.py
+        my_package/
+        ├── __init__.py
+        ├── assets/
+        │   └── logo.png
+        └── plugin.py
 
 
     In the plugin specification, add a component for the `logo.png` file in the `assets`
@@ -91,9 +89,8 @@ class Asset(Component):
     See Also
     --------
     importlib.resources
-
     """
-    def __init__(self, name: str, file_path : Optional[str], package : Optional[str], description: Optional[str] = None):
+    def __init__(self, name: str, file_path : Optional[str], package : Optional[str | ModuleType] = None, description: Optional[str] = None):
         super().__init__(name=name, description=description)
         self.file_path = file_path
         self.package = package or self.__module__ # default to the caller's module

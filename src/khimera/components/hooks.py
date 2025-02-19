@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 khimera.components.hooks
-===========================
+========================
 
-Classes for defining hooks in plugin models and instances.
+Classes defining hooks in plugin models and instances.
 
 Classes
 -------
@@ -22,9 +22,10 @@ khimera.plugins.core.FieldSpec
 """
 from collections import OrderedDict
 import inspect
-from typing import Any, Callable, Union, Optional, Type, Dict, Tuple, List
+from typing import Any, Callable, Union, Optional, Type, Tuple, List
 
 from khimera.components.core import Component, FieldSpec
+
 
 class Hook(Component):
     """
@@ -38,7 +39,7 @@ class Hook(Component):
     Warnings
     --------
     The hook function must be annotated with type hints. This is necessary to match the expected
-    signature defined by the corresponding HookSpec.
+    signature defined by the corresponding `HookSpec`.
     """
     def __init__(self, name: str, callable: Callable, description: Optional[str] = None):
         super().__init__(name=name, description=description)
@@ -130,9 +131,9 @@ class HookSpec(FieldSpec[Hook]):
         keyword_only : List[str]
             Names of keyword-only arguments.
         has_var_positional : bool
-            True if the function has *args.
+            True if the function has `*args`.
         has_var_keyword : bool
-            True if the function has **kwargs.
+            True if the function has `**kwargs`.
         return_annotation : Any
             Return type annotation of the function. If None, the return type is not annotated.
         """

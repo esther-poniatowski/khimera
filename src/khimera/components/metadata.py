@@ -2,31 +2,30 @@
 # -*- coding: utf-8 -*-
 """
 khimera.components.metadata
-==============================
+===========================
 
-Classes for defining metadata components of plugin models and instances.
+Classes defining metadata components in plugin models and instances.
 
 Notes
 -----
-Metadata is typically used to store additional information about a plugin instance, such as
-configuration parameters (plugin settings), author and repository information, or other data that is
-not directly related to the functionality of the plugin.
+Metadata is typically used to store additional information about a plugin that is not directly
+related to its functionality: configuration parameters (plugin settings), author and repository
+information...
 
-Exceptions: name and version are specified outside of the metadata (as top-level plugin attributes),
+Exceptions: name and version are specified outside of metadata, as top-level plugin attributes,
 since they are common to all plugins and are used to identify and manage plugins in the host
 application.
 
-For simplicity and consistency, metadata it is treated as a special type of 'component', although
-it is not a component to the host application in the strict sense. However, this approach is
-useful for defining metadata fields in a plugin model, for validating metadata, and for accessing
-metadata in a plugin instance.
+For simplicity and consistency, metadata it is treated as a special type of 'component', although it
+is not an active contribution to the host application. However, this approach is useful to define,
+access and validate metadata fields in a plugin model similarly to other components.
 
 Classes
 -------
 MetaData
-    Represents metadata associated with a plugin instance.
+    Represents metadata specified in a plugin instance.
 MetaDataSpec
-    Declare metadata expected by the host application.
+    Declare metadata expected by the host application in the plugin model.
 
 See Also
 --------
@@ -42,7 +41,7 @@ from khimera.components.core import Component, FieldSpec
 
 class MetaData(Component):
     """
-    Represents metadata associated with a plugin instance.
+    Represents metadata specified in a plugin instance.
 
     Attributes
     ----------
@@ -56,7 +55,7 @@ class MetaData(Component):
 
 class MetaDataSpec(FieldSpec[MetaData]):
     """
-    Declare metadata expected by the host application.
+    Declare metadata expected by the host application in the plugin model.
 
     Attributes
     ----------
@@ -65,11 +64,12 @@ class MetaDataSpec(FieldSpec[MetaData]):
 
     Notes
     -----
-    Metadata provided in the plugin must exactly match the name (key) and type (value) expected by
-    the host application.
-    Usually, the `unique` attribute is automatically set to `True` since each metadata admits a single
-    value. This can be overridden for metadata fields that accept multiple values by setting the
-    `unique` attribute to `False`.
+    Metadata provided in the plugin must exactly match the field (key) and type expected by the host
+    application.
+
+    Usually, the `unique` attribute is automatically set to `True` since each metadata admits a
+    single value. This can be overridden for metadata fields that accept multiple values by setting
+    the `unique` attribute to `False`.
     """
     COMPONENT_TYPE = MetaData
 
