@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+test_khimera.test_contributions.test_commands
+=============================================
+
+Tests for the contribution and specification classes for commands.
+
+See Also
+--------
+khimera.contributions.commands
+"""
+import pytest
+from khimera.contributions.commands import Command, CommandSpec
+
+import pytest
+from khimera.contributions.commands import Command, CommandSpec
+
+
+# --- Tests for Command (Contrib) ------------------------------------------------------------------
+
+def test_command_initialization():
+    """Test initialization of Command."""
+    name = "test_command"
+    description = "Test command"
+    group = "test_group"
+    def sample_command():
+        pass
+
+    command = Command(name=name, callable=sample_command, group=group, description=description)
+    assert command.name == name
+    assert command.callable == sample_command
+    assert command.group == group
+    assert command.description == description
+
+def test_command_initialization_without_group():
+    """Test initialization of Command without group."""
+    name = "test_command"
+    def sample_command():
+        pass
+
+    command = Command(name=name, callable=sample_command)
+    assert command.name == name
+    assert command.callable == sample_command
+    assert command.group is None
+
+
+# --- Tests for CommandSpec (CategorySpec) ---------------------------------------------------------
+
+def test_commandspec_initialization():
+    """Test initialization of CommandSpec."""
+    name = "test_spec"
+    groups = {"group1", "group2"}
+    admits_new_groups = True
+    admits_top_level = False
+    required = True
+    unique = False
+    description = "Test command specification"
+    command_spec = CommandSpec(
+        name=name,
+        groups=groups,
+        admits_new_groups=admits_new_groups,
+        admits_top_level=admits_top_level,
+        required=required,
+        unique=unique,
+        description=description
+    )
+    assert command_spec.name == name
+    assert command_spec.groups == groups
+    assert command_spec.admits_new_groups == admits_new_groups
+    assert command_spec.admits_top_level == admits_top_level
+    assert command_spec.required == required
+    assert command_spec.unique == unique
+    assert command_spec.description == description
+
+def test_commandspec_initialization_defaults():
+    """Test initialization of CommandSpec with default values."""
+    command_spec = CommandSpec(name="test_spec")
+    assert command_spec.groups == set()
+    assert command_spec.admits_new_groups is True
+    assert command_spec.admits_top_level is True
+    assert command_spec.required is False
+    assert command_spec.unique is False
+
+
+# --- Tests for CommandSpec validation -------------------------------------------------------------
+
+def test_commandspec_validate_valid_group():
+    """Test CommandSpec validation with a valid group."""
+    command_spec = CommandSpec(name="test_spec", groups={"group1", "group2"})
+    command = Command(name="test_command", callable=lambda: None, group="group1")
+    assert command_spec.validate(command) is True
+
+def test_commandspec_validate_new_group():
+    """Test CommandSpec validation with a new group."""
+    command_spec = CommandSpec(name="test_spec", groups={"group1", "group2"}, admits_new_groups=True)
+    command = Command(name="test_command", callable=lambda: None, group="new_group")
+    assert command_spec.validate(command) is True
+
+def test_commandspec_validate_new_group_not_allowed():
+    """Test CommandSpec validation with a new group not allowed."""
+    command_spec = CommandSpec(name="test_spec", groups={"group1", "group2"}, admits_new_groups=False)
+    command = Command(name="test_command", callable=lambda: None, group="new_group")
+    assert command_spec.validate(command) is False
+
+def test_commandspec_validate_top_level():
+    """Test CommandSpec validation with a top-level command."""
+    command_spec = CommandSpec(name="test_spec", admits_top_level=True)
+    command = Command(name="test_command", callable=lambda: None)
+    assert command_spec.validate(command) is True
+
+def test_commandspec_validate_top_level_not_allowed():
+    """Test CommandSpec validation with a top-level command not allowed."""
+    command_spec = CommandSpec(name="test_spec", admits_top_level=False)
+    command = Command(name="test_command", callable=lambda: None)
+    assert command_spec.validate(command) is False
+
+def test_commandspec_validate_empty_groups():
+    """Test CommandSpec validation with empty groups."""
+    command_spec = CommandSpec(name="test_spec")
+    command = Command(name="test_command", callable=lambda: None, group="new_group")
+    assert command_spec.validate(command) is True
