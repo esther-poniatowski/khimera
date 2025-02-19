@@ -98,11 +98,11 @@ class APIExtensionSpec(FieldSpec[APIExtension]):
         self.valid_types = valid_types
         self.check_inheritance = check_inheritance
 
-    def validate(self, contrib: APIExtension) -> bool:
+    def validate(self, comp: APIExtension) -> bool:
         """Check if the extension is of the expected types or subclasses."""
         if self.valid_types is None:
             return True
-        extension = contrib.extension
+        extension = comp.extension
         if self.check_inheritance: # check for inheritance
             return isinstance(extension, type) and issubclass(extension, self.valid_types)
         else: # check for instance of valid type

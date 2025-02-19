@@ -109,9 +109,9 @@ class HookSpec(FieldSpec[Hook]):
         self.allow_var_kwargs = allow_var_kwargs
         self.return_type = return_type
 
-    def validate(self, contrib: Hook) -> bool:
+    def validate(self, comp: Hook) -> bool:
         """Validate that the hook function matches the expected signature."""
-        positional, keyword_only, has_var_positional, has_var_keyword, return_annotation = self.describe_signature(contrib.callable)
+        positional, keyword_only, has_var_positional, has_var_keyword, return_annotation = self.describe_signature(comp.callable)
         return self.check_inputs(positional, has_var_positional, has_var_keyword) and self.check_output(return_annotation)
 
     @staticmethod

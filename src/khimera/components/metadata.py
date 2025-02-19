@@ -77,6 +77,6 @@ class MetaDataSpec(FieldSpec[MetaData]):
         super().__init__(name=name, required=required, unique=unique, description=description)
         self.valid_type = valid_type
 
-    def validate(self, contrib: MetaData) -> bool:
+    def validate(self, comp: MetaData) -> bool:
         """Check if the metadata value is of the expected type."""
-        return isinstance(contrib.value, self.valid_type)
+        return isinstance(comp.value, self.valid_type)

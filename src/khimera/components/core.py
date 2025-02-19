@@ -197,7 +197,7 @@ class FieldSpec(Spec, Generic[C]):
         self.unique = unique
 
     @abstractmethod
-    def validate(self, contrib: C) -> bool:
+    def validate(self, comp: C) -> bool:
         """Validate one component against the specification (narrower signature)."""
         pass
 

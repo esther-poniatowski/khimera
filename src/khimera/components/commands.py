@@ -86,10 +86,10 @@ class CommandSpec(FieldSpec[Command]):
         self.admits_new_groups = admits_new_groups
         self.admits_top_level = admits_top_level
 
-    def validate(self, contrib: Command) -> bool:
+    def validate(self, comp: Command) -> bool:
         """Check if the command group is allowed by the host application."""
-        if contrib.group is None and not self.admits_top_level:
+        if comp.group is None and not self.admits_top_level:
             return False
-        if contrib.group not in self.groups and not self.admits_new_groups:
+        if comp.group not in self.groups and not self.admits_new_groups:
             return False
         return True

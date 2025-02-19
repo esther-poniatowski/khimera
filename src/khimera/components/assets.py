@@ -138,8 +138,8 @@ class AssetSpec(FieldSpec[Asset]):
         super().__init__(name=name, required=required, unique=unique, description=description)
         self.file_ext = file_ext
 
-    def validate(self, contrib: Asset) -> bool:
+    def validate(self, comp: Asset) -> bool:
         """Check if the asset file extension is allowed."""
         if self.file_ext is None:
             return True
-        return contrib.file_path.endswith(self.file_ext)
+        return comp.file_path.endswith(self.file_ext)

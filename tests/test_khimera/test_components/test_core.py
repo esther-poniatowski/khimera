@@ -26,9 +26,9 @@ class MockFieldSpec(FieldSpec[MockContrib]):
     """Mock subclass of `FieldSpec` for testing."""
     COMPONENT_TYPE = MockContrib
 
-    def validate(self, contrib: MockContrib) -> bool:
+    def validate(self, comp: MockContrib) -> bool:
         """Simple validation: return True if name is non-empty."""
-        return bool(contrib.name)
+        return bool(comp.name)
 
 
 # --- Tests for Component ----------------------------------------------------------------------------
@@ -37,24 +37,24 @@ def test_contrib_initialization():
     """Test initialization of a `Component` object and its attributes."""
     name = "test_contrib"
     description = "Test component"
-    contrib = MockContrib(name=name, description=description)
-    assert contrib.name == name
-    assert contrib.description == description
-    assert contrib.plugin is None
+    comp = MockContrib(name=name, description=description)
+    assert comp.name == name
+    assert comp.description == description
+    assert comp.plugin is None
 
 
 def test_contrib_attach():
     """Test attaching a `Component` object to a plugin."""
     plugin_name = "test_plugin"
-    contrib = MockContrib(name="test_contrib")
-    contrib.attach(plugin_name=plugin_name)
-    assert contrib.plugin == plugin_name
+    comp = MockContrib(name="test_contrib")
+    comp.attach(plugin_name=plugin_name)
+    assert comp.plugin == plugin_name
 
 
 def test_contrib_category():
     """Test getting the category of a `Component` object."""
-    contrib = MockContrib(name="test_contrib")
-    assert contrib.category == MockContrib
+    comp = MockContrib(name="test_contrib")
+    assert comp.category == MockContrib
 
 
 def test_contrib_list():
@@ -105,5 +105,5 @@ def test_category_spec_initialization(required, unique):
 )
 def test_category_spec_validation(contrib_name, expected):
     field = MockFieldSpec(name="test_spec")
-    contrib = MockContrib(name=contrib_name)
-    assert field.validate(contrib) == expected
+    comp = MockContrib(name=contrib_name)
+    assert field.validate(comp) == expected
