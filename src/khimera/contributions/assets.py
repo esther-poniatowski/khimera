@@ -42,7 +42,6 @@ class Asset(Contrib):
 
         - String representing a package name
         - Module object
-        - Omitted, in which case it defaults to the caller's module
 
         Common scenarios:
 
@@ -50,6 +49,10 @@ class Asset(Contrib):
           `pyproject.toml` (e.g.  `"my_package"`).
         - If resources are in a subdirectory, use dot notation to specify the subdirectory (e.g.
           `"my_package.resources"`).
+
+        If not provided, the package is inferred from the caller's module, i.e. the module where the
+        `Asset` instance is created (`__module__` attribute), which is assumed to be the file where
+        the plugin is defined.
 
     file_path : str
         Path to the resource file, relative to the package root.
@@ -65,13 +68,14 @@ class Asset(Contrib):
     --------
     Consider the following directory structure for the plugin package:
 
-    ```
+    .. code-block:: none
+
     my_package/
     ├── __init__.py
     ├── assets/
     │   └── logo.png
     └── plugin.py
-    ```
+
 
     In the plugin specification, add a contribution for the `logo.png` file in the `assets`
     directory:
@@ -141,4 +145,4 @@ class AssetSpec(CategorySpec[Asset]):
         """Check if the asset file extension is allowed."""
         if self.file_ext is None:
             return True
-        return contrib.path.suffix in self.file_ext
+        return contrib.file_path.endswith(self.file_ext)
