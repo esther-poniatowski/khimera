@@ -64,7 +64,7 @@ class CliApp(typer.Typer):
         if app:
             self.__dict__.update(app.__dict__)
             self.info.no_args_is_help = True # enforce `no_args_is_help` to True
-        # Register external default callback-
+        # Register default callback
         self.callback()(self.default_callback)
         # Add new attributes for group and command indexing
         self.groups_index = {}
