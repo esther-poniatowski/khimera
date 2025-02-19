@@ -51,8 +51,7 @@ See Also
 --------
 """
 from abc import ABC, abstractmethod
-from collections import UserList
-from typing import Optional, Type, TypeVar, Generic, List
+from typing import Optional, Type, TypeVar, Generic
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -97,8 +96,11 @@ class Contrib(ABC):
         """Attach the contribution to a plugin instance."""
         self.plugin = plugin_name
 
-ContribList = TypeConstrainedList[Contrib]
-"""List of contributions in a plugin instance."""
+
+class ContribList(TypeConstrainedList[Contrib]):
+    """List of contributions in a plugin instance."""
+    def __init__(self, data=None):
+        super().__init__(Contrib, data)
 
 
 # --- Specifications -------------------------------------------------------------------------------
@@ -214,6 +216,6 @@ class DependencySpec(Spec, Generic[C]):
         self.dependencies = dependencies
 
     @abstractmethod
-    def validate(self, plugin: Plugin) -> bool:
+    def validate(self, plugin: 'Plugin') -> bool:
         """Validate the dependencies globally in the plugin instance."""
         pass

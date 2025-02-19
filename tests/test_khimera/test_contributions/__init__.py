@@ -12,5 +12,5 @@ test_core
 
 See Also
 --------
-khimera.cli
+khimera.contributions
 """
