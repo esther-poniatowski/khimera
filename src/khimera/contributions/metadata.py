@@ -6,6 +6,21 @@ khimera.contributions.metadata
 
 Classes for defining metadata components of plugin models and instances.
 
+Notes
+-----
+Metadata is typically used to store additional information about a plugin instance, such as
+configuration parameters (plugin settings), author and repository information, or other data that is
+not directly related to the functionality of the plugin.
+
+Exceptions: name and version are specified outside of the metadata (as top-level plugin attributes),
+since they are common to all plugins and are used to identify and manage plugins in the host
+application.
+
+For simplicity and consistency, metadata it is treated as a special type of 'contribution', although
+it is not a contribution to the host application in the strict sense. However, this approach is
+useful for defining metadata fields in a plugin model, for validating metadata, and for accessing
+metadata in a plugin instance.
+
 Classes
 -------
 MetaData

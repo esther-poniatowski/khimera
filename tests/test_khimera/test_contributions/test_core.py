@@ -4,7 +4,11 @@
 test_khimera.test_contributions.test_core
 =========================================
 
+Tests for the core contribution and specification classes.
 
+See Also
+--------
+khimera.contributions.core
 """
 import pytest
 
