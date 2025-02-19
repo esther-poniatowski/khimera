@@ -14,7 +14,7 @@ import pytest
 from typing import Type
 
 from khimera.plugins.declare import PluginModel
-from khimera.contributions.core import Spec, Contrib, CategorySpec, DependencySpec
+from khimera.contributions.core import Spec, Contrib, FieldSpec, DependencySpec
 
 
 # --- Mock classes for testing ---------------------------------------------------------------------
@@ -23,7 +23,7 @@ class MockContrib(Contrib):
     """Mock contribution class for testing."""
     pass
 
-class MockCategorySpec(CategorySpec):
+class MockFieldSpec(FieldSpec):
     """Mock category specification class for testing."""
     CONTRIB_TYPE = MockContrib
 
@@ -52,7 +52,7 @@ def test_plugin_model_initialization():
     assert len(model.dependencies) == 0
 
 @pytest.mark.parametrize("spec_class, spec_name, spec_attr", [
-    (MockCategorySpec, "test_spec", "specs"),
+    (MockFieldSpec, "test_spec", "specs"),
     (MockDependencySpec, "test_dep", "dependencies")
 ])
 def test_add_spec(spec_class: Type[Spec], spec_name: str, spec_attr: str):
@@ -66,7 +66,7 @@ def test_add_spec(spec_class: Type[Spec], spec_name: str, spec_attr: str):
 def test_add_duplicate_spec():
     """Test adding a duplicate specification to a plugin model."""
     model = PluginModel(name="test_model")
-    spec = MockCategorySpec(name="test_spec")
+    spec = MockFieldSpec(name="test_spec")
     model.add(spec)
     with pytest.raises(KeyError):
         model.add(spec)
@@ -80,7 +80,7 @@ def test_add_invalid_spec():
 def test_all_specs_property():
     """Test the all_specs property of a plugin model."""
     model = PluginModel(name="test_model")
-    cat_spec = MockCategorySpec(name="cat_spec")
+    cat_spec = MockFieldSpec(name="cat_spec")
     dep_spec = MockDependencySpec(name="dep_spec")
     model.add(cat_spec)
     model.add(dep_spec)
@@ -89,7 +89,7 @@ def test_all_specs_property():
     assert "cat_spec" in all_specs and "dep_spec" in all_specs
 
 @pytest.mark.parametrize("spec_class, spec_name, spec_attr", [
-    (MockCategorySpec, "test_spec", "specs"),
+    (MockFieldSpec, "test_spec", "specs"),
     (MockDependencySpec, "test_dep", "dependencies")
 ])
 def test_remove_spec(spec_class: Type[Spec], spec_name: str, spec_attr: str):
@@ -110,7 +110,7 @@ def test_get_existing_spec():
     """Test getting an existing specification from a plugin model."""
     name = "test_spec"
     model = PluginModel(name="test_model")
-    spec = MockCategorySpec(name=name)
+    spec = MockFieldSpec(name=name)
     model.add(spec)
     assert model.get(name) == spec
 
@@ -122,8 +122,8 @@ def test_get_nonexistent_spec():
 def test_filter_by_category():
     """Test filtering specs by category."""
     model = PluginModel(name="test_model")
-    spec1 = MockCategorySpec(name="spec1")
-    spec2 = MockCategorySpec(name="spec2")
+    spec1 = MockFieldSpec(name="spec1")
+    spec2 = MockFieldSpec(name="spec2")
     model.add(spec1)
     model.add(spec2)
     filtered = model.filter(category=MockContrib)
@@ -133,8 +133,8 @@ def test_filter_by_category():
 def test_filter_by_unique():
     """Test filtering specs by uniqueness."""
     model = PluginModel(name="test_model")
-    spec1 = MockCategorySpec(name="spec1", unique=True)
-    spec2 = MockCategorySpec(name="spec2", unique=False)
+    spec1 = MockFieldSpec(name="spec1", unique=True)
+    spec2 = MockFieldSpec(name="spec2", unique=False)
     model.add(spec1)
     model.add(spec2)
     filtered = model.filter(unique=True)
@@ -144,8 +144,8 @@ def test_filter_by_unique():
 def test_filter_by_required():
     """Test filtering specs by requirement."""
     model = PluginModel(name="test_model")
-    spec1 = MockCategorySpec(name="spec1", required=True)
-    spec2 = MockCategorySpec(name="spec2", required=False)
+    spec1 = MockFieldSpec(name="spec1", required=True)
+    spec2 = MockFieldSpec(name="spec2", required=False)
     model.add(spec1)
     model.add(spec2)
     filtered = model.filter(required=True)
@@ -155,8 +155,8 @@ def test_filter_by_required():
 def test_filter_with_custom_filter():
     """Test filtering specs with a custom filter function."""
     model = PluginModel(name="test_model")
-    spec1 = MockCategorySpec(name="spec1")
-    spec2 = MockCategorySpec(name="spec2")
+    spec1 = MockFieldSpec(name="spec1")
+    spec2 = MockFieldSpec(name="spec2")
     model.add(spec1)
     model.add(spec2)
     custom_filter = lambda spec: spec.name == "spec1"
@@ -167,8 +167,8 @@ def test_filter_with_custom_filter():
 def test_method_chaining():
     """Test method chaining in PluginModel."""
     model = PluginModel(name="test_model")
-    spec1 = MockCategorySpec(name="spec1")
-    spec2 = MockCategorySpec(name="spec2")
+    spec1 = MockFieldSpec(name="spec1")
+    spec2 = MockFieldSpec(name="spec2")
     model.add(spec1).add(spec2).remove("spec1")
     assert "spec1" not in model.specs
     assert "spec2" in model.specs

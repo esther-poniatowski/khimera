@@ -17,12 +17,12 @@ See Also
 --------
 khimera.plugins.core.Contrib
     Abstract base class representing a contribution to a plugin instance.
-khimera.plugins.core.CategorySpec
+khimera.plugins.core.FieldSpec
     Abstract base class for defining constraints and validations for contributions in a plugin model.
 """
 from typing import Callable, Optional, Type, Tuple
 
-from khimera.contributions.core import Contrib, CategorySpec
+from khimera.contributions.core import Contrib, FieldSpec
 
 
 class APIExtension(Contrib):
@@ -39,7 +39,7 @@ class APIExtension(Contrib):
         self.extension = extension
 
 
-class APIExtensionSpec(CategorySpec[APIExtension]):
+class APIExtensionSpec(FieldSpec[APIExtension]):
     """
     Declare an API extension allowed in the host application.
 

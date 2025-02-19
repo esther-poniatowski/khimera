@@ -102,7 +102,7 @@ def test_asset_get_path_installed_package(tmp_path):
         sys.path.pop(0)
 
 
-# --- Tests for AssetSpec (CategorySpec) -----------------------------------------------------------
+# --- Tests for AssetSpec (FieldSpec) -----------------------------------------------------------
 
 def test_assetspec_initialization():
     """Test initialization of Asset Spec."""

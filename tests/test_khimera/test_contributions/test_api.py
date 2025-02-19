@@ -30,7 +30,7 @@ def test_api_extension_initialization():
     assert api_extension.extension == sample_function
     assert api_extension.description == description
 
-# --- Tests for APIExtensionSpec (CategorySpec) ----------------------------------------------------
+# --- Tests for APIExtensionSpec (FieldSpec) ----------------------------------------------------
 
 def test_api_extension_spec_initialization():
     """Test initialization of APIExtensionSpec."""

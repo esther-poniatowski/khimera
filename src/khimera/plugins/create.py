@@ -102,7 +102,7 @@ class Plugin:
         """Print name and metadata of the plugin."""
         return f"Plugin(name={self.name}, version={self.version}, model={self.model})"
 
-    def add(self, key: str, contrib: Contrib) -> None:
+    def add(self, key: str, contrib: Contrib) -> Self:
         """
         Add a contribution to one of the specified fields in the plugin model.
 
@@ -112,6 +112,11 @@ class Plugin:
             Key of the specification field in the plugin model.
         contrib : Contrib
             Contribution to add to the plugin.
+
+        Returns
+        -------
+        Self
+            Updated plugin instance, for method chaining.
 
         Raise
         -----
@@ -123,6 +128,9 @@ class Plugin:
             self.contributions[key] = TypeConstrainedList(Contrib) # automatic type checking
         contrib.attach(self.name) # keep track of the plugin providing the contribution
         self.contributions[key].append(contrib)
+        return self
+
+
 
     def get(self, key: str) -> ContribList:
         """

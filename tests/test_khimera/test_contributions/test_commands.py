@@ -45,7 +45,7 @@ def test_command_initialization_without_group():
     assert command.group is None
 
 
-# --- Tests for CommandSpec (CategorySpec) ---------------------------------------------------------
+# --- Tests for CommandSpec (FieldSpec) ---------------------------------------------------------
 
 def test_commandspec_initialization():
     """Test initialization of CommandSpec."""

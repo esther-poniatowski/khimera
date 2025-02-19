@@ -7,12 +7,12 @@ khimera.contributions
 Components of plugins that contribute to the host application.
 
 Each module in this package encapsulates the behavior of one type of plugin components. Each
-inherits from the base classes `Contrib` and `CategorySpec` and tailors their attributes and methods
+inherits from the base classes `Contrib` and `FieldSpec` and tailors their attributes and methods
 to the specific plugin components they represent.
 
-Both the `Contrib` and `CategorySpec` classes are subclassed in parallel in each module, forming a
+Both the `Contrib` and `FieldSpec` classes are subclassed in parallel in each module, forming a
 hierarchy of plugin components. The `Contrib` class represents the actual components provided by
-plugin instances, while the `CategorySpec` class represents constraints for those components
+plugin instances, while the `FieldSpec` class represents constraints for those components
 according to the host application's requirements.
 
 Modules

@@ -17,7 +17,7 @@ See Also
 --------
 khimera.plugins.core.Contrib
     Abstract base class representing a contribution to a plugin instance.
-khimera.plugins.core.CategorySpec
+khimera.plugins.core.FieldSpec
     Abstract base class for defining constraints and validations for contributions in a plugin
     model.
 pathlib.Path
@@ -28,7 +28,7 @@ from importlib.resources import files, as_file
 from pathlib import Path
 from typing import Optional, Tuple
 
-from khimera.contributions.core import Contrib, CategorySpec
+from khimera.contributions.core import Contrib, FieldSpec
 
 
 class Asset(Contrib):
@@ -120,7 +120,7 @@ class Asset(Contrib):
         return as_file(files(self.package).joinpath(self.file_path))
 
 
-class AssetSpec(CategorySpec[Asset]):
+class AssetSpec(FieldSpec[Asset]):
     """
     Declare an asset expected by the host application.
 

@@ -14,7 +14,7 @@ ContribList
     List of contributions in a plugin instance.
 Spec
     Base class representing constraints and validations for contributions in a plugin model.
-CategorySpec
+FieldSpec
     Variant of `Spec` applying to one or multiple contributions of the same category.
 DependencySpec
     Variant of `Spec` enforcing dependencies between several contributions.
@@ -44,7 +44,7 @@ subclassing the `Contrib` and `Spec` classes.
 Default `Spec` sub-classes are defined in the `khimera.plugins.variants` module, providing a default
 validation logic for the distinct categories of contributions. The current system can be extended
 with variant specifications implementing other validation constraints for existing or new
-categories, by subclassing the `CategorySpec` class (or the `DependencySpec` class to
+categories, by subclassing the `FieldSpec` class (or the `DependencySpec` class to
 specify relational constraints between several plugin components).
 
 See Also
@@ -163,7 +163,7 @@ class Spec(ABC):
         pass
 
 
-class CategorySpec(Spec, Generic[C]):
+class FieldSpec(Spec, Generic[C]):
     """
     Variant of `Spec` applying to one or multiple contributions of the same category.
 

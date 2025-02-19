@@ -17,14 +17,14 @@ See Also
 --------
 khimera.plugins.core.Contrib
     Abstract base class representing a contribution to a plugin instance.
-khimera.plugins.core.CategorySpec
+khimera.plugins.core.FieldSpec
     Abstract base class for defining constraints and validations for contributions in a plugin model.
 """
 from collections import OrderedDict
 import inspect
 from typing import Any, Callable, Union, Optional, Type, Dict, Tuple, List
 
-from khimera.contributions.core import Contrib, CategorySpec
+from khimera.contributions.core import Contrib, FieldSpec
 
 class Hook(Contrib):
     """
@@ -45,7 +45,7 @@ class Hook(Contrib):
         self.callable = callable
 
 
-class HookSpec(CategorySpec[Hook]):
+class HookSpec(FieldSpec[Hook]):
     """
     Declare a hook expected by the host application.
 

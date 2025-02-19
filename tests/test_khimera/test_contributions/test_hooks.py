@@ -30,7 +30,7 @@ def test_hook_initialization():
     assert hook.description == description
 
 
-# --- Tests for HookSpec (CategorySpec) ------------------------------------------------------------
+# --- Tests for HookSpec (FieldSpec) ------------------------------------------------------------
 
 def test_hookspec_initialization():
     """Test initialization of HookSpec."""

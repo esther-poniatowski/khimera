@@ -22,7 +22,7 @@ def test_metadata_initialization():
     assert metadata.value == "value"
     assert metadata.description == "test description"
 
-# --- Tests for MetaDataSpec (CategorySpec) --------------------------------------------------------
+# --- Tests for MetaDataSpec (FieldSpec) --------------------------------------------------------
 
 def test_metadata_spec_initialization():
     """Test initialization of MetaDataSpec."""

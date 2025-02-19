@@ -17,7 +17,7 @@ See Also
 from typing import Optional, Type, Dict, Callable, Self
 
 from khimera.utils.factories import TypeConstrainedDict
-from khimera.contributions.core import Spec, Contrib, DependencySpec, CategorySpec
+from khimera.contributions.core import Spec, Contrib, DependencySpec, FieldSpec
 
 
 class PluginModel:
@@ -30,7 +30,7 @@ class PluginModel:
         Name of the model.
     version : str, optional
         Version of the model.
-    specs : Dict[str, CategorySpec]
+    specs : Dict[str, FieldSpec]
         Specifications for single or multiple contributions of the same category in the plugin
         model.
     dependencies : Dict[str, DependencySpec]
@@ -95,7 +95,7 @@ class PluginModel:
         self.name = name
         self.version = version
         # Initialize model's specifications
-        self.specs = TypeConstrainedDict(str, CategorySpec)
+        self.specs = TypeConstrainedDict(str, FieldSpec)
         self.dependencies = TypeConstrainedDict(str, DependencySpec)
 
     @property
@@ -121,16 +121,16 @@ class PluginModel:
         ------
         TypeError
             If the spec is not a subclass of `Spec` supported by the plugin model (either
-            `CategorySpec` or `DependencySpec`).
+            `FieldSpec` or `DependencySpec`).
         KeyError
             If a spec with the same name is already declared in the plugin model
             (category and dependency specs are unique by name).
         """
-        if not isinstance(spec, (CategorySpec, DependencySpec)): # before accessing `name` attribute
-            raise TypeError(f"Unsupported spec type: '{type(spec)}' (must be a subclass of 'Spec': either 'CategorySpec' or 'DependencySpec')")
+        if not isinstance(spec, (FieldSpec, DependencySpec)): # before accessing `name` attribute
+            raise TypeError(f"Unsupported spec type: '{type(spec)}' (must be a subclass of 'Spec': either 'FieldSpec' or 'DependencySpec')")
         if spec.name in self.all_specs:
             raise KeyError(f"Spec '{spec.name}' already declared in the plugin model")
-        if isinstance(spec, CategorySpec):
+        if isinstance(spec, FieldSpec):
             self.specs[spec.name] = spec
         else: # isinstance(spec, DependencySpec)
             self.dependencies[spec.name] = spec
@@ -171,8 +171,8 @@ class PluginModel:
                category: Optional[Type[Contrib]] = None,
                unique: Optional[bool] = None,
                required: Optional[bool] = None,
-               custom_filter: Optional[Callable[[CategorySpec], bool]] = None
-              ) -> Dict[str, CategorySpec]:
+               custom_filter: Optional[Callable[[FieldSpec], bool]] = None
+              ) -> Dict[str, FieldSpec]:
         """
         Filter the specs in the plugin model based on various criteria.
 
@@ -188,20 +188,20 @@ class PluginModel:
             If True, retain only required specs.
             If False, retain only optional specs.
             If None (default), this criterion is not applied.
-        custom_filter : Callable[[CategorySpec], bool], optional
+        custom_filter : Callable[[FieldSpec], bool], optional
             Custom function for more complex filtering logic.
-            It should take a CategorySpec and returns a boolean.
+            It should take a FieldSpec and returns a boolean.
 
         Returns
         -------
-        Dict[str, CategorySpec]
+        Dict[str, FieldSpec]
             Specs that meet all the specified criteria.
 
         Examples
         --------
         Filter with a custom function:
 
-        >>> def custom_filter(spec: CategorySpec) -> bool:
+        >>> def custom_filter(spec: FieldSpec) -> bool:
         ...     return spec.name.startswith('test_')
         >>> model.filter(custom_filter=custom_filter)
 
@@ -210,7 +210,7 @@ class PluginModel:
         Dependency specs are not considered since they do not share the same
         filtering properties as category specs.
         """
-        def meets_criteria(spec: CategorySpec) -> bool:
+        def meets_criteria(spec: FieldSpec) -> bool:
             return (
                 (category is None or spec.CONTRIB_TYPE == category) and
                 (unique is None or spec.unique == unique) and

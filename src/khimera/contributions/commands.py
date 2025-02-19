@@ -17,12 +17,12 @@ See Also
 --------
 khimera.plugins.core.Contrib
     Abstract base class representing a contribution to a plugin instance.
-khimera.plugins.core.CategorySpec
+khimera.plugins.core.FieldSpec
     Abstract base class for defining constraints and validations for contributions in a plugin model.
 """
 from typing import Callable, Optional, Set
 
-from khimera.contributions.core import Contrib, CategorySpec
+from khimera.contributions.core import Contrib, FieldSpec
 
 
 class Command(Contrib):
@@ -47,7 +47,7 @@ class Command(Contrib):
         self.group = group
 
 
-class CommandSpec(CategorySpec[Command]):
+class CommandSpec(FieldSpec[Command]):
     """
     Declare the constraints that the commands of the plugins must satisfy to be accepted by the host
     application's CLI.

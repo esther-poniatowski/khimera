@@ -12,7 +12,7 @@ khimera.contributions.core
 """
 import pytest
 
-from khimera.contributions.core import Contrib, ContribList, CategorySpec, DependencySpec
+from khimera.contributions.core import Contrib, ContribList, FieldSpec, DependencySpec
 
 
 # --- Mock Classes ---------------------------------------------------------------------------------
@@ -22,8 +22,8 @@ class MockContrib(Contrib):
     pass
 
 
-class MockCategorySpec(CategorySpec[MockContrib]):
-    """Mock subclass of `CategorySpec` for testing."""
+class MockFieldSpec(FieldSpec[MockContrib]):
+    """Mock subclass of `FieldSpec` for testing."""
     CONTRIB_TYPE = MockContrib
 
     def validate(self, contrib: MockContrib) -> bool:
@@ -83,17 +83,17 @@ def test_contrib_list():
 def test_spec_initialization():
     name = "test_spec"
     description = "Test spec"
-    spec = MockCategorySpec(name=name, description=description)
+    spec = MockFieldSpec(name=name, description=description)
     assert spec.name == name
     assert spec.description == description
 
 
 def test_spec_category():
-    spec = MockCategorySpec(name="test_spec")
+    spec = MockFieldSpec(name="test_spec")
     assert spec.category == MockContrib
 
 
-# --- Tests for CategorySpec -----------------------------------------------------------------------
+# --- Tests for FieldSpec -----------------------------------------------------------------------
 
 @pytest.mark.parametrize(
     "required, unique",
@@ -101,7 +101,7 @@ def test_spec_category():
 )
 def test_category_spec_initialization(required, unique):
     name = "test_spec"
-    spec = MockCategorySpec(name=name, required=required, unique=unique)
+    spec = MockFieldSpec(name=name, required=required, unique=unique)
     assert spec.name == name
     assert spec.required == required
     assert spec.unique == unique
@@ -112,7 +112,7 @@ def test_category_spec_initialization(required, unique):
     [("valid_contrib", True), ("", False)]
 )
 def test_category_spec_validation(contrib_name, expected):
-    spec = MockCategorySpec(name="test_spec")
+    spec = MockFieldSpec(name="test_spec")
     contrib = MockContrib(name=contrib_name)
     assert spec.validate(contrib) == expected
 
