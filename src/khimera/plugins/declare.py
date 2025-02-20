@@ -4,7 +4,7 @@
 khimera.plugins.declare
 =======================
 
-Standardized interface for declaring plugin models, on the host application side.
+Standardized interface for declaring plugin models (on the host application side).
 
 Classes
 -------
@@ -17,10 +17,12 @@ See Also
 from typing import Optional, Type, Dict, Callable, Self
 
 from khimera.utils.factories import TypeConstrainedDict
-from khimera.components.core import Spec, Component, DependencySpec, FieldSpec
+from khimera.utils.mixins import DeepCopyable, DeepComparable
+from khimera.components.core import Spec, Component, FieldSpec
+from khimera.components.dependencies import DependencySpec
 
 
-class PluginModel:
+class PluginModel(DeepCopyable, DeepComparable):
     """
     Represents a plugin model specifying the expected structure and components of a plugin.
 
@@ -31,10 +33,30 @@ class PluginModel:
     version : str, optional
         Version of the model.
     fields : Dict[str, FieldSpec]
-        Specifications for single or multiple components of the same category in the plugin
-        model.
+        Specifications for fields in the plugin model, each enforcing constraints on a specific
+        category of components supported by the host application.
     dependencies : Dict[str, DependencySpec]
         Specifications enforcing dependencies between several components in the plugin model.
+
+    Methods
+    -------
+    add(spec: Spec) -> Self
+        Declare a `Spec` in the plugin model.
+    remove(name: str) -> Self
+        Remove a spec from the plugin model by name.
+    get(name: str) -> Spec | None
+        Get a `Spec` from the plugin model by name. None if not present in the model.
+    filter(category: Optional[Type[Component]] = None,
+           unique: Optional[bool] = None,
+           required: Optional[bool] = None,
+           custom_filter: Optional[Callable[[FieldSpec], bool]] = None
+          ) -> Dict[str, FieldSpec]
+        Filter the fields in the plugin model based on various criteria.
+    copy() -> Self
+        Create a deep copy of the plugin model (provided by the `DeepCopyable` mixin).
+    __eq__(other: Self) -> bool
+        Compare the plugin model with another plugin model by deep comparison (provided by the
+        `DeepComparable` mixin).
 
     Examples
     --------
@@ -74,7 +96,7 @@ class PluginModel:
     ...                          unique=True,
     ...                          description="File to process"))
 
-    Get all the metadata specifications in the plugin model:
+    Get all the metadata fields in the plugin model:
 
     >>> model.get(category=MetaData)
     {'author': MetaDataSpec(name='author', required=True, description="Author of the plugin")}
@@ -86,9 +108,9 @@ class PluginModel:
 
     Implementation
     --------------
-    Dependency fields are treated separately from category fields (two distinct attributes) since they
-    do not share the same properties and constraints. However, they can be declared via the same
-    `add` method and retrieved via the same `get` method.
+    Dependency specifications are treated separately from fields specifications (two distinct
+    attributes) since they do not share the same properties and constraints. However, they can be
+    declared via the same `add` method and retrieved via the same `get` method.
     """
     def __init__(self, name: str, version: Optional[str] = None):
         # Initialize model's metadata
@@ -98,18 +120,27 @@ class PluginModel:
         self.fields = TypeConstrainedDict(str, FieldSpec)
         self.dependencies = TypeConstrainedDict(str, DependencySpec)
 
+    def __str__(self) -> str:
+        specs_str = ", ".join(str(spec) for spec in self.specs.values())
+        return (
+            f"{self.__class__.__name__}(name='{self.name}', version='{self.version}'):[{specs_str}]"
+        )
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(name='{self.name}', version='{self.version}')"
+
     @property
     def specs(self) -> Dict[str, Spec]:
         """All specifications in the plugin model (combined category and dependency fields)."""
         return {**self.fields, **self.dependencies}
 
-    def add(self, field: Spec) -> Self:
+    def add(self, spec: Spec) -> Self:
         """
         Declares a `Spec` in the plugin model.
 
         Arguments
         ---------
-        field : Spec
+        spec : Spec
             Specification to declare in the plugin model. The name is used as the key in the model.
 
         Returns
@@ -126,24 +157,27 @@ class PluginModel:
             If a field with the same name is already declared in the plugin model
             (category and dependency specs are unique by name).
         """
-        if not isinstance(field, (FieldSpec, DependencySpec)): # before accessing `name` attribute
-            raise TypeError(f"Unsupported field type: '{type(field)}' (must be a subclass of 'Spec': either 'FieldSpec' or 'DependencySpec')")
-        if field.name in self.specs:
-            raise KeyError(f"Spec '{field.name}' already declared in the plugin model")
-        if isinstance(field, FieldSpec):
-            self.fields[field.name] = field
-        else: # isinstance(field, DependencySpec)
-            self.dependencies[field.name] = field
+        if not isinstance(spec, (FieldSpec, DependencySpec)): # before accessing `name` attribute
+            raise TypeError(
+                f"Unsupported field type: '{type(spec)}' "
+                "(must be a subclass of 'Spec': either 'FieldSpec' or 'DependencySpec')"
+            )
+        if spec.name in self.specs:
+            raise KeyError(f"Spec '{spec.name}' already declared in the plugin model")
+        if isinstance(spec, FieldSpec):
+            self.fields[spec.name] = spec
+        else: # isinstance(spec, DependencySpec)
+            self.dependencies[spec.name] = spec
         return self
 
     def remove(self, name: str) -> Self:
         """
-        Remove a field from the plugin model by name.
+        Remove a spec from the plugin model by name.
 
         Arguments
         ---------
         name : str
-            Name of the field to remove from the plugin model.
+            Key of the spec to remove from the plugin model.
 
         Returns
         -------
@@ -153,7 +187,7 @@ class PluginModel:
         Raises
         ------
         KeyError
-            If the field with the given name is not found in the plugin model.
+            If the spec with the given name is not found in the plugin model.
         """
         if name in self.fields:
             del self.fields[name]
@@ -190,12 +224,12 @@ class PluginModel:
             If None (default), this criterion is not applied.
         custom_filter : Callable[[FieldSpec], bool], optional
             Custom function for more complex filtering logic.
-            It should take a FieldSpec and returns a boolean.
+            It should take a `FieldSpec` and returns a boolean.
 
         Returns
         -------
         Dict[str, FieldSpec]
-            Specs that meet all the specified criteria.
+            Fields that meet all the specified criteria.
 
         Examples
         --------
@@ -207,8 +241,8 @@ class PluginModel:
 
         Notes
         -----
-        Dependency specs are not considered since they do not share the same
-        filtering properties as category specs.
+        Dependency specs are not considered since they do not share the same filtering properties as
+        category specs.
         """
         def meets_criteria(field: FieldSpec) -> bool:
             return (
