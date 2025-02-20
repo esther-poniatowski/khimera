@@ -46,6 +46,12 @@ class DependencySpec(Spec):
         super().__init__(name=name, description=description)
         self.fields = tuple(fields)
 
+    def __str__(self):
+        return f"{self.__class__.__name__}('{self.name}'):[{', '.join(self.fields if self.fields else [])}]"
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}('{self.name}')"
+
     @abstractmethod
     def validate(self, plugin: 'Plugin') -> bool:
         """Validate the dependencies globally in the plugin instance."""
