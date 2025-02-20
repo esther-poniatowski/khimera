@@ -87,16 +87,21 @@ khimera.plugins.declare.PluginModel
 khimera.plugins.create.Plugin
     Class representing a plugin instance, which is a collection of components that adhere to a
     plugin model.
+khimera.utils.mixins.DeepCopyable
+    Mixin class for creating deep copies of objects.
+khimera.utils.mixins.DeepComparable
+    Mixin class for comparing objects by deep comparison.
 """
 from abc import ABC, abstractmethod
 from typing import Optional, Type, TypeVar, Generic
 
 from khimera.utils.factories import TypeConstrainedList
+from khimera.utils.mixins import DeepCopyable, DeepComparable
 
 
 # --- Components --------------------------------------------------------------------------------
 
-class Component(ABC):
+class Component(ABC, DeepCopyable, DeepComparable):
     """
     Base class representing a component in a plugin, i.e. a unit of functionality or data that is
     supported by the host application.
@@ -114,11 +119,27 @@ class Component(ABC):
     category : Type
         (Property) Category of the component (e.g. `MetaData`, `APIExtension`, `Command`, `Hook`,
         `Asset`, or custom categories). It is used to filter and validate components in the plugin.
+
+    Methods
+    -------
+    attach(plugin_name: str) -> None
+        Attach the component to a plugin instance.
+    copy() -> Component
+        Create a deep copy of the component (provided by the `DeepCopyable` mixin).
+    __eq__(other: Component) -> bool
+        Compare the component with another component by deep comparison (provided by the
+        `DeepComparable` mixin).
     """
     def __init__(self, name: str, description: Optional[str] = None):
         self.name = name
         self.description = description
         self.plugin = None
+
+    def __str__(self):
+        return f"{type(self).__name__}('{self.name}'): {self.description}"
+
+    def __repr__(self):
+        return f"{type(self).__name__}('{self.name}')"
 
     @property
     def category(self) -> Type:
@@ -135,6 +156,12 @@ class ComponentSet(TypeConstrainedList[Component]):
     def __init__(self, data=None):
         super().__init__(Component, data)
 
+    def __str__(self):
+        return f"{type(self).__name__}({[str(comp) for comp in self]})"
+
+    def __repr__(self):
+        return f"{type(self).__name__}({[repr(comp) for comp in self]})"
+
 
 # --- Specifications -------------------------------------------------------------------------------
 
@@ -142,7 +169,7 @@ C = TypeVar('C', bound=Component)
 """Type variable for a component to a plugin instance."""
 
 
-class Spec(ABC):
+class Spec(ABC, DeepCopyable, DeepComparable):
     """
     Base class representing constraints specifications for plugin components within a plugin model.
 
@@ -155,10 +182,26 @@ class Spec(ABC):
     category : Type[Component]
         (Property) Category of the component associated with the specification, if any. If not
         applicable, returns `None`.
+
+    Methods
+    -------
+    validate(*args, **kwargs) -> bool
+        Validates a candidate component against the Spec.
+    copy() -> Spec
+        Create a deep copy of the specification (provided by the `DeepCopyable` mixin).
+    __eq__(other: Spec) -> bool
+        Compare the specification with another specification by deep comparison (provided by the
+        `DeepComparable` mixin).
     """
     def __init__(self, name: str, description: Optional[str] = None):
         self.name = name
         self.description = description
+
+    def __str__(self):
+        return f"{type(self).__name__}('{self.name}'): {self.description}"
+
+    def __repr__(self):
+        return f"{type(self).__name__}('{self.name}')"
 
     @abstractmethod
     def validate(self, *args, **kwargs) -> bool:
@@ -182,12 +225,24 @@ class FieldSpec(Spec, Generic[C]):
     """
     Specification of a field in the plugin that is supported by the host application.
 
+    Class Attributes
+    ----------------
+    COMPONENT_TYPE : Type[Component]
+        Type of the component associated with the specification.
+
     Attributes
     ----------
     required : bool, optional
         Whether at least one component is required in the plugin under this name.
     unique : bool, optional
         Whether the component must be unique in the plugin.
+    category : Type[Component]
+        (Property) Category of the component associated with the specification.
+
+    Methods
+    -------
+    validate(comp: C) -> bool
+        Validate one component against the specification.
     """
     COMPONENT_TYPE : Type[C]
 
@@ -195,6 +250,12 @@ class FieldSpec(Spec, Generic[C]):
         super().__init__(name=name, description=description)
         self.required = required
         self.unique = unique
+
+    def __str__(self):
+        return f"{type(self).__name__}('{self.name}'): {self.description}"
+
+    def __repr__(self):
+        return f"{type(self).__name__}('{self.name}')"
 
     @abstractmethod
     def validate(self, comp: C) -> bool:
