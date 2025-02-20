@@ -14,27 +14,30 @@ import pytest
 from typing import Type
 
 from khimera.plugins.declare import PluginModel
-from khimera.components.core import Spec, Component, FieldSpec, DependencySpec
+from khimera.components.core import Spec, Component, FieldSpec
+from khimera.components.dependencies import DependencySpec
 
 
 # --- Mock classes for testing ---------------------------------------------------------------------
 
-class MockContrib(Component):
+class MockComponent(Component):
     """Mock component class for testing."""
     pass
 
 class MockFieldSpec(FieldSpec):
     """Mock category specification class for testing."""
-    COMPONENT_TYPE = MockContrib
+    COMPONENT_TYPE = MockComponent
 
-    def validate(self, contrib: MockContrib) -> bool:
+    def validate(self, comp: MockComponent) -> bool:
         """Implement abstract method for validation."""
         return True
 
 class MockDependencySpec(DependencySpec):
     """Mock dependency specification class for testing."""
+    def __init__(self, name: str):
+        super().__init__(name=name, fields=["field1", "field2"])
 
-    def validate(self, contrib1: MockContrib, contrib2: MockContrib) -> bool:
+    def validate(self, contrib1: MockComponent, contrib2: MockComponent) -> bool:
         """Implement abstract method for validation."""
         return True
 
@@ -75,18 +78,20 @@ def test_add_invalid_spec():
     """Test adding an invalid specification to a plugin model."""
     model = PluginModel(name="test_model")
     with pytest.raises(TypeError):
-        model.add("not a field")
+        model.add("not a spec")
 
 def test_all_specs_property():
-    """Test the specs property of a plugin model."""
+    """Test the `specs` property of a plugin model."""
+    field_name = "field_spec"
+    dep_name = "dep_spec"
     model = PluginModel(name="test_model")
-    cat_spec = MockFieldSpec(name="cat_spec")
-    dep_spec = MockDependencySpec(name="dep_spec")
-    model.add(cat_spec)
+    field_spec = MockFieldSpec(name=field_name)
+    dep_spec = MockDependencySpec(name=dep_name)
+    model.add(field_spec)
     model.add(dep_spec)
     specs = model.specs
     assert len(specs) == 2
-    assert "cat_spec" in specs and "dep_spec" in specs
+    assert field_name in specs and dep_name in specs
 
 @pytest.mark.parametrize("spec_class, spec_name, spec_attr", [
     (MockFieldSpec, "test_spec", "fields"),
@@ -126,7 +131,7 @@ def test_filter_by_category():
     spec2 = MockFieldSpec(name="spec2")
     model.add(spec1)
     model.add(spec2)
-    filtered = model.filter(category=MockContrib)
+    filtered = model.filter(category=MockComponent)
     assert len(filtered) == 2
     assert "spec1" in filtered and "spec2" in filtered
 
@@ -159,7 +164,9 @@ def test_filter_with_custom_filter():
     spec2 = MockFieldSpec(name="spec2")
     model.add(spec1)
     model.add(spec2)
-    custom_filter = lambda field: field.name == "spec1"
+    def custom_filter(field: FieldSpec) -> bool:
+        return field.name == "spec1"
+
     filtered = model.filter(custom_filter=custom_filter)
     assert len(filtered) == 1
     assert "spec1" in filtered

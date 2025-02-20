@@ -18,7 +18,7 @@ from khimera.components.dependencies import DependencySpec, PredicateDependency
 
 # --- Mock Classes ---------------------------------------------------------------------------------
 
-class MockContrib(Component):
+class MockComponent(Component):
     """Mock subclass of `Component` for testing."""
     pass
 
@@ -56,17 +56,17 @@ def mock_predicate(dep1: Component, dep2: Component) -> bool:
 def test_predicate_dependency_validate_correct():
     """Test PredicateDependency validation with correct dependencies."""
     spec = PredicateDependency(name="predicate_dependency", predicate=mock_predicate, fields=["dep1", "dep2"])
-    plugin = MockPlugin(components={"dep1": MockContrib(name="dep1"), "dep2": MockContrib(name="dep2")})
+    plugin = MockPlugin(components={"dep1": MockComponent(name="dep1"), "dep2": MockComponent(name="dep2")})
     assert spec.validate(plugin) is True
 
 def test_predicate_dependency_validate_incorrect():
     """Test PredicateDependency validation with incorrect dependencies."""
     spec = PredicateDependency(name="predicate_dependency", predicate=mock_predicate, fields=["dep1", "dep2"])
-    plugin = MockPlugin(components={"dep1": MockContrib(name="dep1"), "dep2": MockContrib(name="wrong_name")})
+    plugin = MockPlugin(components={"dep1": MockComponent(name="dep1"), "dep2": MockComponent(name="wrong_name")})
     assert spec.validate(plugin) is False
 
 def test_predicate_dependency_validate_missing_dependency():
     """Test PredicateDependency validation with missing dependencies."""
     spec = PredicateDependency(name="predicate_dependency", predicate=mock_predicate, fields=["dep1", "dep2"])
-    plugin = MockPlugin(components={"dep1": MockContrib(name="dep1")})
+    plugin = MockPlugin(components={"dep1": MockComponent(name="dep1")})
     assert spec.validate(plugin) is False
