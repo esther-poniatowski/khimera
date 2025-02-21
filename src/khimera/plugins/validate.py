@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-khimera.plugins.create
-======================
+khimera.plugins.validate
+========================
 
 Validate the components of a plugin against its model.
 
@@ -18,10 +18,8 @@ khimera.plugins.declare
 khimera.plugins.create
 """
 
-from typing import List
+from typing import List, Dict
 
-from khimera.utils.factories import TypeConstrainedDict
-from khimera.components.core import ComponentSet
 from khimera.plugins.create import Plugin
 
 
@@ -62,42 +60,42 @@ class PluginValidator:
         self.missing : List[str] = []
         self.unknown : List[str] = []
         self.not_unique : List[str] = []
-        self.invalid = TypeConstrainedDict(str, ComponentSet)
+        self.invalid : Dict = {}
         self.deps_unsatisfied : List[str] = []
 
     def check_required(self) -> None:
         """Check if all required components are present in the plugin instance."""
-        fields = self.model.filter(self, required=True)
-        for key in fields:
-            if key not in self.plugin.components:
-                self.missing.append(key)
+        specs = self.model.filter(required=True)
+        for field in specs:
+            if field not in self.plugin.components:
+                self.missing.append(field)
 
     def check_unique(self) -> None:
         """Check if components are unique where required."""
-        fields = self.model.filter(unique=True)
-        for key, field in fields.items():
-            if key in self.plugin.components and len(self.plugin.components[key]) > 1:
-                self.not_unique.append(key)
+        specs = self.model.filter(unique=True)
+        for field in specs:
+            if len(self.plugin.get(field)) > 1:
+                self.not_unique.append(field)
 
     def check_unknown(self) -> None:
         """Check if components are unknown."""
-        for key in self.plugin.components:
-            if key not in self.model.fields:
-                self.unknown.append(key)
+        for field in self.plugin.components:
+            if field not in self.model.fields:
+                self.unknown.append(field)
 
     def check_rules(self) -> None:
         """Validate the components of the plugin instance against the rules of the model."""
-        for key, contribs in self.plugin.components.items(): # key: field name, contribs: list
-            field = self.model.get(key)
-            for item in contribs: # item: candidate component
-                if not field.validate(item):
-                    self.invalid[key].append(item)
+        for field, contribs in self.plugin.components.items(): # field: field name, contribs: list
+            spec = self.model.get(field) # spec to use for validation
+            invalid_components = [item for item in contribs if not spec.validate(item)]
+            if invalid_components:
+                self.invalid[field] = invalid_components
 
     def check_dependencies(self) -> None:
         """Check if all dependencies are satisfied in the plugin instance."""
-        for key, field in self.model.dependencies.items():
-            if not field.validate(self.plugin):
-                self.deps_unsatisfied.append(key)
+        for field, spec in self.model.dependencies.items():
+            if not spec.validate(self.plugin):
+                self.deps_unsatisfied.append(field)
 
     def validate(self) -> bool:
         """
@@ -121,19 +119,19 @@ class PluginValidator:
 
         Return
         ------
-        Plugin
-            Plugin instance with only the valid components.
+        valid_plugin : Plugin
+            Plugin instance containing only the valid components.
 
         Warning
         -------
         This correction does not guarantee that the resulting plugin instance is valid, as it does
         not provide missing components nor satisfy the dependencies.
         """
-        valid = self.plugin.copy()
-        for key in self.invalid: # keys in plugin instance
-            valid.components.pop(key) # remove invalid components
-        for key in self.unknown: # keys in plugin instance
-            valid.components.pop(key) # remove unknown components
-        for key in self.not_unique: # keys in plugin instance
-            valid.components[key] = [valid.components[key][0]] # keep the first component
-        return valid
+        valid_plugin = self.plugin.copy()
+        for key in self.invalid: # key in plugin instance
+            valid_plugin.components.pop(key) # remove invalid components
+        for key in self.unknown: # key in plugin instance
+            valid_plugin.components.pop(key) # remove unknown components
+        for key in self.not_unique: # key in plugin instance
+            valid_plugin.components[key] = [valid_plugin.components[key][0]] # keep the first component
+        return valid_plugin
