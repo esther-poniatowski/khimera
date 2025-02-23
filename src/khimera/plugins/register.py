@@ -60,7 +60,7 @@ class ConflictResolver:
         """
         return self.MODES[self.mode](new)
 
-    def raise_error(self, new: E) -> E:
+    def raise_error(self, new: E) -> None:
         """Fail when conflicts occur."""
         raise ValueError(f"Already registered.")
 
@@ -83,18 +83,18 @@ class PluginRegistry:
     ----------
     resolver : ConflictResolver
         Strategy to resolve conflicts when registering plugins.
-    validator : PluginValidator
-        Validator to check the plugin structure and components against its model.
+    validator_type : Type[PluginValidator], default=PluginValidator
+        Validator class to check the plugin structure and components against its model.
     enable_by_default : bool
         Whether to enable plugins by default when registering them.
     plugins : Dict[str, Plugin]
         Registered plugins by name.
     enabled : List[str]
-        List of enabled plugins, whose components are available in the registry.
+        List of enabled plugins, whose components are available directly via the `get` method.
     components : Dict[str, ComponentSet]
-        Mapping of component keys to the actual components provided by the plugins.
-        Keys: Contribution key, as specified in the plugin model.
-        Values: List of components registered under this key across all plugins.
+        Mapping of fields' keys (from the model) to the actual components provided by the plugins.
+        Keys: Field for a type of components specified in the model.
+        Values: All the components registered under this key across the validated plugins.
 
     Examples
     --------
@@ -131,83 +131,125 @@ class PluginRegistry:
     Notes
     -----
     So far, a single version per plugin is allowed in the registry.
+
+    Enabling and disabling plugins is a way to control which components are available for retrieval.
+    However, the components are not actually moved within the registry, but are simply filtered out
+    when retrieving them through the `get` method. Disabled components are still accessible through
+    the `components` attribute of the registry, or by setting the `enabled_only` argument to `False`
+    in the `get` method.
     """
-    def __init__(self, resolver = ConflictResolver('RAISE_ERROR'), validator = PluginValidator(), enable_by_default = True):
+    def __init__(self, resolver = ConflictResolver('RAISE_ERROR'), validator_type = PluginValidator, enable_by_default = True):
         self.resolver = resolver
-        self.validator = validator
+        self.validator_type = validator_type
         self.enable_by_default = enable_by_default
         self.plugins = TypeConstrainedDict(str, Plugin)
         self.enabled : List[str] = []
         self.components = TypeConstrainedDict(str, ComponentSet)
 
-    def register(self, plugin: Plugin):
+    def get(self, key: str, name: Optional[str], enabled_only = True) -> List[Component]:
         """
-        Default registering behavior. Override this method to customize the registration process.
+        Retrieve all the components under a specific key, optionally by name and enabled status.
+
+        Arguments
+        ---------
+        key : str
+            Field containing the component(s) to retrieve (i.e. as specified in the model).
+        name : str, optional
+            Name of one specific component to retrieve (i.e. as registered in the plugin).
+        enabled_only : bool, default=True
+            Whether to retrieve only components from enabled plugins.
+
+        Returns
+        -------
+        ComponentSet
+            All the components registered under this key, matching the name if provided, and
+            enabled if requested.
         """
-        if self.validator.validate(plugin):
-            new = plugin
-            if plugin.name in self.plugins:
-                new = self.resolver.resolve(plugin)
-            if new :
-                self.plugins[plugin.name] = plugin
-                if self.enable_by_default:
-                    self.enable(plugin)
-        else:
-            raise ValueError(f"Invalid plugin: {plugin.name}")
+        comps = self.components.get(key) # None if key not found
+        if not comps:
+            return []
+        if name:
+            comps = [comp for comp in comps if comp.name == name]
+        if enabled_only:
+            comps = [comp for comp in comps if comp.plugin in self.enabled]
+        return comps
 
     def enable(self, name: str) -> None:
         """
-        Enable all the components of the plugin from the registry.
+        Enable a plugin to make all its components available via the `get` method.
 
         Arguments
         ---------
         name : str
             Name of the plugin to enable.
 
-        Notes
-        -----
-        Enabling a plugin consists in making all its components available in the registry.
-        Components are unpacked from the plugin and stored in the registered components under
-        the same key. If the key does not exist, it is created.
+        Raises
+        ------
+        AttributeError
+            If the plugin is not registered (i.e. cannot be enabled).
         """
-        plugin = self.plugins[name]
-        for key, contribs in plugin.components.items():
-            if key not in self.components:
-                self.components[key] = TypeConstrainedList(Component)
-            self.components[key].extend(contribs)
+        if not name in self.plugins:
+            raise AttributeError(f"No plugin '{name}' in register.")
+        if name not in self.enabled:
+            self.enabled.append(name)
 
     def disable(self, name: str) -> None:
         """
-        Disable all the components of the plugin from the registry.
+        Disable a plugin to prevent its components from being retrieved via the `get` method.
 
         Arguments
         ---------
         name : str
             Name of the plugin to disable.
-
-        Notes
-        -----
-        Disabling a plugin consists in removing all its components from the registry.
-        Components are still stored in the plugin instance, but are not available for retrieval.
         """
-        for key in self.plugins[name].components:
-            self.components[key] = [contrib for contrib in self.components[key] if contrib.plugin != name]
+        if name in self.enabled:
+            self.enabled.remove(name)
 
-    def get(self, key: str, name: Optional[str]) -> List[Component]:
+    def register(self, plugin: Plugin):
         """
-        Retrieve all components under a specific key.
+        Default registering behavior. Override this method to customize the registration process.
 
         Arguments
         ---------
-        key : str
-            Contribution key (general category) to retrieve.
-        name : str, optional
-            Name of the specific component to retrieve.
+        plugin : Plugin
+            Plugin instance to register.
 
-        Returns
-        -------
-        ComponentSet
-            All the components registered under this key, and matching the name if provided.
+        Raises
+        ------
+        ValueError
+            If the plugin is invalid.
+            If conflicts occur and the conflict resolution strategy is set to 'RAISE_ERROR'.
         """
-        contribs = self.components[key]
-        return [contrib for contrib in contribs if name is None or contrib.name == name]
+        validator = self.validator_type(plugin) # fresh validator for the plugin
+        if validator.validate():
+            new = plugin
+            if plugin.name in self.plugins: # trigger conflict resolution
+                new = self.resolver.resolve(plugin)
+            if new : # resolver may return None
+                self.plugins[plugin.name] = plugin # save the full plugin
+                self.unpack(plugin) # organize its components
+                if self.enable_by_default:
+                    self.enable(plugin.name)
+        else:
+            raise ValueError(f"Invalid plugin: {plugin.name}")
+
+    def unpack(self, plugin : Plugin) -> None:
+        """
+        Unpack and organize all the components provided by a plugin.
+
+        Notes
+        -----
+        Each component provided by the plugin is stored in the registry under the key corresponding
+        to its nature (i.e. the field's key under which it was added to the plugin). If a key
+        already exists in the registry (e.g. other plugins have already registered components for
+        this field), the new component is added among the already registered components. If a key
+        does not exist yet in the registry (i.e. the plugin is the first to provide components for
+        this field), a new key is created and the component is stored under it.
+
+        For each key, if the field is not contained to `unique` in the model (i.e. unique component
+        by plugin), a plugin can provide multiple components (under the form of a `ComponentSet`).
+        """
+        for key, comps in plugin.components.items(): # key: field name, comps: ComponentSet
+            if key not in self.components:
+                self.components[key] = ComponentSet()
+            self.components[key].extend(comps)
