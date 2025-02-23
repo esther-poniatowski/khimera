@@ -211,7 +211,7 @@ class Spec(ABC, DeepCopyable, DeepComparable):
         Arguments
         ---------
         args, kwargs
-            Contribution instances to validate.
+            Component instances to validate.
 
         Returns
         -------

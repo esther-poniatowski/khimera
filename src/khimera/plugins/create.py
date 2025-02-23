@@ -128,7 +128,7 @@ class Plugin(DeepCopyable, DeepComparable):
         key : str
             Key of the field as defined in the plugin model.
         comp : Component
-            Contribution to add to the plugin.
+            Component to add to the plugin.
 
         Returns
         -------
@@ -221,5 +221,5 @@ class Plugin(DeepCopyable, DeepComparable):
             Components of the plugin, filtered by category if provided.
         """
         if category:
-            return {key: contribs for key, contribs in self.components.items() if any(isinstance(item, category) for item in contribs)}
+            return {key: comps for key, comps in self.components.items() if any(isinstance(item, category) for item in comps)}
         return self.components

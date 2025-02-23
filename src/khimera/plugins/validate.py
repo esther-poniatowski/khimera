@@ -85,9 +85,9 @@ class PluginValidator:
 
     def check_rules(self) -> None:
         """Validate the components of the plugin instance against the rules of the model."""
-        for field, contribs in self.plugin.components.items(): # field: field name, contribs: list
+        for field, comps in self.plugin.components.items(): # field: field name, comps: list
             spec = self.model.get(field) # spec to use for validation
-            invalid_components = [item for item in contribs if not spec.validate(item)]
+            invalid_components = [item for item in comps if not spec.validate(item)]
             if invalid_components:
                 self.invalid[field] = invalid_components
 
