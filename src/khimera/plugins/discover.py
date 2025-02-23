@@ -48,17 +48,17 @@ class PluginFinder(ABC):
 
     >>> plugins = finder.filter(model=MyPluginModel)
     >>> print(plugins)
-    [Plugin(name='myplugin', version='0.1.0', ...), ...]
+    [Plugin(name='my_plugin', version='0.1.0', ...), ...]
 
     Get a specific plugin by name and version:
 
-    >>> plugin = finder.get(name='myplugin', version='0.1.0')
+    >>> plugin = finder.get(name='my_plugin', version='0.1.0')
     >>> print(plugin)
-    Plugin(name='myplugin', version='0.1.0', ...)
+    Plugin(name='my_plugin', version='0.1.0', ...)
 
     Notes
     -----
-    The plugin discovery mechanism is designed to be comprehensive and to collet as many plugins as
+    The plugin discovery mechanism is designed to be comprehensive and to collect as many plugins as
     possible before selecting them, validating them, or resolving conflicts between them.
 
     To do so, all the plugins are stored in a list rather than a dictionary. Thus, plugins are not
@@ -72,7 +72,7 @@ class PluginFinder(ABC):
         """Discovers plugins by implementing the discovery strategy."""
         pass
 
-    def filter(self, model : PluginModel) -> List[Plugin]:
+    def filter(self, model : Optional[PluginModel]) -> List[Plugin]:
         """
         Filter the discovered plugins by model.
 
@@ -82,6 +82,8 @@ class PluginFinder(ABC):
             Plugin model specifying the expected structure and components of the plugins.
             If not provided, all the plugins are considered regardless of the model they adhere to.
         """
+        if model is None:
+            return self.plugins
         return [plugin for plugin in self.plugins if plugin.model == model]
 
     def store(self, plugin: Plugin) -> None:
@@ -96,7 +98,7 @@ class PluginFinder(ABC):
 
     def get(self, name : str, version : Optional[str]) -> Optional[Plugin | List[Plugin]]:
         """
-        Get a plugin by name, and optionally by model.
+        Get a plugin by name, and optionally by version.
 
         Arguments
         ---------
@@ -150,12 +152,39 @@ class EntryPointsFinderPyproject(PluginFinder):
         self.entry_point_group = entry_point_group or f"{self.app_name}.plugins"
 
     def discover(self):
-        """Discovers plugins from entry points in the `pyproject.toml` files of plugin packages."""
+        """
+        Discovers plugins from entry points in the `pyproject.toml` files of plugin packages.
+
+        Raises
+        ------
+        TypeError
+            If a plugin loaded from an entry point is not an instance of `Plugin`.
+        """
         entry_points = self.get_entry_points()
         for entry_point in entry_points:
             plugin = entry_point.load() # expected: `Plugin` instance
+            if not isinstance(plugin, Plugin):
+                raise TypeError(
+                    f"Invalid plugin loaded from entry point {entry_point.name}. "
+                    "Expected `Plugin` instance."
+                )
             self.store(plugin)
 
     def get_entry_points(self):
-        """Finds all installed plugins that declare an entry point for the host application."""
-        return importlib.metadata.entry_points(group=self.entry_point_group)
+        """
+        Finds all installed plugins that declare an entry point for the host application.
+
+        Returns
+        -------
+        List[importlib.metadata.EntryPoint]
+            Entry points for the host application.
+
+        Raises
+        ------
+        RuntimeError
+            If the entry points cannot be retrieved.
+        """
+        try:
+            return importlib.metadata.entry_points(group=self.entry_point_group)
+        except Exception as exc:
+            raise RuntimeError(f"Failed to retrieve entry points for {self.entry_point_group}: {exc}")
