@@ -1,5 +1,6 @@
 abstractmethod
 dataclass
+deepdiff
 docstrings
 getattr
 hasattr
@@ -10,5 +11,8 @@ joinpath
 pathlib
 pycache
 pyproject
+repr
 setattr
+shutil
+staticmethod
 varnames
