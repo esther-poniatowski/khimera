@@ -11,25 +11,29 @@ See Also
 khimera.plugins.validate
 """
 from typing import Any, Callable, Dict, List
+
 import pytest
 import pytest_mock
 
 from khimera.plugins.validate import PluginValidator
-from khimera.components.core import ComponentSet # mocked
+from khimera.components.core import ComponentSet, Component, FieldSpec # mocked
 from khimera.plugins.create import Plugin # mocked
+from khimera.plugins.declare import PluginModel # mocked
+
+
+
 
 
 # --- Tests for PluginValidator --------------------------------------------------------------------
 
-
-@pytest.mark.parametrize("required_fields, plugin_components, expected_missing", [
-    ({'required_field': None}, {}, ['required_field']),
-    ({'required_field': None}, {'required_field': []}, []),
-    ({'field1': None, 'field2': None}, {'field1': []}, ['field2']),
+@pytest.mark.parametrize("required_fields, plugin_fields, expected_missing", [
+    (['required_field'], [], ['required_field']),
+    (['required_field'], ['required_field'], []),
+    (['required_field1', 'required_field2'], ['required_field1'], ['required_field2']),
 ])
 def test_check_required(mocker : pytest_mock.MockFixture,
                         required_fields : dict,
-                        plugin_components : dict,
+                        plugin_fields : dict,
                         expected_missing : list
                         ):
     """
@@ -39,12 +43,12 @@ def test_check_required(mocker : pytest_mock.MockFixture,
     ---------
     mocker : pytest_mock.MockFixture
         Pytest-mock fixture.
-    required_fields : dict
-        Dictionary of required fields in the model.
-    plugin_components : dict
-        Components of the plugin to be validated.
+    required_fields : List[str]
+        Required fields specified in the model.
+    plugin_fields : List[str]
+        Fields present in the plugin.
     expected_missing : list
-        List of fields expected to be identified as missing.
+        Fields expected to be identified as missing.
 
     Test cases:
 
@@ -54,7 +58,7 @@ def test_check_required(mocker : pytest_mock.MockFixture,
 
     Mocking:
 
-    - Plugin model that has required fields (identified via `filter`).
+    - Plugin model that has required fields and a `filter` method that returns them.
     - Plugin which may or may not have these required fields.
 
     Notes
@@ -62,27 +66,27 @@ def test_check_required(mocker : pytest_mock.MockFixture,
     In the parametric definition, the `FieldSpec` values in the `required_fields` dictionary are set
     to None for simplicity, since they are not involved in the test.
     """
-    mock_model = mocker.Mock()
-    mock_model.filter.return_value = required_fields
-    mock_plugin = mocker.Mock()
-    mock_plugin.model = mock_model
-    mock_plugin.components = plugin_components
-
+    # Mock model
+    filter_output = {field: mocker.Mock(spec=FieldSpec) for field in required_fields}
+    mock_model = mocker.Mock(spec=PluginModel, filter=mocker.Mock(return_value=filter_output))
+    # Mock plugin
+    components = {field: mocker.Mock(spec=ComponentSet) for field in plugin_fields}
+    mock_plugin = mocker.Mock(spec=Plugin, model=mock_model, components=components)
+    # Run test
     validator = PluginValidator(mock_plugin)
     validator.check_required()
     assert validator.missing == expected_missing
 
 
-@pytest.mark.parametrize("unique_fields, plugin_components, expected_not_unique", [
-    ({'unique_field': None}, {'unique_field': [1, 2]}, ['unique_field']),
-    ({'unique_field': None}, {'unique_field': [1]}, []),
-    ({'field1': None, 'field2': None}, {'field1': [1, 2], 'field2': [1]}, ['field1']),
+@pytest.mark.parametrize("unique_fields, component_counts, expected_not_unique", [
+    (['unique_field'], [1], []),
+    (['unique_field'], [2], ['unique_field']),
+    (['field1', 'field2'], [1, 2], ['field2']),
 ])
-def test_check_unique(mocker : pytest_mock.MockFixture,
-                      unique_fields :  dict,
-                      plugin_components : dict,
-                      expected_not_unique: list
-                    ):
+def test_check_unique(mocker: pytest_mock.MockFixture,
+                      unique_fields: List[str],
+                      component_counts: List[int],
+                      expected_not_unique: List[str]):
     """
     Test if `check_unique` correctly identifies non-unique fields.
 
@@ -90,49 +94,48 @@ def test_check_unique(mocker : pytest_mock.MockFixture,
     ---------
     mocker : pytest_mock.MockFixture
         Pytest-mock fixture.
-    unique_fields : dict
+    unique_fields : List[str]
         Fields expected to be unique in the model.
-    plugin_components : dict
-        Components of the plugin to be validated.
-    expected_not_unique : list
+    component_counts : List[int]
+        Number of components for each field in the plugin to be validated.
+    expected_not_unique : List[str]
         Fields expected to be identified as not unique.
 
     Test cases:
 
-    1. Unique field has multiple components.
-    2. Unique field has a single component.
+    1. Unique field has a single component.
+    2. Unique field has multiple components.
     3. Multiple unique fields, one has multiple components.
 
     Mocking:
 
-    - Plugin model that has unique fields (identified via `filter`).
-    - Plugin which may or may not have multiple components for these unique fields.
-
-    Notes
-    -----
-    In the parametric definition, the `FieldSpec` values in the `unique_fields` dictionary are set to
-    None for simplicity, since they are not involved in the test.
+    - Plugin model that has unique fields and a `filter` method that returns them.
+    - Plugin which may or may not have multiple components for these unique fields, and a `get`
+      method which is called in the `check_unique` method.
     """
-    mock_model = mocker.Mock()
-    mock_model.filter.return_value = unique_fields
-    mock_plugin = mocker.Mock()
-    mock_plugin.model = mock_model
-    mock_plugin.get.side_effect = lambda field: plugin_components.get(field, [])
-
+    # Mock model
+    filter_output = {field: mocker.Mock(spec=FieldSpec) for field in unique_fields}
+    mock_model = mocker.Mock(spec=PluginModel, filter=mocker.Mock(return_value=filter_output))
+    components = {field: [mocker.Mock(spec=Component) for _ in range(count)]
+                  for field, count in zip(unique_fields, component_counts)}
+    # Mock plugin
+    mock_plugin = mocker.Mock(spec=Plugin, model=mock_model) # no need of ComponentSet
+    mock_plugin.get.side_effect = lambda field: components.get(field, [])
+    # Run the test
     validator = PluginValidator(mock_plugin)
     validator.check_unique()
     assert validator.not_unique == expected_not_unique
 
 
-@pytest.mark.parametrize("plugin_components, expected_unknown", [
-    ({'known_field': []}, []),
-    ({'unknown_field': []}, ['unknown_field']),
-    ({'known_field': [], 'unknown_field': []}, ['unknown_field']),
+@pytest.mark.parametrize("known_fields, plugin_fields, expected_unknown", [
+    (['known_field'], ['known_field'], []),
+    (['known_field'], ['unknown_field'], ['unknown_field']),
+    (['known_field1'], ['known_field1', 'unknown_field'], ['unknown_field']),
 ])
-def test_check_unknown(mocker : pytest_mock.MockFixture,
-                      plugin_components : dict,
-                      expected_unknown : list
-                      ):
+def test_check_unknown(mocker: pytest_mock.MockFixture,
+                       known_fields: List[str],
+                       plugin_fields: List[str],
+                       expected_unknown: List[str]):
     """
     Test if `check_unknown` correctly identifies unknown fields.
 
@@ -140,35 +143,38 @@ def test_check_unknown(mocker : pytest_mock.MockFixture,
     ---------
     mocker : pytest_mock.MockFixture
         Pytest-mock fixture.
-    plugin_components : dict
-        Components of the plugin to be validated.
-    expected_unknown : list
-        List of fields that are expected to be unknown.
+    known_fields : List[str]
+        Fields known to the model.
+    plugin_fields : List[str]
+        Fields present in the plugin.
+    expected_unknown : List[str]
+        Fields that are expected to be unknown.
 
     Test cases:
 
-    1. Known field present in the plugin components -> No unknown fields.
-    2. Unknown field is present in the plugin components -> One unknown field.
-    3. Known and unknown fields present in the plugin components -> One unknown field.
+    1. Known field present in the plugin fields -> No unknown fields.
+    2. Unknown field is present in the plugin fields -> One unknown field.
+    3. Known and unknown fields present in the plugin fields -> One unknown field.
 
     Mocking:
 
-    - Model with a known field.
-    - Plugin with the specified components for the test cases.
+    - Model with known fields.
+    - Plugin with the specified fields for the test cases.
     """
-    mock_model = mocker.Mock()
-    mock_model.fields = {'known_field': mocker.Mock()}
-    mock_plugin = mocker.Mock()
-    mock_plugin.model = mock_model
-    mock_plugin.components = plugin_components
-
+    # Mock model
+    fields = {field: mocker.Mock(spec=FieldSpec) for field in known_fields}
+    mock_model = mocker.Mock(spec=PluginModel, fields=fields)
+    # Mock plugin
+    components = {field: mocker.Mock(spec=ComponentSet) for field in plugin_fields}
+    mock_plugin = mocker.Mock(spec=Plugin, model=mock_model, components=components)
+    # Run the test
     validator = PluginValidator(mock_plugin)
     validator.check_unknown()
     assert validator.unknown == expected_unknown
 
 
 
-@pytest.mark.parametrize("components, model_specs, expected_invalid", [
+@pytest.mark.parametrize("component_values, validate_func, expected_invalid", [
     (
         {"field1": [1, 2, 3]},
         {"field1": lambda x: x > 1},
@@ -191,8 +197,8 @@ def test_check_unknown(mocker : pytest_mock.MockFixture,
     ),
 ])
 def test_check_rules(mocker: pytest_mock.MockFixture,
-                     components: Dict[str, List[Any]],
-                     model_specs: Dict[str, Callable[[Any], bool]],
+                     component_values: Dict[str, List[Any]],
+                     validate_func: Dict[str, Callable[[Any], bool]],
                      expected_invalid: Dict[str, ComponentSet]):
     """
     Test if `check_rules` correctly identifies invalid components.
@@ -201,9 +207,9 @@ def test_check_rules(mocker: pytest_mock.MockFixture,
     ---------
     mocker : pytest_mock.MockFixture
         Pytest-mock fixture.
-    components : dict
-        Components in the plugin to be validated.
-    model_specs : dict
+    component_values : dict
+        Values within the components in the plugin to be validated.
+    validate_func : dict
         Model specifications for fields (validation functions).
     expected_invalid : dict
         Expected invalid components after validation.
@@ -223,7 +229,7 @@ def test_check_rules(mocker: pytest_mock.MockFixture,
 
     Notes
     -----
-    The `model_specs` dictionary contains validation functions for each field in the model. The
+    The `validate_func` dictionary contains validation functions for each field in the model. The
     validation functions are simple lambda functions that return True or False based on the
     component value.
 
@@ -233,27 +239,31 @@ def test_check_rules(mocker: pytest_mock.MockFixture,
     The model `get` method is mocked (using `side_effect`) to return these `Spec` instances when
     called with a field name.
 
-    Plugin components are mocked as basic types rather than `Component` instances and are stored in
-    bare lists rather than `ComponentSet` instances, because those are not relevant to the test.
+    Plugin components are mocked as basic types (int, str) rather than `Component` instances and are
+    stored in bare lists rather than `ComponentSet` instances, because those are not relevant to the
+    test.
     """
-    mock_model = mocker.Mock()
+    # Mock model
+    mock_model = mocker.Mock(spec=PluginModel)
     mock_specs = {field: mocker.Mock(validate=mocker.Mock(side_effect=func))
-                  for field, func in model_specs.items()}
+                  for field, func in validate_func.items()}
     mock_model.get.side_effect = lambda field: mock_specs[field]
-    mock_plugin = mocker.Mock()
-    mock_plugin.components = components
-    mock_plugin.model = mock_model
-
+    # Mock plugin
+    components = {}
+    for field, values in component_values.items():
+        components[field] = component_values[field]
+    mock_plugin = mocker.Mock(spec=Plugin, model=mock_model, components=components)
+    # Run the test
     validator = PluginValidator(mock_plugin)
     validator.check_rules()
-    # Assert that the invalid components are as expected
+    # Check invalid components as expected
     assert validator.invalid == expected_invalid
-    # Verify that model.get was called for each field
+    # Check that `model.get` was called for each field
     assert mock_model.get.call_count == len(components)
     mock_model.get.assert_has_calls([mocker.call(field) for field in components])
-    # Verify that validate was called for each component
-    for field, contribs in components.items():
-        assert mock_specs[field].validate.call_count == len(contribs)
+    # Check `validate` was called for each component
+    for field, comps in components.items():
+        assert mock_specs[field].validate.call_count == len(comps)
 
 
 @pytest.mark.parametrize("dependencies, validation_results, expected_unsatisfied", [
@@ -294,13 +304,14 @@ def test_check_dependencies(mocker : pytest_mock.MockFixture,
     - Model with the specified dependencies and `get` method that returns them.
     - Plugin with the specified components.
     """
-    mock_model = mocker.Mock()
+    # Mock model
+    mock_model = mocker.Mock(spec=PluginModel)
     mock_model.dependencies = {
         field: mocker.Mock(validate=mocker.Mock(return_value=validation_results[spec]), __str__=lambda self: spec)
         for field, spec in dependencies.items()
     }
-    mock_plugin = mocker.Mock()
-
+    mock_plugin = mocker.Mock(spec=Plugin, model=mock_model)
+    # Run the test
     validator = PluginValidator(mock_plugin)
     validator.model = mock_model
     validator.check_dependencies()
@@ -353,18 +364,19 @@ def test_validate(mocker : pytest_mock.MockFixture,
     - Mock all check methods.
     - Set validator attributes based on `check_results`.
     """
-    mock_plugin = mocker.Mock()
-    validator = PluginValidator(mock_plugin)
+    # Mock plugin
+    mock_plugin = mocker.Mock(spec=Plugin)
     # Mock all check methods
+    validator = PluginValidator(mock_plugin)
     mocker.patch.object(validator, 'check_required')
     mocker.patch.object(validator, 'check_unique')
     mocker.patch.object(validator, 'check_unknown')
     mocker.patch.object(validator, 'check_rules')
     mocker.patch.object(validator, 'check_dependencies')
-    # Set validator attributes based on check_results
+    # Set validator attributes based on `check_results`
     for attr, value in check_results.items():
         setattr(validator, attr, value)
-
+    # Run the test
     result = validator.validate()
     assert result == expected_validity
     # Verify that all check methods were called
@@ -429,17 +441,18 @@ def test_extract(mocker, initial_components, invalid, unknown, not_unique, expec
     - Plugin with the specified components.
     - Mock `copy` method of the plugin.
     """
-    mock_model = mocker.Mock()
+    # Mock model and plugin
+    mock_model = mocker.Mock(spec=PluginModel)
     mock_plugin = mocker.Mock(spec=Plugin)
     mock_plugin.model = mock_model
     mock_plugin.copy.return_value = mocker.Mock(spec=Plugin)
     mock_plugin.copy.return_value.components = initial_components.copy()
-
+    # Mock internal attributes
     validator = PluginValidator(mock_plugin)
     validator.invalid = invalid
     validator.unknown = unknown
     validator.not_unique = not_unique
-
+    # Run the test
     result = validator.extract()
     assert result.components == expected_components
     mock_plugin.copy.assert_called_once()
