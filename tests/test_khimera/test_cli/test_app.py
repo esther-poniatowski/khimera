@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 test_khimera.test_cli.test_app
-===============================
+==============================
 
 Tests for the `CliApp` class in the `khimera.cli.app` module.
 
