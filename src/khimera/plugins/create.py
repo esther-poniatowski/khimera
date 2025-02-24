@@ -88,7 +88,7 @@ class Plugin(DeepCopyable, DeepComparable):
     -----
     No validation of the components is performed when adding them to the plugin. The components are
     validated against the plugin model by the `PluginValidator` class in the module
-    `khimera.plugins.validate`.
+    `khimera.management.validate`.
 
     Implications:
 

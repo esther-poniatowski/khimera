@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-test_khimera.test_plugins.test_validate
-=======================================
+test_khimera.test_management.test_validate
+==========================================
 
-Unit tests for the validation of plugin instances against their models.
+Tests for the `PluginValidator` class in the `khimera.management.validate` module.
 
 See Also
 --------
-khimera.plugins.validate
+khimera.management.validate
 """
 from typing import Any, Callable, Dict, List
 
 import pytest
 import pytest_mock
 
-from khimera.plugins.validate import PluginValidator
+from khimera.management.validate import PluginValidator
 from khimera.core.components import ComponentSet, Component
 from khimera.core.specifications import FieldSpec  # mocked
 from khimera.plugins.create import Plugin  # mocked

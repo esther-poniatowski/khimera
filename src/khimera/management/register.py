@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-khimera.plugins.register
+khimera.management.register
 ========================
 
 Registers plugins on the host application side.
@@ -19,7 +19,7 @@ import warnings
 from khimera.utils.factories import TypeConstrainedDict
 from khimera.plugins.create import Plugin
 from khimera.core.components import Component, ComponentSet
-from khimera.plugins.validate import PluginValidator
+from khimera.management.validate import PluginValidator
 
 E = TypeVar("E", bound=Plugin | Component)
 """Type variable for elements in the registry."""

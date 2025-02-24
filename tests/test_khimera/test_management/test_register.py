@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-test_khimera.test_plugins.test_discover
-=======================================
+test_khimera.test_management.test_register
+==========================================
 
-Test suite for the `PluginRegistry` module.
+Test suite for the `khimera.management.register` module.
 
 Notes
 -----
@@ -36,7 +36,7 @@ and `Plugin` classes if it is passed as keyword argument to the `Mock` construct
 
 See Also
 --------
-khimera.plugins.register
+khimera.management.register
     Module under test.
 pytest_mock.MockFixture
     Mocking fixture for Pytest.
@@ -46,11 +46,11 @@ from typing import List, Dict
 import pytest
 import pytest_mock
 
-from khimera.plugins.register import ConflictResolver, PluginRegistry
+from khimera.management.register import ConflictResolver, PluginRegistry
 from khimera.plugins.create import Plugin
 from khimera.plugins.declare import PluginModel
 from khimera.core.components import Component, ComponentSet
-from khimera.plugins.validate import PluginValidator
+from khimera.management.validate import PluginValidator
 
 
 # --- Fixtures and Utilities -----------------------------------------------------------------------

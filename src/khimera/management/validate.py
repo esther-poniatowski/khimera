@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-khimera.plugins.validate
+khimera.management.validate
 ========================
 
 Validate the components of a plugin against its model.
