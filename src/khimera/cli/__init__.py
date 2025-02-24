@@ -2,16 +2,19 @@
 # -*- coding: utf-8 -*-
 """
 khimera.cli
-============
+===========
 
-Core functionality for the khimera package.
+Command line interface integrated in Khimera.
 
 Modules
 -------
-load_plugins
-    Manages discovery, loading and caching of plugins.
+app
+    Main module for the command line interface.
+plug
+    Add new commands to the command line interface.
 
 See Also
 --------
-
+typer.Typer
+    Main class for building command line interfaces.
 """

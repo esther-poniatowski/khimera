@@ -4,22 +4,19 @@
 khimera.cli.cli_app
 ===================
 
-Provides a custom CLI class which inherits from a Typer application, with additional methods.
+Provides a custom CLI class which inherits from a `Typer` application, with additional methods for
+structured command registration.
 
 Classes
 -------
 CliApp
 """
-from typing import Optional, Self
+from typing import Optional, Self, Dict, Callable
 
 import typer
 
 
-def default_callback():
-    """Default CLI entry point when no command is provided."""
-    pass  # No-op, prevents Typer from raising RuntimeError
-
-class CliApp(typer.Typer):
+class CliApp(typer.Typer):  # pylint: disable=unused-variable
     """
     Extends Typer with additional functionality for structured command registration.
 
@@ -53,7 +50,10 @@ class CliApp(typer.Typer):
     --------
     typer.Typer.registered_groups : List[TyperInfo]
         Registered command groups, stored as TyperInfo objects. To access the Typer instance, use
-        the
+        the `typer_instance` attribute.
+    typer.Typer.registered_commands : List[TyperInfo]
+        Registered commands at the main application level, stored as TyperInfo objects. To access
+        the command function, use the `command` attribute.
     """
 
     def __init__(self, app: Optional[typer.Typer] = None, **kwargs):
@@ -63,16 +63,15 @@ class CliApp(typer.Typer):
         # If an existing Typer instance is provided, copy all its other attributes
         if app:
             self.__dict__.update(app.__dict__)
-            self.info.no_args_is_help = True # enforce `no_args_is_help` to True
+            self.info.no_args_is_help = True  # enforce `no_args_is_help` to True
         # Register default callback
         self.callback()(self.default_callback)
         # Add new attributes for group and command indexing
-        self.groups_index = {}
-        self.commands_index = {}
+        self.groups_index: Dict[str, int] = {}
+        self.commands_index: Dict[str, int] = {}
 
     def default_callback(self):
         """Default CLI entry point when no command is provided or execution fails."""
-        pass
 
     def has_group(self, name: str) -> bool:
         """Check if a command group exists."""
@@ -104,10 +103,13 @@ class CliApp(typer.Typer):
         """
         index = self.groups_index.get(name)
         if index is not None:
-            return self.registered_groups[index].typer_instance
+            typer_instance = self.registered_groups[index].typer_instance
+            return typer_instance if isinstance(typer_instance, self.__class__) else None
         return None
 
-    def add_group(self, name: str, sub_app : Optional[typer.Typer] = None, help: Optional[str] = None) -> Self:
+    def add_group(
+        self, name: str, sub_app: Optional[typer.Typer] = None, help_msg: Optional[str] = None
+    ) -> Self:
         """
         Registers a command group, either an existing Typer instance or a new empty one.
 
@@ -118,8 +120,8 @@ class CliApp(typer.Typer):
         sub_app : typer.Typer, optional
             Typer instance to be used as the command group. If None, a new Typer instance is
             created.
-        help : str, optional
-            Help text for the command group.
+        help_msg : str, optional
+            Help message for the command group.
 
         Returns
         -------
@@ -137,45 +139,51 @@ class CliApp(typer.Typer):
             Add a sub-Typer instance as a command group. The new group is appended to the end of the
             `registered_groups` list, so that newly added command group becomes the last item in the
             list of registered groups.
+
+        Implementation
+        --------------
+        The new application is converted to an instance of the current class (`self.__class__`) if
+        it is not already, to inherit the custom methods of the class. The current class is
+        dynamically determined, so that subclasses of `CliApp` can be used uniformly.
         """
         if self.has_group(name):
             raise ValueError(f"Command group '{name}' already exists.")
-        new_app = sub_app if isinstance(sub_app, CliApp) else CliApp(app=sub_app) # convert if necessary
-        self.add_typer(new_app, name=name, help=help) # call Typer's add_typer method
-        self.groups_index[name] = len(self.registered_groups) - 1 # group index in main app
+        new_app = sub_app if isinstance(sub_app, self.__class__) else self.__class__(app=sub_app)
+        self.add_typer(new_app, name=name, help=help_msg)  # call Typer's add_typer method
+        self.groups_index[name] = len(self.registered_groups) - 1  # group index in main app
         return new_app
 
-    def add_command(self, function: callable, name: str, in_group: Optional[str] = None) -> None:
+    def add_command(self, function: Callable, name: str, in_group: Optional[str] = None) -> None:
         """
-        Dynamically register a command inside a specific group.
+         Dynamically register a command inside a specific group.
 
-        Arguments
-        ---------
-        function : callable
-            Function to be executed when the command is triggered.
-        name : str
-            Name of the command.
-       in_group : str, optional
-            Name of the group the command belongs to. If not specified, the command is added to the
-            main application.
+         Arguments
+         ---------
+         function : callable
+             Function to be executed when the command is triggered.
+         name : str
+             Name of the command.
+        in_group : str, optional
+             Name of the group the command belongs to. If not specified, the command is added to the
+             main application.
 
-        Raises
-        ------
-        ValueError
-            If the command group does not exist.
+         Raises
+         ------
+         ValueError
+             If the command group does not exist.
 
-        See Also
-        --------
-        typer.Typer.command
-            Decorator for registering a command in a Typer application.
+         See Also
+         --------
+         typer.Typer.command
+             Decorator for registering a command in a Typer application.
         """
-        if in_group: # retrieve group and delegate command registration
-            if not self.has_group(in_group):
+        if in_group:  # retrieve group and delegate command registration
+            app = self.get_group(in_group)  # None if group not found
+            if not app:
                 raise ValueError(f"Command group '{in_group}' not found.")
-            app = self.get_group(in_group)
             app.add_command(function, name, in_group=None)
-        else: # fallback to main app (self)
+        else:  # fallback to main app (self)
             if self.has_command(name):
                 raise ValueError(f"Command '{name}' already exists.")
-            self.command(name=name)(function) # call Typer's command decorator
-            self.commands_index[name] = len(self.registered_commands) - 1 # command index in main app
+            self.command(name=name)(function)  # call Typer's command decorator
+            self.commands_index[name] = len(self.registered_commands) - 1  # index in main app
