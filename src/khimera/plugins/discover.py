@@ -52,7 +52,31 @@ class PluginEntryPoint:
 
     Examples
     --------
-    Create a plugin entry point:
+    Consider the following plugin package structure:
+
+    .. code-block:: none
+
+        path/to/project/
+        ├── my_package/
+        │   ├── __init__.py
+        │   └── plugins.py
+        └── ...
+
+    The `plugins.py` module contains the following `Plugin` object:
+
+    .. code-block:: python
+
+        from khimera.plugins.create import Plugin
+        from host_app.models import MyPluginModel
+
+        my_plugin = Plugin(
+            name='my_plugin',
+            version='0.1.0',
+            model=MyPluginModel,
+            ...
+        )
+
+    Create a plugin entry point for this plugin:
 
     >>> entry_point = PluginEntryPoint(path='path/to/package', value='my_package.plugins:MyPlugin')
 
@@ -60,15 +84,15 @@ class PluginEntryPoint:
 
     >>> plugin = entry_point.load()
     >>> print(plugin)
-    Plugin(name='my_plugin', version='0.1.0', ...)
+    Plugin(name='my_plugin', version='0.1.0', model=MyPluginModel, ...)
 
     Notes
     -----
     This class is inspired by the `EntryPoint` class from the `importlib.metadata` module.
 
-    Shared attributes: `name`, `value`, `module`, `attr`, `load`.
-
-    Omitted attributes: `group`.
+    - Shared attributes: `name`, `value`, `module`, `attr`, `load`.
+    - Omitted attributes: `name`, `group` (relevant for entry points specified in `pyproject.toml`).
+    - New attributes: `path` (custom directory path to the plugin package).
 
     """
     def __init__(self, name: str, value: str):
