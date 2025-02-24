@@ -2,13 +2,17 @@
 # -*- coding: utf-8 -*-
 """
 test_khimera.test_components
-===============================
+============================
 
-Tests for the core functionality of the khimera package and the distinct types of components.
+Tests for distinct types of default components provided by the Khimera package.
 
 Modules
 -------
-test_core
+test_api
+test_assets
+test_commands
+test_hooks
+test_metadata
 
 See Also
 --------
