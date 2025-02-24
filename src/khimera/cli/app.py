@@ -52,7 +52,7 @@ class CliApp(typer.Typer):  # pylint: disable=unused-variable
 
         #!/usr/bin/env python3
 
-        from cli_app import CliApp
+        from app import CliApp
 
         cli = CliApp()
 

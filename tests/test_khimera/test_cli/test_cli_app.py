@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-test_khimera.test_core.test_cli_app
-===================================
+test_khimera.test_cli.test_app
+===============================
 
-Tests for the `CliApp` class in the `khimera.cli.cli_app` module.
+Tests for the `CliApp` class in the `khimera.cli.app` module.
 
 See Also
 --------
-khimera.cli.cli_app.CliApp
+khimera.cli.app.CliApp
 """
 # --- Silenced Errors ---
 # pylint: disable=unused-variable
@@ -20,7 +20,7 @@ import pytest
 import typer
 from typer.testing import CliRunner
 
-from khimera.cli.cli_app import CliApp
+from khimera.cli.app import CliApp
 
 # --- Fixtures -------------------------------------------------------------------------------------
 
