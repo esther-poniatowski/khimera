@@ -21,9 +21,6 @@ from khimera.plugins.create import Plugin # mocked
 from khimera.plugins.declare import PluginModel # mocked
 
 
-
-
-
 # --- Tests for PluginValidator --------------------------------------------------------------------
 
 @pytest.mark.parametrize("required_fields, plugin_fields, expected_missing", [
@@ -41,8 +38,6 @@ def test_check_required(mocker : pytest_mock.MockFixture,
 
     Arguments
     ---------
-    mocker : pytest_mock.MockFixture
-        Pytest-mock fixture.
     required_fields : List[str]
         Required fields specified in the model.
     plugin_fields : List[str]
@@ -92,8 +87,6 @@ def test_check_unique(mocker: pytest_mock.MockFixture,
 
     Arguments
     ---------
-    mocker : pytest_mock.MockFixture
-        Pytest-mock fixture.
     unique_fields : List[str]
         Fields expected to be unique in the model.
     component_counts : List[int]
@@ -141,8 +134,6 @@ def test_check_unknown(mocker: pytest_mock.MockFixture,
 
     Arguments
     ---------
-    mocker : pytest_mock.MockFixture
-        Pytest-mock fixture.
     known_fields : List[str]
         Fields known to the model.
     plugin_fields : List[str]
@@ -205,8 +196,6 @@ def test_check_rules(mocker: pytest_mock.MockFixture,
 
     Arguments
     ---------
-    mocker : pytest_mock.MockFixture
-        Pytest-mock fixture.
     component_values : dict
         Values within the components in the plugin to be validated.
     validate_func : dict
@@ -282,8 +271,6 @@ def test_check_dependencies(mocker : pytest_mock.MockFixture,
 
     Arguments
     ---------
-    mocker : pytest_mock.MockFixture
-        Pytest-mock fixture.
     dependencies : dict
         Dependencies in the model.
     validation_results : dict
@@ -341,8 +328,6 @@ def test_validate(mocker : pytest_mock.MockFixture,
 
     Arguments
     ---------
-    mocker : pytest_mock.MockFixture
-        Pytest-mock fixture.
     check_results : dict
         Results of the individual checks.
     expected_validity : bool
@@ -361,11 +346,11 @@ def test_validate(mocker : pytest_mock.MockFixture,
     Mocking:
 
     - Plugin with the specified components.
-    - Mock all check methods.
+    - Mock all check methods that are called in `validate`.
     - Set validator attributes based on `check_results`.
     """
     # Mock plugin
-    mock_plugin = mocker.Mock(spec=Plugin)
+    mock_plugin = mocker.Mock(spec=Plugin, model=mocker.Mock(spec=PluginModel))
     # Mock all check methods
     validator = PluginValidator(mock_plugin)
     mocker.patch.object(validator, 'check_required')
@@ -385,7 +370,6 @@ def test_validate(mocker : pytest_mock.MockFixture,
     validator.check_unknown.assert_called_once()
     validator.check_rules.assert_called_once()
     validator.check_dependencies.assert_called_once()
-
 
 
 @pytest.mark.parametrize("initial_components, invalid, unknown, not_unique, expected_components", [
@@ -416,9 +400,7 @@ def test_extract(mocker, initial_components, invalid, unknown, not_unique, expec
     Test if `extract` correctly extracts valid components from a plugin instance.
 
     Arguments
-    ---------
-    mocker : pytest_mock.MockFixture
-        Pytest-mock fixture.
+    ---------.
     initial_components : dict
         Initial components in the plugin.
     invalid : dict
