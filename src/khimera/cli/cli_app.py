@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-khimera.cli.cli_app
-===================
+khimera.cli.app
+===============
 
 Provides a custom CLI class which inherits from a `Typer` application, with additional methods for
 structured command registration.
@@ -37,14 +37,109 @@ class CliApp(typer.Typer):  # pylint: disable=unused-variable
         Registry of commands at the main application level.
         Keys: Group names. Values: Index of the command in the `Typer.registered_commands` list.
 
+    Usage
+    -----
+    To define a main application:
+
+    1. Create a new Python script (e.g., `main.py`).
+    2. Initialize an instance of `CliApp`
+    3. Add command groups and commands (see Examples).
+    4. Register the main application as the entry point.
+
+    Structure of the main application (`main.py`):
+
+    .. code-block:: python
+
+        #!/usr/bin/env python3
+
+        from cli_app import CliApp
+
+        cli = CliApp()
+
+        def my_command(arg: str):
+            print("Test command with argument:", arg)
+
+        cli.add_command(name="test-command", function=my_command)
+
+        if __name__ == "__main__":
+            cli()
+
+    To run commands from the terminal:
+
+    1. Display available commands:
+
+    .. code-block:: bash
+
+        $ python main.py --help
+
+    2. Invoke commands from the terminal:
+
+    .. code-block:: bash
+
+        $ python main.py test-command --arg "Test argument"
+        Test command with argument: Test argument
+
+
+    To use this application as a command-line tool:
+
+    1. Create a `pyproject.toml` file in the project root:
+
+    .. code-block:: toml
+
+        [build-system]
+        requires = ["setuptools", "wheel"]
+        build-backend = "setuptools.build_meta"
+
+        [project]
+        name = "my-app"
+        version = "0.1.0"
+        dependencies = ["typer"]
+
+        [project.scripts]
+        my-app = "main:cli"
+
+    2. Install the package locally in editable mode:
+
+    .. code-block:: bash
+
+        $ pip install -e .
+
+    3. Use the CLI directly as a command-line tool:
+
+    .. code-block:: bash
+
+        $ my-app test-command --arg "Test argument"
+        Test command with argument: Test argument
+
+    Examples
+    --------
+    Add a command to the main application:
+
+    >>> def my_command():
+    ...     print("Test command")
+    >>> cli.add_command(name="test-command", function=my_command)
+
+    Add a command group:
+
+    >>> cli.add_group("test-group")
+
+    Add a command to the group:
+
+    >>> def group_command():
+    ...     print("Test group command")
+    >>> group.add_command(name="group-command", function=group_command)
+
+    Retrieve the group and check the command it contains:
+
+    >>> group = cli.get_group("test-group")
+    >>> print(group.has_command("group-command"))
+    True
+
     Notes
     -----
-    A default callback is registered to prevent errors when no command is provided. Although the
-    attribute `no_args_is_help` is set to True, it does not prevent parsing errors:
-
-    ```python
-    RuntimeError: Could not get a command for this Typer instance
-    ```
+    A default callback is registered to prevent errors when the CLI is invoked without any argument.
+    Although the attribute `no_args_is_help` is set to True, it does not prevent parsing errors:
+    `RuntimeError: Could not get a command for this Typer instance`.
 
     See Also
     --------
@@ -153,35 +248,35 @@ class CliApp(typer.Typer):  # pylint: disable=unused-variable
         self.groups_index[name] = len(self.registered_groups) - 1  # group index in main app
         return new_app
 
-    def add_command(self, function: Callable, name: str, in_group: Optional[str] = None) -> None:
+    def add_command(self, name: str, function: Callable, in_group: Optional[str] = None) -> None:
         """
-         Dynamically register a command inside a specific group.
+        Dynamically register a command inside a specific group.
 
-         Arguments
-         ---------
-         function : callable
-             Function to be executed when the command is triggered.
-         name : str
-             Name of the command.
+        Arguments
+        ---------
+        function : callable
+            Function to be executed when the command is triggered.
+        name : str
+            Name of the command.
         in_group : str, optional
-             Name of the group the command belongs to. If not specified, the command is added to the
-             main application.
+            Name of the group the command belongs to. If not specified, the command is added to the
+            main application.
 
-         Raises
-         ------
-         ValueError
-             If the command group does not exist.
+        Raises
+        ------
+        ValueError
+            If the command group does not exist.
 
-         See Also
-         --------
-         typer.Typer.command
-             Decorator for registering a command in a Typer application.
+        See Also
+        --------
+        typer.Typer.command
+            Decorator for registering a command in a Typer application.
         """
         if in_group:  # retrieve group and delegate command registration
             app = self.get_group(in_group)  # None if group not found
             if not app:
                 raise ValueError(f"Command group '{in_group}' not found.")
-            app.add_command(function, name, in_group=None)
+            app.add_command(name, function, in_group=None)
         else:  # fallback to main app (self)
             if self.has_command(name):
                 raise ValueError(f"Command '{name}' already exists.")
