@@ -14,19 +14,22 @@ import pytest
 from typing import Type
 
 from khimera.plugins.declare import PluginModel
-from khimera.components.core import Spec, Component, FieldSpec
-from khimera.components.dependencies import DependencySpec
+from khimera.core.core import Spec, Component, FieldSpec
+from khimera.core.dependencies import DependencySpec
 
 
 # --- Mock classes for testing ---------------------------------------------------------------------
 
+
 class MockComponent(Component):
     """Mock component class for testing."""
+
     pass
 
 
 class MockFieldSpec(FieldSpec):
     """Mock category specification class for testing."""
+
     COMPONENT_TYPE = MockComponent
 
     def validate(self, comp: MockComponent) -> bool:
@@ -36,6 +39,7 @@ class MockFieldSpec(FieldSpec):
 
 class MockDependencySpec(DependencySpec):
     """Mock dependency specification class for testing."""
+
     def __init__(self, name: str):
         super().__init__(name=name, fields=["field1", "field2"])
 
@@ -45,6 +49,7 @@ class MockDependencySpec(DependencySpec):
 
 
 # --- Tests for PluginModel ------------------------------------------------------------------------
+
 
 def test_plugin_model_initialization():
     """Test initialization of PluginModel."""
@@ -57,10 +62,10 @@ def test_plugin_model_initialization():
     assert len(model.dependencies) == 0
 
 
-@pytest.mark.parametrize("spec_class, spec_name, spec_attr", [
-    (MockFieldSpec, "test_spec", "fields"),
-    (MockDependencySpec, "test_dep", "dependencies")
-])
+@pytest.mark.parametrize(
+    "spec_class, spec_name, spec_attr",
+    [(MockFieldSpec, "test_spec", "fields"), (MockDependencySpec, "test_dep", "dependencies")],
+)
 def test_add_spec(spec_class: Type[Spec], spec_name: str, spec_attr: str):
     """Test adding a specification to a plugin model."""
     model = PluginModel(name="test_model")
@@ -100,10 +105,10 @@ def test_all_specs_property():
     assert field_name in specs and dep_name in specs
 
 
-@pytest.mark.parametrize("spec_class, spec_name, spec_attr", [
-    (MockFieldSpec, "test_spec", "fields"),
-    (MockDependencySpec, "test_dep", "dependencies")
-])
+@pytest.mark.parametrize(
+    "spec_class, spec_name, spec_attr",
+    [(MockFieldSpec, "test_spec", "fields"), (MockDependencySpec, "test_dep", "dependencies")],
+)
 def test_remove_spec(spec_class: Type[Spec], spec_name: str, spec_attr: str):
     """Test removing a specification from a plugin model."""
     model = PluginModel(name="test_model")
@@ -178,6 +183,7 @@ def test_filter_with_custom_filter():
     spec2 = MockFieldSpec(name="spec2")
     model.add(spec1)
     model.add(spec2)
+
     def custom_filter(field: FieldSpec) -> bool:
         return field.name == "spec1"
 

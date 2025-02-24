@@ -33,6 +33,6 @@ assets
 
 See Also
 --------
-khimera.components.core
+khimera.core.core
     Base components of plugins models and instances.
 """

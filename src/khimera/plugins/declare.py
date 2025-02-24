@@ -18,8 +18,8 @@ from typing import Optional, Type, Dict, Callable, Self
 
 from khimera.utils.factories import TypeConstrainedDict
 from khimera.utils.mixins import DeepCopyable, DeepComparable
-from khimera.components.core import Spec, Component, FieldSpec
-from khimera.components.dependencies import DependencySpec
+from khimera.core.core import Spec, Component, FieldSpec
+from khimera.core.dependencies import DependencySpec
 
 
 class PluginModel(DeepCopyable, DeepComparable):
@@ -112,6 +112,7 @@ class PluginModel(DeepCopyable, DeepComparable):
     attributes) since they do not share the same properties and constraints. However, they can be
     declared via the same `add` method and retrieved via the same `get` method.
     """
+
     def __init__(self, name: str, version: Optional[str] = None):
         # Initialize model's metadata
         self.name = name
@@ -157,7 +158,7 @@ class PluginModel(DeepCopyable, DeepComparable):
             If a field with the same name is already declared in the plugin model
             (category and dependency specs are unique by name).
         """
-        if not isinstance(spec, (FieldSpec, DependencySpec)): # before accessing `name` attribute
+        if not isinstance(spec, (FieldSpec, DependencySpec)):  # before accessing `name` attribute
             raise TypeError(
                 f"Unsupported field type: '{type(spec)}' "
                 "(must be a subclass of 'Spec': either 'FieldSpec' or 'DependencySpec')"
@@ -166,7 +167,7 @@ class PluginModel(DeepCopyable, DeepComparable):
             raise KeyError(f"Spec '{spec.name}' already declared in the plugin model")
         if isinstance(spec, FieldSpec):
             self.fields[spec.name] = spec
-        else: # isinstance(spec, DependencySpec)
+        else:  # isinstance(spec, DependencySpec)
             self.dependencies[spec.name] = spec
         return self
 
@@ -201,12 +202,13 @@ class PluginModel(DeepCopyable, DeepComparable):
         """Get a `Spec` from the plugin model by name. None if not present in the model."""
         return self.specs.get(name)
 
-    def filter(self,
-               category: Optional[Type[Component]] = None,
-               unique: Optional[bool] = None,
-               required: Optional[bool] = None,
-               custom_filter: Optional[Callable[[FieldSpec], bool]] = None
-              ) -> Dict[str, FieldSpec]:
+    def filter(
+        self,
+        category: Optional[Type[Component]] = None,
+        unique: Optional[bool] = None,
+        required: Optional[bool] = None,
+        custom_filter: Optional[Callable[[FieldSpec], bool]] = None,
+    ) -> Dict[str, FieldSpec]:
         """
         Filter the fields in the plugin model based on various criteria.
 
@@ -244,12 +246,13 @@ class PluginModel(DeepCopyable, DeepComparable):
         Dependency specs are not considered since they do not share the same filtering properties as
         category specs.
         """
+
         def meets_criteria(field: FieldSpec) -> bool:
             return (
-                (category is None or field.COMPONENT_TYPE == category) and
-                (unique is None or field.unique == unique) and
-                (required is None or field.required == required) and
-                (custom_filter is None or custom_filter(field))
+                (category is None or field.COMPONENT_TYPE == category)
+                and (unique is None or field.unique == unique)
+                and (required is None or field.required == required)
+                and (custom_filter is None or custom_filter(field))
             )
 
         return {name: field for name, field in self.fields.items() if meets_criteria(field)}

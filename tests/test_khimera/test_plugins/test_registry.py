@@ -49,11 +49,12 @@ import pytest_mock
 from khimera.plugins.register import ConflictResolver, PluginRegistry
 from khimera.plugins.create import Plugin
 from khimera.plugins.declare import PluginModel
-from khimera.components.core import Component, ComponentSet
+from khimera.core.core import Component, ComponentSet
 from khimera.plugins.validate import PluginValidator
 
 
 # --- Fixtures and Utilities -----------------------------------------------------------------------
+
 
 def mock_component(mocker: pytest_mock.MockFixture, name: str, plugin: str = None):
     """
@@ -74,9 +75,12 @@ def mock_component(mocker: pytest_mock.MockFixture, name: str, plugin: str = Non
     component.configure_mock(name=name, plugin=plugin)  # outside of the constructor
     return component
 
-def mock_plugin(mocker: pytest_mock.MockFixture,
-                name: str = "mock_plugin",
-                components: Dict[str, List[str]] = None):
+
+def mock_plugin(
+    mocker: pytest_mock.MockFixture,
+    name: str = "mock_plugin",
+    components: Dict[str, List[str]] = None,
+):
     """
     Create a mock `Plugin` instance with a specified name and components.
 
@@ -106,6 +110,7 @@ def mock_plugin(mocker: pytest_mock.MockFixture,
     else:
         plugin.components = {"key1": ComponentSet([mocker.Mock(spec=Component, name="compA")])}
     return plugin
+
 
 def patch_validator(mocker: pytest_mock.MockFixture, output: bool = True):
     """
@@ -137,6 +142,7 @@ def test_conflict_resolver(mocker: pytest_mock.MockFixture):
     with pytest.raises(ValueError):
         resolver.resolve(plugin)
 
+
 def test_conflict_resolver_override(mocker: pytest_mock.MockFixture):
     """
     Test the conflict resolution strategy in 'OVERRIDE' mode.
@@ -163,6 +169,7 @@ def test_conflict_resolver_ignore(mocker: pytest_mock.MockFixture):
 
 # --- Tests for PluginRegistry ---------------------------------------------------------------------
 
+
 def test_plugin_registry_init():
     """Test initializing a PluginRegistry instance."""
     registry = PluginRegistry()
@@ -173,26 +180,30 @@ def test_plugin_registry_init():
     assert hasattr(registry, "enable_by_default")
 
 
-@pytest.mark.parametrize("query_field, query_name, enabled_only, expected_components", [
-    # Case 1: Retrieve no specific component under a valid key -> Expect all components
-    ("test_key", None, False, ["comp1", "comp2", "comp3"]),
-    # Case 2: Retrieve only enabled components under a -> Expect only enabled components
-    ("test_key", None, True, ["comp1", "comp2"]),
-    # Case 3: Retrieve a named component under a valid key -> Expect a single component
-    ("test_key", "comp1", False, ["comp1"]),
-    # Case 4: Retrieve a named component that is not enabled -> Expect an empty list
-    ("test_key", "comp3", True, []),
-    # Case 5: Retrieve a nonexistent component under a valid key -> Expect an empty list
-    ("test_key", "nonexistent", False, []),
-    # Case 6: Retrieve from a nonexistent key -> Expect an empty list
-    ("nonexistent_key", None, False, []),
-])
-def test_plugin_registry_get(mocker : pytest_mock.MockFixture,
-                            query_field : str,
-                            query_name : str,
-                            enabled_only : bool,
-                            expected_components : List[str]
-                            ):
+@pytest.mark.parametrize(
+    "query_field, query_name, enabled_only, expected_components",
+    [
+        # Case 1: Retrieve no specific component under a valid key -> Expect all components
+        ("test_key", None, False, ["comp1", "comp2", "comp3"]),
+        # Case 2: Retrieve only enabled components under a -> Expect only enabled components
+        ("test_key", None, True, ["comp1", "comp2"]),
+        # Case 3: Retrieve a named component under a valid key -> Expect a single component
+        ("test_key", "comp1", False, ["comp1"]),
+        # Case 4: Retrieve a named component that is not enabled -> Expect an empty list
+        ("test_key", "comp3", True, []),
+        # Case 5: Retrieve a nonexistent component under a valid key -> Expect an empty list
+        ("test_key", "nonexistent", False, []),
+        # Case 6: Retrieve from a nonexistent key -> Expect an empty list
+        ("nonexistent_key", None, False, []),
+    ],
+)
+def test_plugin_registry_get(
+    mocker: pytest_mock.MockFixture,
+    query_field: str,
+    query_name: str,
+    enabled_only: bool,
+    expected_components: List[str],
+):
     """
     Parametric test for the `get` method and its different retrieval scenarios.
 
@@ -223,8 +234,8 @@ def test_plugin_registry_get(mocker : pytest_mock.MockFixture,
         for comp_name, plugin_name in [
             ("comp1", "pluginA"),
             ("comp2", "pluginA"),
-            ("comp3", "pluginB")
-            ]:
+            ("comp3", "pluginB"),
+        ]:
             component = mock_component(mocker, comp_name, plugin_name)
             registry.components[query_field].append(component)
     if enabled_only:
@@ -235,19 +246,25 @@ def test_plugin_registry_get(mocker : pytest_mock.MockFixture,
     for comp in components:
         assert comp.name in expected_components
 
-@pytest.mark.parametrize("plugin_name, initial_enabled, registered, expected", [
-    # Case 1: Enable a plugin that is not registered -> Expect AttributeError
-    ("unknown_plugin", [], [], None),
-    # Case 2: Enable a plugin that is registered but not enabled -> Expect plugin to be added to `enabled`
-    ("known_plugin", [], ["known_plugin"], ["known_plugin"]),
-    # Case 3: Enable a plugin that is already enabled -> Expect no change
-    ("known_plugin", ["known_plugin"], ["known_plugin"], ["known_plugin"]),
-])
-def test_plugin_registry_enable(mocker: pytest_mock.MockFixture,
-                                plugin_name: str,
-                                initial_enabled: list,
-                                registered: list,
-                                expected: list):
+
+@pytest.mark.parametrize(
+    "plugin_name, initial_enabled, registered, expected",
+    [
+        # Case 1: Enable a plugin that is not registered -> Expect AttributeError
+        ("unknown_plugin", [], [], None),
+        # Case 2: Enable a plugin that is registered but not enabled -> Expect plugin to be added to `enabled`
+        ("known_plugin", [], ["known_plugin"], ["known_plugin"]),
+        # Case 3: Enable a plugin that is already enabled -> Expect no change
+        ("known_plugin", ["known_plugin"], ["known_plugin"], ["known_plugin"]),
+    ],
+)
+def test_plugin_registry_enable(
+    mocker: pytest_mock.MockFixture,
+    plugin_name: str,
+    initial_enabled: list,
+    registered: list,
+    expected: list,
+):
     """
     Test for the `enable` method in different scenarios.
 
@@ -282,19 +299,24 @@ def test_plugin_registry_enable(mocker: pytest_mock.MockFixture,
         assert registry.enabled == expected
 
 
-@pytest.mark.parametrize("plugin_name, initial_enabled, registered, expected", [
-    # Case 1: Disable a plugin that is not registered -> Expect no change
-    ("unknown_plugin", ["known_plugin"], [], ["known_plugin"]),
-    # Case 2: Disable a registered and enabled plugin -> Expect removal from `enabled`
-    ("known_plugin", ["known_plugin"], ["known_plugin"], []),
-    # Case 3: Disable a registered but already disabled plugin -> Expect no change
-    ("known_plugin", [], ["known_plugin"], []),
-])
-def test_plugin_registry_disable(mocker: pytest_mock.MockFixture,
-                                 plugin_name: str,
-                                 initial_enabled: list,
-                                 registered: list,
-                                 expected: list):
+@pytest.mark.parametrize(
+    "plugin_name, initial_enabled, registered, expected",
+    [
+        # Case 1: Disable a plugin that is not registered -> Expect no change
+        ("unknown_plugin", ["known_plugin"], [], ["known_plugin"]),
+        # Case 2: Disable a registered and enabled plugin -> Expect removal from `enabled`
+        ("known_plugin", ["known_plugin"], ["known_plugin"], []),
+        # Case 3: Disable a registered but already disabled plugin -> Expect no change
+        ("known_plugin", [], ["known_plugin"], []),
+    ],
+)
+def test_plugin_registry_disable(
+    mocker: pytest_mock.MockFixture,
+    plugin_name: str,
+    initial_enabled: list,
+    registered: list,
+    expected: list,
+):
     """
     Test for the `disable` method in different scenarios.
 
@@ -325,22 +347,29 @@ def test_plugin_registry_disable(mocker: pytest_mock.MockFixture,
     assert registry.enabled == expected
 
 
-@pytest.mark.parametrize("initial_components, plugin_components, expected", [
-    # Case 1: Plugin provides new components under a new key
-    ({}, {"key1": ["compA"]}, {"key1": ["compA"]}),
-    # Case 2: Plugin adds components to an existing key
-    ({"key1": ["compA"]}, {"key1": ["compB"]}, {"key1": ["compA", "compB"]}),
-    # Case 3: Plugin provides multiple keys with components
-    ({}, {"key1": ["compA"], "key2": ["compB"]}, {"key1": ["compA"], "key2": ["compB"]}),
-    # Case 4: Plugin adds components to multiple existing keys
-    ({"key1": ["compA"], "key2": ["compB"]}, {"key1": ["compC"], "key2": ["compD"]},
-     {"key1": ["compA", "compC"], "key2": ["compB", "compD"]}),
-])
-def test_plugin_registry_unpack(mocker : pytest_mock.MockFixture,
-                                initial_components : dict,
-                                plugin_components : dict,
-                                expected : dict
-                                ):
+@pytest.mark.parametrize(
+    "initial_components, plugin_components, expected",
+    [
+        # Case 1: Plugin provides new components under a new key
+        ({}, {"key1": ["compA"]}, {"key1": ["compA"]}),
+        # Case 2: Plugin adds components to an existing key
+        ({"key1": ["compA"]}, {"key1": ["compB"]}, {"key1": ["compA", "compB"]}),
+        # Case 3: Plugin provides multiple keys with components
+        ({}, {"key1": ["compA"], "key2": ["compB"]}, {"key1": ["compA"], "key2": ["compB"]}),
+        # Case 4: Plugin adds components to multiple existing keys
+        (
+            {"key1": ["compA"], "key2": ["compB"]},
+            {"key1": ["compC"], "key2": ["compD"]},
+            {"key1": ["compA", "compC"], "key2": ["compB", "compD"]},
+        ),
+    ],
+)
+def test_plugin_registry_unpack(
+    mocker: pytest_mock.MockFixture,
+    initial_components: dict,
+    plugin_components: dict,
+    expected: dict,
+):
     """
     Test for the `unpack` method in different scenarios.
 
@@ -379,8 +408,8 @@ def test_plugin_registry_unpack(mocker : pytest_mock.MockFixture,
         assert sorted(actual_names) == sorted(expected[key])
 
 
-
 # --- Tests for the final `register` method --------------------------------------------------------
+
 
 def test_plugin_registry_register(mocker: pytest_mock.MockFixture):
     """
@@ -459,7 +488,7 @@ def test_plugin_registry_register_conflict_override(mocker):
     with pytest.warns(UserWarning):
         registry.register(plugin2)
     assert registry.plugins[name] == plugin2  # replaced plugin
-    mock_unpack.assert_called_with(plugin2) # unpack called for the new plugin
+    mock_unpack.assert_called_with(plugin2)  # unpack called for the new plugin
 
 
 def test_plugin_registry_register_conflict_ignore(mocker):

@@ -19,10 +19,10 @@ import warnings
 from khimera.utils.factories import TypeConstrainedDict, TypeConstrainedList
 from khimera.plugins.declare import PluginModel
 from khimera.plugins.create import Plugin
-from khimera.components.core import Component, ComponentSet
+from khimera.core.core import Component, ComponentSet
 from khimera.plugins.validate import PluginValidator
 
-E = TypeVar('E', bound=Plugin | Component)
+E = TypeVar("E", bound=Plugin | Component)
 """Type variable for elements in the registry."""
 
 
@@ -36,12 +36,13 @@ class ConflictResolver:
     mode : str
         Strategy to apply to resolve conflicts between plugins.
     """
-    def __init__(self, mode: str = 'RAISE_ERROR'):
+
+    def __init__(self, mode: str = "RAISE_ERROR"):
         self.mode = mode
         self.MODES: Dict[str, callable] = {
             "RAISE_ERROR": self.raise_error,
             "OVERRIDE": self.override,
-            "IGNORE": self.ignore
+            "IGNORE": self.ignore,
         }
 
     def resolve(self, new: E) -> E | None:
@@ -64,12 +65,12 @@ class ConflictResolver:
         """Fail when conflicts occur."""
         raise ValueError(f"Already registered.")
 
-    def override(self,  new: E) -> E:
-        """ Replace the existing element by the latest registered."""
+    def override(self, new: E) -> E:
+        """Replace the existing element by the latest registered."""
         warnings.warn(f"Overridden: name '{new.name}' already registered.", UserWarning)
         return new
 
-    def ignore(self,  new: E) -> None:
+    def ignore(self, new: E) -> None:
         """Keep the existing element and discard the new one."""
         warnings.warn(f"Ignored: name '{new.name}' already registered.", UserWarning)
         return None
@@ -138,15 +139,21 @@ class PluginRegistry:
     the `components` attribute of the registry, or by setting the `enabled_only` argument to `False`
     in the `get` method.
     """
-    def __init__(self, resolver = ConflictResolver('RAISE_ERROR'), validator_type = PluginValidator, enable_by_default = True):
+
+    def __init__(
+        self,
+        resolver=ConflictResolver("RAISE_ERROR"),
+        validator_type=PluginValidator,
+        enable_by_default=True,
+    ):
         self.resolver = resolver
         self.validator_type = validator_type
         self.enable_by_default = enable_by_default
         self.plugins = TypeConstrainedDict(str, Plugin)
-        self.enabled : List[str] = []
+        self.enabled: List[str] = []
         self.components = TypeConstrainedDict(str, ComponentSet)
 
-    def get(self, key: str, name: Optional[str], enabled_only = True) -> List[Component]:
+    def get(self, key: str, name: Optional[str], enabled_only=True) -> List[Component]:
         """
         Retrieve all the components under a specific key, optionally by name and enabled status.
 
@@ -165,7 +172,7 @@ class PluginRegistry:
             All the components registered under this key, matching the name if provided, and
             enabled if requested.
         """
-        comps = self.components.get(key) # None if key not found
+        comps = self.components.get(key)  # None if key not found
         if not comps:
             return []
         if name:
@@ -220,20 +227,20 @@ class PluginRegistry:
             If the plugin is invalid.
             If conflicts occur and the conflict resolution strategy is set to 'RAISE_ERROR'.
         """
-        validator = self.validator_type(plugin) # fresh validator for the plugin
+        validator = self.validator_type(plugin)  # fresh validator for the plugin
         if validator.validate():
             new = plugin
-            if plugin.name in self.plugins: # trigger conflict resolution
+            if plugin.name in self.plugins:  # trigger conflict resolution
                 new = self.resolver.resolve(plugin)
-            if new : # resolver may return None
-                self.plugins[plugin.name] = plugin # save the full plugin
-                self.unpack(plugin) # organize its components
+            if new:  # resolver may return None
+                self.plugins[plugin.name] = plugin  # save the full plugin
+                self.unpack(plugin)  # organize its components
                 if self.enable_by_default:
                     self.enable(plugin.name)
         else:
             raise ValueError(f"Invalid plugin: {plugin.name}")
 
-    def unpack(self, plugin : Plugin) -> None:
+    def unpack(self, plugin: Plugin) -> None:
         """
         Unpack and organize all the components provided by a plugin.
 
@@ -249,7 +256,7 @@ class PluginRegistry:
         For each key, if the field is not contained to `unique` in the model (i.e. unique component
         by plugin), a plugin can provide multiple components (under the form of a `ComponentSet`).
         """
-        for key, comps in plugin.components.items(): # key: field name, comps: ComponentSet
+        for key, comps in plugin.components.items():  # key: field name, comps: ComponentSet
             if key not in self.components:
                 self.components[key] = ComponentSet()
             self.components[key].extend(comps)

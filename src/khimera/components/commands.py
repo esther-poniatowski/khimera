@@ -22,7 +22,7 @@ khimera.plugins.core.FieldSpec
 """
 from typing import Callable, Optional, Set
 
-from khimera.components.core import Component, FieldSpec
+from khimera.core.core import Component, FieldSpec
 
 
 class Command(Component):
@@ -41,7 +41,14 @@ class Command(Component):
         If the group names does not match any predefined group in the host application, a new group
         will be created, if allowed by the host application.
     """
-    def __init__(self, name: str, callable: Callable, group: Optional[str] = None, description: Optional[str] = None):
+
+    def __init__(
+        self,
+        name: str,
+        callable: Callable,
+        group: Optional[str] = None,
+        description: Optional[str] = None,
+    ):
         super().__init__(name=name, description=description)
         self.callable = callable
         self.group = group
@@ -70,15 +77,18 @@ class CommandSpec(FieldSpec[Command]):
     Usually the `unique` attribute is set to `False` since multiple commands can be nested in a
     single field collecting commands for a specific sub-command group.
     """
+
     COMPONENT_TYPE = Command
 
-    def __init__(self, name: str,
-                 groups: Optional[Set[str]] = None,
-                 admits_new_groups: bool = True,
-                 admits_top_level: bool = True,
-                 required: bool = False,
-                 unique: bool = False,
-                 description: Optional[str] = None,
+    def __init__(
+        self,
+        name: str,
+        groups: Optional[Set[str]] = None,
+        admits_new_groups: bool = True,
+        admits_top_level: bool = True,
+        required: bool = False,
+        unique: bool = False,
+        description: Optional[str] = None,
     ):
         super().__init__(name=name, required=required, unique=unique, description=description)
         # Configure CLI

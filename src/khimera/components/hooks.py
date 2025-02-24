@@ -24,7 +24,7 @@ from collections import OrderedDict
 import inspect
 from typing import Any, Callable, Union, Optional, Type, Tuple, List
 
-from khimera.components.core import Component, FieldSpec
+from khimera.core.core import Component, FieldSpec
 
 
 class Hook(Component):
@@ -41,6 +41,7 @@ class Hook(Component):
     The hook function must be annotated with type hints. This is necessary to match the expected
     signature defined by the corresponding `HookSpec`.
     """
+
     def __init__(self, name: str, callable: Callable, description: Optional[str] = None):
         super().__init__(name=name, description=description)
         self.callable = callable
@@ -92,17 +93,20 @@ class HookSpec(FieldSpec[Hook]):
     >>> print(hook_spec.validate(invalid_contrib))
     False
     """
+
     COMPONENT_TYPE = Hook
 
-    def __init__(self,
-                 name: str,
-                 arg_types: OrderedDict[str, Type],
-                 allow_var_args: bool = False,
-                 allow_var_kwargs: bool = False,
-                 return_type: Optional[Union[Type, Tuple[Type, ...]]] = None,
-                 required: bool = False,
-                 unique: bool = True,
-                 description: Optional[str] = None):
+    def __init__(
+        self,
+        name: str,
+        arg_types: OrderedDict[str, Type],
+        allow_var_args: bool = False,
+        allow_var_kwargs: bool = False,
+        return_type: Optional[Union[Type, Tuple[Type, ...]]] = None,
+        required: bool = False,
+        unique: bool = True,
+        description: Optional[str] = None,
+    ):
         super().__init__(name=name, required=required, unique=unique, description=description)
         self.arg_types = arg_types if isinstance(arg_types, OrderedDict) else OrderedDict(arg_types)
         self.allow_var_args = allow_var_args
@@ -111,8 +115,12 @@ class HookSpec(FieldSpec[Hook]):
 
     def validate(self, comp: Hook) -> bool:
         """Validate that the hook function matches the expected signature."""
-        positional, keyword_only, has_var_positional, has_var_keyword, return_annotation = self.describe_signature(comp.callable)
-        return self.check_inputs(positional, has_var_positional, has_var_keyword) and self.check_output(return_annotation)
+        positional, keyword_only, has_var_positional, has_var_keyword, return_annotation = (
+            self.describe_signature(comp.callable)
+        )
+        return self.check_inputs(
+            positional, has_var_positional, has_var_keyword
+        ) and self.check_output(return_annotation)
 
     @staticmethod
     def describe_signature(fn: Callable) -> Tuple[List[str], List[str], bool, bool, Any]:
@@ -145,7 +153,10 @@ class HookSpec(FieldSpec[Hook]):
         has_var_positional = False
         has_var_keyword = False
         for param in params.values():
-            if param.kind in {inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD}:
+            if param.kind in {
+                inspect.Parameter.POSITIONAL_ONLY,
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            }:
                 positional.append((param.name, param.annotation))
             elif param.kind == inspect.Parameter.KEYWORD_ONLY:
                 keyword_only.append(param.name)
@@ -155,7 +166,9 @@ class HookSpec(FieldSpec[Hook]):
                 has_var_keyword = True
         return positional, keyword_only, has_var_positional, has_var_keyword, return_annotation
 
-    def check_inputs(self, positional: List[str], has_var_positional: bool, has_var_keyword: bool) -> bool:
+    def check_inputs(
+        self, positional: List[str], has_var_positional: bool, has_var_keyword: bool
+    ) -> bool:
         """
         Validate if a function matches the signature constraints.
 

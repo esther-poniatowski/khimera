@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 from types import ModuleType
 
-from khimera.components.core import Component, FieldSpec
+from khimera.core.core import Component, FieldSpec
 
 
 class Asset(Component):
@@ -90,10 +90,17 @@ class Asset(Component):
     --------
     importlib.resources
     """
-    def __init__(self, name: str, file_path : Optional[str], package : Optional[str | ModuleType] = None, description: Optional[str] = None):
+
+    def __init__(
+        self,
+        name: str,
+        file_path: Optional[str],
+        package: Optional[str | ModuleType] = None,
+        description: Optional[str] = None,
+    ):
         super().__init__(name=name, description=description)
         self.file_path = file_path
-        self.package = package or self.__module__ # default to the caller's module
+        self.package = package or self.__module__  # default to the caller's module
 
     def get_path(self) -> Path:
         """
@@ -132,9 +139,17 @@ class AssetSpec(FieldSpec[Asset]):
     By default, assets are not required but they are unique, implying that the host application
     expects a single asset per name.
     """
+
     COMPONENT_TYPE = Asset
 
-    def __init__(self, name: str, file_ext: Optional[Tuple[str]] = None, required: bool = False, unique: bool = True, description: Optional[str] = None):
+    def __init__(
+        self,
+        name: str,
+        file_ext: Optional[Tuple[str]] = None,
+        required: bool = False,
+        unique: bool = True,
+        description: Optional[str] = None,
+    ):
         super().__init__(name=name, required=required, unique=unique, description=description)
         self.file_ext = file_ext
 

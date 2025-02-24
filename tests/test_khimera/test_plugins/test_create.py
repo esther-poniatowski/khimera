@@ -13,14 +13,16 @@ khimera.plugins.create
 import pytest
 
 from khimera.plugins.create import Plugin
-from khimera.components.core import FieldSpec, Component
+from khimera.core.core import FieldSpec, Component
 from khimera.plugins.declare import PluginModel
 
 
 # --- Mock classes for testing ---------------------------------------------------------------------
 
+
 class MockSpec(FieldSpec):
     """Mock specification class for testing."""
+
     def __init__(self, name: str):
         self.name = name
 
@@ -39,17 +41,20 @@ def mock_model():
 
 class MockComponent(Component):
     """Mock component class for testing."""
+
     def __init__(self, name: str):
         self.name = name
 
 
 class MockComponent2(Component):
     """Mock component class for testing different categories."""
+
     def __init__(self, name: str):
         self.name = name
 
 
 # --- Tests for Plugin -----------------------------------------------------------------------------
+
 
 def test_plugin_initialization(mock_model):
     """Test initialization of Plugin."""
@@ -62,10 +67,9 @@ def test_plugin_initialization(mock_model):
     assert len(plugin.components) == 0
 
 
-@pytest.mark.parametrize("names, expected", [
-    (False, lambda comp: comp),
-    (True, lambda comp: comp.name)
-])
+@pytest.mark.parametrize(
+    "names, expected", [(False, lambda comp: comp), (True, lambda comp: comp.name)]
+)
 def test_get_component(mock_model, names, expected):
     """
     Test retrieving a component from a plugin.
@@ -83,10 +87,9 @@ def test_get_component(mock_model, names, expected):
     assert retrieved[0] == expected(comp)
 
 
-@pytest.mark.parametrize("field_name, expected_field_exists", [
-    ("test_spec", True),
-    ("new_spec", False)
-])
+@pytest.mark.parametrize(
+    "field_name, expected_field_exists", [("test_spec", True), ("new_spec", False)]
+)
 def test_add_component(mock_model, field_name, expected_field_exists):
     """Test adding a component to a plugin in various fields."""
     plugin = Plugin(name="test_plugin", model=mock_model)
@@ -123,7 +126,7 @@ def test_remove_field(mock_model):
     field_key = "test_spec"
     comp = MockComponent(name="test_comp")
     plugin.add(key=field_key, comp=comp)
-    plugin.remove(key=field_key) # no `comp_name` argument
+    plugin.remove(key=field_key)  # no `comp_name` argument
     assert field_key not in plugin.components
 
 
@@ -131,7 +134,7 @@ def test_remove_nonexistent_component(mock_model):
     plugin = Plugin(model=mock_model, name="test_plugin")
     field_key = "test_spec"
     comp = MockComponent(name="test_comp")
-    plugin.add(key=field_key, comp=comp) # initialize the field
+    plugin.add(key=field_key, comp=comp)  # initialize the field
     with pytest.raises(KeyError):
         plugin.remove(key=field_key, comp_name="nonexistent")
 

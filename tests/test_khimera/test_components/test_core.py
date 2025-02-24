@@ -8,22 +8,25 @@ Tests for the core component and specification classes.
 
 See Also
 --------
-khimera.components.core
+khimera.core.core
 """
 import pytest
 
-from khimera.components.core import Component, ComponentSet, FieldSpec
+from khimera.core.core import Component, ComponentSet, FieldSpec
 
 
 # --- Mock Classes ---------------------------------------------------------------------------------
 
+
 class MockComponent(Component):
     """Mock subclass of `Component` for testing."""
+
     pass
 
 
 class MockFieldSpec(FieldSpec[MockComponent]):
     """Mock subclass of `FieldSpec` for testing."""
+
     COMPONENT_TYPE = MockComponent
 
     def validate(self, comp: MockComponent) -> bool:
@@ -32,6 +35,7 @@ class MockFieldSpec(FieldSpec[MockComponent]):
 
 
 # --- Tests for Component ----------------------------------------------------------------------------
+
 
 def test_component_initialization():
     """Test initialization of a `Component` object and its attributes."""
@@ -82,6 +86,7 @@ def test_component_equality():
 
 # --- Tests for ComponentSet -----------------------------------------------------------------------
 
+
 def test_component_set():
     """Test appending and accessing `Component` objects in a `ComponentSet`."""
     name1, name2 = "contrib1", "contrib2"
@@ -103,6 +108,7 @@ def test_component_set_append_invalid():
 
 
 # ---- Tests for Spec (Abstract Base Class) --------------------------------------------------------
+
 
 def test_spec_initialization():
     name = "test_spec"
@@ -136,14 +142,14 @@ def test_spec_equality():
 
 # --- Tests for FieldSpec -----------------------------------------------------------------------
 
+
 def test_spec_category():
     field = MockFieldSpec(name="test_spec")
     assert field.category == MockComponent
 
 
 @pytest.mark.parametrize(
-    "required, unique",
-    [(True, False), (False, True), (True, True), (False, False)]
+    "required, unique", [(True, False), (False, True), (True, True), (False, False)]
 )
 def test_category_spec_initialization(required, unique):
     name = "test_spec"
@@ -153,10 +159,7 @@ def test_category_spec_initialization(required, unique):
     assert field.unique == unique
 
 
-@pytest.mark.parametrize(
-    "comp_name, expected",
-    [("valid_contrib", True), ("", False)]
-)
+@pytest.mark.parametrize("comp_name, expected", [("valid_contrib", True), ("", False)])
 def test_category_spec_validation(comp_name, expected):
     field = MockFieldSpec(name="test_spec")
     comp = MockComponent(name=comp_name)

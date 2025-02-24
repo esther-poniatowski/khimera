@@ -36,7 +36,7 @@ khimera.plugins.core.FieldSpec
 """
 from typing import Any, Optional
 
-from khimera.components.core import Component, FieldSpec
+from khimera.core.core import Component, FieldSpec
 
 
 class MetaData(Component):
@@ -48,6 +48,7 @@ class MetaData(Component):
     value : Any
         Value of the metadata.
     """
+
     def __init__(self, name: str, value: Any, description: Optional[str] = None):
         super().__init__(name=name, description=description)
         self.value = value
@@ -71,9 +72,17 @@ class MetaDataSpec(FieldSpec[MetaData]):
     single value. This can be overridden for metadata fields that accept multiple values by setting
     the `unique` attribute to `False`.
     """
+
     COMPONENT_TYPE = MetaData
 
-    def __init__(self, name: str, valid_type: type, required: bool = False, unique: bool = True, description: Optional[str] = None):
+    def __init__(
+        self,
+        name: str,
+        valid_type: type,
+        required: bool = False,
+        unique: bool = True,
+        description: Optional[str] = None,
+    ):
         super().__init__(name=name, required=required, unique=unique, description=description)
         self.valid_type = valid_type
 

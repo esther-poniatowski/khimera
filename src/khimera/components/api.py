@@ -22,7 +22,7 @@ khimera.plugins.core.FieldSpec
 """
 from typing import Callable, Optional, Type, Tuple
 
-from khimera.components.core import Component, FieldSpec
+from khimera.core.core import Component, FieldSpec
 
 
 class APIExtension(Component):
@@ -34,6 +34,7 @@ class APIExtension(Component):
     extension : Callable or Type
         Function or class to extend the host application's API.
     """
+
     def __init__(self, name: str, extension: Callable | Type, description: Optional[str] = None):
         super().__init__(name=name, description=description)
         self.extension = extension
@@ -86,14 +87,18 @@ class APIExtensionSpec(FieldSpec[APIExtension]):
     Usually the `unique` attribute is set to `False` since multiple extensions can be provided for a
     single general field which collects extensions.
     """
+
     COMPONENT_TYPE = APIExtension
 
-    def __init__(self, name: str,
-                 valid_types: Optional[Tuple[Type, ...]] = None,
-                 check_inheritance: bool = False,
-                 required: bool = False,
-                 unique: bool = False,
-                 description: Optional[str] = None):
+    def __init__(
+        self,
+        name: str,
+        valid_types: Optional[Tuple[Type, ...]] = None,
+        check_inheritance: bool = False,
+        required: bool = False,
+        unique: bool = False,
+        description: Optional[str] = None,
+    ):
         super().__init__(name=name, required=required, unique=unique, description=description)
         self.valid_types = valid_types
         self.check_inheritance = check_inheritance
@@ -103,8 +108,8 @@ class APIExtensionSpec(FieldSpec[APIExtension]):
         if self.valid_types is None:
             return True
         extension = comp.extension
-        if self.check_inheritance: # check for inheritance
+        if self.check_inheritance:  # check for inheritance
             return isinstance(extension, type) and issubclass(extension, self.valid_types)
-        else: # check for instance of valid type
+        else:  # check for instance of valid type
             return isinstance(extension, self.valid_types)
         return False
