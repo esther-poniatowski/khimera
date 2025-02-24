@@ -25,6 +25,73 @@ from khimera.plugins.declare import PluginModel
 from khimera.plugins.create import Plugin
 
 
+# --- Plugin Entry Point ---------------------------------------------------------------------------
+
+class PluginEntryPoint:
+    """
+    Represents an entry point for a plugin in the host application, inspired by the `EntryPoint`
+    class from `importlib.metadata`.
+
+    Attributes
+    ----------
+    path : str or Path
+        Path to the directory on the filesystem containing the plugin package.
+    value : str
+        Reference pointing to to a `Plugin` instance. Format: 'package.module:object'.
+    module : str
+        Name of the module containing the referenced object.
+        It refers to the full Python import path, including both the package name and the module
+        name. Format: 'package.module'.
+    attr : str
+        Name of the specific `Plugin` object within the module. Format: 'object'.
+
+    Methods
+    -------
+    load()
+        Dynamically imports and returns the referenced `Plugin` object.
+
+    Examples
+    --------
+    Create a plugin entry point:
+
+    >>> entry_point = PluginEntryPoint(path='path/to/package', value='my_package.plugins:MyPlugin')
+
+    Load the referenced plugin object:
+
+    >>> plugin = entry_point.load()
+    >>> print(plugin)
+    Plugin(name='my_plugin', version='0.1.0', ...)
+
+    Notes
+    -----
+    This class is inspired by the `EntryPoint` class from the `importlib.metadata` module.
+
+    Shared attributes: `name`, `value`, `module`, `attr`, `load`.
+
+    Omitted attributes: `group`.
+
+    """
+    def __init__(self, name: str, value: str):
+        self.name = name
+        self.value = value
+        self.module, self.attr = value.split(':')
+
+    def load(self) -> Plugin:
+        """
+        Dynamically imports and returns the referenced `Plugin` object.
+
+        Returns
+        -------
+        Plugin
+            Referenced `Plugin` object.
+        """
+        module = importlib.import_module(self.module)
+        return getattr(module, self.attr)
+
+
+# --- Abstract Strategy - PluginFinder -------------------------------------------------------------
+
+
 class PluginFinder(ABC):
     """
     Abstract base class for plugins discovery strategies for the host application.
@@ -72,20 +139,6 @@ class PluginFinder(ABC):
         """Discovers plugins by implementing the discovery strategy."""
         pass
 
-    def filter(self, model : Optional[PluginModel]) -> List[Plugin]:
-        """
-        Filter the discovered plugins by model.
-
-        Arguments
-        ---------
-        model : PluginModel
-            Plugin model specifying the expected structure and components of the plugins.
-            If not provided, all the plugins are considered regardless of the model they adhere to.
-        """
-        if model is None:
-            return self.plugins
-        return [plugin for plugin in self.plugins if plugin.model == model]
-
     def store(self, plugin: Plugin) -> None:
         """
         Stores a discovered plugin.
@@ -95,6 +148,10 @@ class PluginFinder(ABC):
         Type checking is performed automatically by the `TypeConstrainedList` class.
         """
         self.plugins.append(plugin)
+
+    def __iter__(self):
+        """Iterates over the discovered plugins."""
+        return iter(self.plugins)
 
     def get(self, name : str, version : Optional[str]) -> Optional[Plugin | List[Plugin]]:
         """
@@ -117,9 +174,22 @@ class PluginFinder(ABC):
         found = [plugin for plugin in self.plugins if plugin.name == name and (version is None or plugin.version == version)]
         return found[0] if len(found) == 1 else found or None
 
-    def __iter__(self):
-        """Iterates over the discovered plugins."""
-        return iter(self.plugins)
+    def filter(self, model : Optional[PluginModel]) -> List[Plugin]:
+        """
+        Filter the discovered plugins by model.
+
+        Arguments
+        ---------
+        model : PluginModel
+            Plugin model specifying the expected structure and components of the plugins.
+            If not provided, all the plugins are considered regardless of the model they adhere to.
+        """
+        if model is None:
+            return self.plugins
+        return [plugin for plugin in self.plugins if plugin.model == model]
+
+
+# --- Concrete Strategy - EntryPointsFinderPyproject -----------------------------------------------
 
 
 class EntryPointsFinderPyproject(PluginFinder):
