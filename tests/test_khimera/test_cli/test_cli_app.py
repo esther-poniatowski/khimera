@@ -53,24 +53,16 @@ def test_cli_app_creation_with_existing_instance():
     app = typer.Typer(help=message)
     app.custom_attribute = value
     cli = CliApp(app)
-    assert (
-        cli.info.help == message
-    ), "CliApp should inherit 'help' attribute from existing Typer instance"
-    assert hasattr(
-        cli, "custom_attribute"
-    ), "CliApp should inherit custom attributes from existing Typer instance"
-    assert cli.custom_attribute == value, "CliApp should copy the custom attribute correctly"
+    assert cli.info.help == message, "CliApp did not inherit 'help' from Typer instance"
+    assert hasattr(cli, "custom_attribute"), "CliApp did not inherit attributes from Typer instance"
+    assert cli.custom_attribute == value, "CliApp did copy the custom attribute"
 
 
 def test_custom_indices_initialized():
     """Ensure `groups_index` and `commands_index` are correctly initialized."""
     cli = CliApp()
-    assert isinstance(
-        cli.groups_index, dict
-    ), "`groups_index` should be initialized as a dictionary"
-    assert isinstance(
-        cli.commands_index, dict
-    ), "`commands_index` should be initialized as a dictionary"
+    assert isinstance(cli.groups_index, dict), "`groups_index` not initialized as dictionary"
+    assert isinstance(cli.commands_index, dict), "`commands_index` not initialized as dictionary"
     assert not cli.groups_index, "`groups_index` should start empty"
     assert not cli.commands_index, "`commands_index` should start empty"
 
@@ -90,10 +82,8 @@ def test_add_group_new():
     """Ensure command groups can be created and retrieved with no sub-group instance."""
     cli = CliApp()
     group = cli.add_group("test-group")
-    assert cli.has_group("test-group"), "Command group 'test-group' was not registered"
-    assert (
-        cli.get_group("test-group") is group
-    ), "Retrieved group does not match the registered instance"
+    assert cli.has_group("test-group"), "Command group 'test-group' not registered"
+    assert cli.get_group("test-group") is group, "Retrieved group != registered instance"
 
 
 def test_add_group_existing():
@@ -101,10 +91,8 @@ def test_add_group_existing():
     cli = CliApp()
     sub_app = CliApp()
     cli.add_group("test-group", sub_app)
-    assert cli.has_group("test-group"), "Command group 'test-group' was not registered"
-    assert (
-        cli.get_group("test-group") is sub_app
-    ), "Retrieved group does not match the registered instance"
+    assert cli.has_group("test-group"), "Command group 'test-group' not registered"
+    assert cli.get_group("test-group") is sub_app, "Retrieved group =! registered instance"
 
 
 def test_duplicate_group():
@@ -126,10 +114,8 @@ def test_nested_groups():
     cli = CliApp()
     group = cli.add_group("test-group")
     sub_group = group.add_group("test-sub-group")
-    assert group.has_group(
-        "test-sub-group"
-    ), "Nested group 'test-sub-group' was not registered under 'test-group'"
-    assert group.get_group("test-sub-group") is sub_group, "Nested group retrieval failed"
+    assert group.has_group("test-sub-group"), "Subgroup 'test-sub-group' not in 'test-group'"
+    assert group.get_group("test-sub-group") is sub_group, "Sub-group retrieval failed"
 
 
 # --- Tests for Command Registration ---------------------------------------------------------------
@@ -138,33 +124,31 @@ def test_nested_groups():
 def test_register_command_main(sample_command):
     """Ensure commands can be registered dynamically in the main CLI."""
     cli = CliApp()
-    cli.add_command(sample_command, "test-cmd")
-    assert cli.has_command("test-cmd"), "Command 'test-cmd' was not registered"
+    cli.add_command("test-cmd", sample_command)
+    assert cli.has_command("test-cmd"), "Command 'test-cmd' not registered"
 
 
 def test_register_command_in_group(sample_command):
     """Ensure commands can be registered inside a command group."""
     cli = CliApp()
     group = cli.add_group("test-group")
-    group.add_command(sample_command, "test-cmd")
-    assert group.has_command(
-        "test-cmd"
-    ), "Command 'test-cmd' was not registered inside 'test-group'"
+    group.add_command("test-cmd", sample_command)
+    assert group.has_command("test-cmd"), "Command 'test-cmd' not registered in 'test-group'"
 
 
 def test_register_command_non_existent_group(sample_command):
     """Ensure that a command cannot be registered in a non-existent group."""
     cli = CliApp()
     with pytest.raises(ValueError, match="Command group 'unknown' not found."):
-        cli.add_command(sample_command, "test-cmd", in_group="unknown")
+        cli.add_command("test-cmd", sample_command, in_group="unknown")
 
 
 def test_duplicate_command_registration(sample_command):
     """Ensure that registering a duplicate command is prevented."""
     cli = CliApp()
-    cli.add_command(sample_command, "test-cmd")
+    cli.add_command("test-cmd", sample_command)
     with pytest.raises(ValueError, match="Command 'test-cmd' already exists."):
-        cli.add_command(sample_command, "test-cmd")
+        cli.add_command("test-cmd", sample_command)
 
 
 # --- Tests for CLI Execution ----------------------------------------------------------------------
@@ -198,7 +182,7 @@ def test_unknown_command():
 def test_command_execution(sample_command):
     """Ensure a command registered in the main CLI executes properly."""
     cli = CliApp()
-    cli.add_command(sample_command, "test-cmd")
+    cli.add_command("test-cmd", sample_command)
     result = runner.invoke(cli, ["test-cmd"])
     assert not result.exit_code, "Command execution failed (O exit code)"
     assert "Success" in result.output, "Expected output not found"
@@ -208,7 +192,7 @@ def test_group_command_execution(sample_command):
     """Ensure a command registered inside a group executes properly."""
     cli = CliApp()
     group = cli.add_group("test-group")
-    group.add_command(sample_command, "test-cmd")
+    group.add_command("test-cmd", sample_command)
     result = runner.invoke(cli, ["test-group", "test-cmd"])
     assert not result.exit_code, "Group command execution failed (O exit code)"
     assert "Success" in result.output, "Expected output not found"
