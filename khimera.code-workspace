@@ -1,20 +1,25 @@
 // Workspace-Specific Settings for Khimera
 {
-	// Folders Included in the Workspace
-	"folders": [
-		{
-			// Project
-				"name": "khimera",
-				"path": "."
-			}
-	],
+	// --- WORKSPACE FOLDERS -----------------------------------------------------------------------
 
-	// Workspace Settings
+	"folders": [
+		{ // Project Root
+			"name": "khimera",
+			"path": "."
+		}
+    ],
+
+	// --- WORKSPACE SETTINGS ----------------------------------------------------------------------
+
 	"settings": {
-		// Python Environment
+
+		// --- Virtual Environment ---
+
 		"python.defaultInterpreterPath": "${userHome}/miniconda3/envs/khimera/bin/python",
 		"python.terminal.activateEnvironment": true,
 		"terminal.integrated.inheritEnv": false, // user setting, here to remember if troubleshooting
+
+		// --- VS Code Interface and Behavior ---
 
 		// View and Layout
 		"workbench.editor.closeEmptyGroups": false,
@@ -64,24 +69,23 @@
 			"git": true,
 		},
 
+		// --- Code Quality and Analysis ---
+
 		// Formatting
 		"files.trimTrailingWhitespace": true, // remove trailing white spaces on save
 		"files.insertFinalNewline": true, // at least one line at the end of the file
 		"files.trimFinalNewlines": true, // at most one line at the end of the file
-		"[python]": {
+		"[python]": { // use Black for Python formatting
 			"editor.defaultFormatter": "ms-python.black-formatter",
 			"editor.formatOnSave": true
 		},
-		// provide black configuration file
 		"black-formatter.args": ["--config", "./config/tools/black.toml"],
 
 		// Linting
 		"pylint.lintOnChange": true, // user setting, here to remember to activate
-		// provide pylint configuration file
-		"pylint.args": ["--rcfile=config/tools/pylintrc.ini"],
+		"pylint.args": ["--rcfile=./config/tools/pylintrc.ini"],
 
 		// Type Checking
-		// provide mypy configuration file
 		"mypy-type-checker.args": ["--config-file=./config/tools/mypy.ini"],
 		"mypy-type-checker.ignorePatterns": [
 			"**/docs/**",
@@ -106,7 +110,8 @@
 		"esbonio.sphinx.srcDir": "docs/source",
 		"esbonio.sphinx.builderName": "html",
 
-		// Testing
+		// --- Testing ---
+
 		"python.testing.pytestEnabled": false, // disable built-in test runner
 		"python.testing.unittestEnabled": false, // disable built-in test runner
 		"pythonTestExplorer.testFramework": "pytest", // use pytest as the test framework
@@ -114,7 +119,8 @@
 
 	},
 
-	// Debugging Configurations
+	// --- DEBUGGING -------------------------------------------------------------------------------
+
 	"launch": {
 		"version": "0.2.0",
 		"configurations": [
@@ -128,7 +134,8 @@
     	]
 	},
 
-	// Recommended Extensions
+	// --- EXTENSIONS ------------------------------------------------------------------------------
+
 	"extensions": {
 		"recommendations": [
 			// Core Python
