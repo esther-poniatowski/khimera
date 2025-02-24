@@ -10,11 +10,13 @@ See Also
 --------
 khimera.plugins.declare
 """
-import pytest
 from typing import Type
 
+import pytest
+
 from khimera.plugins.declare import PluginModel
-from khimera.core.core import Spec, Component, FieldSpec
+from khimera.core.components import Component
+from khimera.core.specifications import Spec, FieldSpec
 from khimera.core.dependencies import DependencySpec
 
 

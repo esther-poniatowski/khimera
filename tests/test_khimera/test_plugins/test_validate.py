@@ -16,7 +16,8 @@ import pytest
 import pytest_mock
 
 from khimera.plugins.validate import PluginValidator
-from khimera.core.core import ComponentSet, Component, FieldSpec  # mocked
+from khimera.core.components import ComponentSet, Component
+from khimera.core.specifications import FieldSpec  # mocked
 from khimera.plugins.create import Plugin  # mocked
 from khimera.plugins.declare import PluginModel  # mocked
 

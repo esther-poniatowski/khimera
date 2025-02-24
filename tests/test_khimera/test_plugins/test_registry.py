@@ -49,7 +49,7 @@ import pytest_mock
 from khimera.plugins.register import ConflictResolver, PluginRegistry
 from khimera.plugins.create import Plugin
 from khimera.plugins.declare import PluginModel
-from khimera.core.core import Component, ComponentSet
+from khimera.core.components import Component, ComponentSet
 from khimera.plugins.validate import PluginValidator
 
 

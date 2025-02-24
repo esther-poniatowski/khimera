@@ -13,7 +13,8 @@ khimera.plugins.create
 import pytest
 
 from khimera.plugins.create import Plugin
-from khimera.core.core import FieldSpec, Component
+from khimera.core.components import Component
+from khimera.core.specifications import FieldSpec
 from khimera.plugins.declare import PluginModel
 
 

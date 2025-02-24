@@ -13,13 +13,12 @@ PluginRegistry
 See Also
 --------
 """
-from typing import Dict, List, Type, TypeVar, Optional, Generic
+from typing import Dict, List, TypeVar, Optional
 import warnings
 
-from khimera.utils.factories import TypeConstrainedDict, TypeConstrainedList
-from khimera.plugins.declare import PluginModel
+from khimera.utils.factories import TypeConstrainedDict
 from khimera.plugins.create import Plugin
-from khimera.core.core import Component, ComponentSet
+from khimera.core.components import Component, ComponentSet
 from khimera.plugins.validate import PluginValidator
 
 E = TypeVar("E", bound=Plugin | Component)

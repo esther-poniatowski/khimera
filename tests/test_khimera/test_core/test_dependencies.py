@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-test_khimera.test_components.test_dependencies
-==============================================
+test_khimera.test_core.test_dependencies
+========================================
 
 Tests for the dependency specifications in plugin models.
 
 See Also
 --------
-khimera.components.dependencies
+khimera.core.dependencies
 """
 import pytest
 
-from khimera.core.core import Component
+from khimera.core.components import Component
 from khimera.core.dependencies import DependencySpec, PredicateDependency
 
 

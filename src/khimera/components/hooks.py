@@ -15,16 +15,17 @@ HookSpec
 
 See Also
 --------
-khimera.plugins.core.Component
+khimera.core.components.Component
     Abstract base class representing a component to a plugin instance.
-khimera.plugins.core.FieldSpec
+khimera.core.specifications.FieldSpec
     Abstract base class for defining constraints and validations for components in a plugin model.
 """
 from collections import OrderedDict
 import inspect
 from typing import Any, Callable, Union, Optional, Type, Tuple, List
 
-from khimera.core.core import Component, FieldSpec
+from khimera.core.components import Component
+from khimera.core.specifications import FieldSpec
 
 
 class Hook(Component):

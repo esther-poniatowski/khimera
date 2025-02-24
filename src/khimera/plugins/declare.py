@@ -18,7 +18,8 @@ from typing import Optional, Type, Dict, Callable, Self
 
 from khimera.utils.factories import TypeConstrainedDict
 from khimera.utils.mixins import DeepCopyable, DeepComparable
-from khimera.core.core import Spec, Component, FieldSpec
+from khimera.core.components import Component
+from khimera.core.specifications import Spec, FieldSpec
 from khimera.core.dependencies import DependencySpec
 
 

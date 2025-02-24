@@ -29,14 +29,15 @@ MetaDataSpec
 
 See Also
 --------
-khimera.plugins.core.Component
+khimera.core.components.Component
     Abstract base class representing a component to a plugin instance.
-khimera.plugins.core.FieldSpec
+khimera.core.specifications.FieldSpec
     Abstract base class for defining constraints and validations for components in a plugin model.
 """
 from typing import Any, Optional
 
-from khimera.core.core import Component, FieldSpec
+from khimera.core.components import Component
+from khimera.core.specifications import FieldSpec
 
 
 class MetaData(Component):

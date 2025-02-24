@@ -13,14 +13,14 @@ Plugin
 
 See Also
 --------
-khimera.plugins.core
+khimera.core
 khimera.plugins.declare
 """
 from typing import Optional, Type, Dict, Self
 
 from khimera.utils.factories import TypeConstrainedDict
 from khimera.utils.mixins import DeepCopyable, DeepComparable
-from khimera.core.core import Component, ComponentSet
+from khimera.core.components import Component, ComponentSet
 from khimera.plugins.declare import PluginModel
 
 

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-khimera.plugins.core
-====================
+khimera.core.dependencies
+=========================
 
-Core classes and interfaces for defining the building blocks of plugin models and instances.
+Base and concrete classes for dependency specifications in plugin models.
 
 Classes
 -------
@@ -25,7 +25,7 @@ khimera.plugins.create.Plugin
 from abc import abstractmethod
 from typing import Optional, Callable, Iterable, TYPE_CHECKING
 
-from khimera.core.core import Spec
+from khimera.core.specifications import Spec
 
 if TYPE_CHECKING:
     from khimera.plugins.create import Plugin  # only imported for type checking
