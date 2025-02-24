@@ -53,8 +53,6 @@ def mock_plugin(mocker: pytest_mock.MockFixture, name: str, version: str = "1.0.
 
     Arguments
     ---------
-    mocker : pytest_mock.MockFixture
-        Pytest mock fixture to create a mock object.
     name : str
         Name of the plugin.
     version : str, default="1.0.0"
@@ -80,10 +78,8 @@ def patch_entry_points(mocker: pytest_mock.MockFixture, entry_points: List):
 
     Arguments
     ---------
-    mocker : pytest_mock.MockFixture
-        Pytest mock fixture to create a patch.
     entry_points : list
-        List of mocked entry points to return.
+        Mocked entry points to return.
 
     Returns
     -------
@@ -255,7 +251,7 @@ def test_entry_points_finder_get_entry_points(mocker: pytest_mock.MockFixture):
     - If `importlib.metadata.entry_points` raises an error, it should be handled as `RuntimeError`.
     """
     finder = EntryPointsFinderPyproject(app_name="test_app")
-    mock_entry_point = mocker.Mock()
+    mock_entry_point = mocker.Mock() # entry point returned by `importlib.metadata.entry_points`
     # Case 1: Entry points exist
     patch_entry_points(mocker, [mock_entry_point])
     assert finder.get_entry_points() == [mock_entry_point]
