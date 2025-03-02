@@ -10,23 +10,26 @@ See Also
 --------
 khimera.components.assets
 """
-import pytest
+# --- Silenced Errors ---
+# pylint: disable=unused-variable
+#   Test functions are used, but pylint does not detect it.
+
 from pathlib import Path
-import sys # for manipulating sys.path
-import shutil # for copying directories
+import sys  # for manipulating sys.path
+import shutil  # for copying directories
+
+import pytest
 
 from khimera.components.assets import Asset, AssetSpec
 
-# -- Mock Package and File for testing -------------------------------------------------------------
 
-mock_package = "test_package"
-mock_file = "test_file.txt"
+# --- Tests for Asset (Component) ------------------------------------------------------------------
 
-
-# --- Tests for Asset (Component) --------------------------------------------------------------------
 
 def test_asset_initialization():
-    """Test initialization of Asset."""
+    """Test initialization of `Asset`."""
+    mock_package = "test_package"
+    mock_file = "test_file.txt"
     name = "test_asset"
     description = "Test asset"
     asset = Asset(name=name, file_path=mock_file, package=mock_package, description=description)
@@ -35,25 +38,32 @@ def test_asset_initialization():
     assert asset.package == mock_package
     assert asset.description == description
 
+
 def test_asset_initialization_default_package():
-    """Test initialization of Asset with default package."""
+    """Test initialization of `Asset` with default package."""
+    mock_file = "test_file.txt"
     asset = Asset(name="test_asset", file_path=mock_file, package=None)
     assert asset.package == asset.__module__
 
-@pytest.mark.parametrize("file_path,package", [
-    ("assets/image.png", "my_package"),
-    ("config.json", "my_package.resources"),
-])
+
+@pytest.mark.parametrize(
+    "file_path, package",
+    [
+        ("assets/image.png", "my_package"),
+        ("config.json", "my_package.resources"),
+    ],
+)
 def test_asset_initialization_various_paths(file_path, package):
-    """Test initialization of Asset with various file paths and package."""
+    """Test initialization of `Asset` with various file paths and package."""
     asset = Asset(name="test_asset", file_path=file_path, package=package)
     assert asset.file_path == file_path
     assert asset.package == package
 
 
-# --- Tests for `Asset.get_path()` method ----------------------------------------------------------
+# --- Tests for Asset.get_path() method ------------------------------------------------------------
 
-def test_asset_get_path_installed_package(tmp_path):
+
+def test_asset_get_path_installed_package(tmp_path: Path):
     """
     Test the `Asset.get_path()` method for an installed package.
 
@@ -87,39 +97,44 @@ def test_asset_get_path_installed_package(tmp_path):
     shutil.copytree(package_dir, installed_package_dir)
     # Add the site-packages directory to sys.path
     sys.path.insert(0, str(site_packages_dir))
-    try:
-        # Create an asset and get the path with a context manager
+    try:  # Create an asset and get the path with a context manager
         asset = Asset(name="test_asset", file_path=file_name, package=package_name)
         with asset.get_path() as path:
             assert isinstance(path, Path)
             assert path.name == file_name
             assert path.read_text() == file_content
-            # Additional checks
             assert path.exists(), "Resource file does not exist."
             assert path.is_file(), "Resource is not a file."
-    finally:
-        # Clean up
+    finally:  # Clean up
         sys.path.pop(0)
 
 
 # --- Tests for AssetSpec (FieldSpec) -----------------------------------------------------------
 
-def test_assetspec_initialization():
-    """Test initialization of Asset Spec."""
+
+def test_asset_spec_initialization():
+    """Test initialization of `AssetSpec`."""
     name = "test_spec"
     file_ext = (".txt", ".pdf")
     required = True
     unique = False
     description = "Test asset field"
-    asset_spec = AssetSpec(name=name, file_ext=file_ext, required=required, unique=unique, description=description)
+    asset_spec = AssetSpec(
+        name=name,
+        file_ext=file_ext,
+        required=required,
+        unique=unique,
+        description=description,
+    )
     assert asset_spec.name == name
     assert asset_spec.file_ext == file_ext
     assert asset_spec.required == required
     assert asset_spec.unique == unique
     assert asset_spec.description == description
 
-def test_assetspec_initialization_defaults():
-    """Test initialization of Asset Spec with default values."""
+
+def test_asset_spec_initialization_defaults():
+    """Test initialization of `AssetSpec` with default values."""
     asset_spec = AssetSpec(name="test_spec")
     assert asset_spec.file_ext is None
     assert asset_spec.required is False
@@ -128,20 +143,23 @@ def test_assetspec_initialization_defaults():
 
 # --- Tests for AssetSpec validation ---------------------------------------------------------------
 
-def test_assetspec_validate_valid_extension():
-    """Test AssetSpec validation with valid extension."""
+
+def test_asset_spec_validate_valid_extension():
+    """Test `AssetSpec` validation with valid extension."""
     asset_spec = AssetSpec(name="test_spec", file_ext=(".txt", ".pdf"))
     asset = Asset(name="test_asset", file_path="test.txt", package="test_package")
     assert asset_spec.validate(asset) is True
 
-def test_assetspec_validate_invalid_extension():
-    """Test AssetSpec validation with invalid extension."""
+
+def test_asset_spec_validate_invalid_extension():
+    """Test `AssetSpec` validation with invalid extension."""
     asset_spec = AssetSpec(name="test_spec", file_ext=(".txt", ".pdf"))
     asset = Asset(name="test_asset", file_path="test.png", package="test_package")
     assert asset_spec.validate(asset) is False
 
-def test_assetspec_validate_no_extension_restriction():
-    """Test AssetSpec validation with no extension restriction."""
+
+def test_asset_spec_validate_no_extension_restriction():
+    """Test `AssetSpec` validation with no extension restriction."""
     asset_spec = AssetSpec(name="test_spec")
     asset = Asset(name="test_asset", file_path="test.any", package="test_package")
     assert asset_spec.validate(asset) is True

@@ -23,6 +23,7 @@ khimera.core.specifications.FieldSpec
 pathlib.Path
     Object-oriented filesystem paths.
 """
+from contextlib import AbstractContextManager
 from importlib.resources import files, as_file
 from pathlib import Path
 from typing import Optional, Tuple
@@ -38,6 +39,8 @@ class Asset(Component):
 
     Arguments
     ---------
+    file_path : str
+        Path to the resource file, relative to the package root.
     package : str | ModuleType, optional
         Name of the package where the resource is located. It can be either a string representing a
         package name or a module object (e.g., `__name__`).
@@ -49,12 +52,9 @@ class Asset(Component):
         - If resources are in a subdirectory, use dot notation to specify the subdirectory (e.g.
           `"my_package.resources"`).
 
-        If not provided, the package is inferred from the caller's module, i.e. the module where the
-        `Asset` instance is created (`__module__` attribute), which is assumed to be the file where
-        the plugin is defined.
-
-    file_path : str
-        Path to the resource file, relative to the package root.
+        If not provided, the package is inferred from the caller's module where the `Asset`
+        instance is created (`__module__` attribute), which is assumed to be the file where the
+        plugin is defined.
 
     Notes
     -----
@@ -95,7 +95,7 @@ class Asset(Component):
     def __init__(
         self,
         name: str,
-        file_path: Optional[str],
+        file_path: str,
         package: Optional[str | ModuleType] = None,
         description: Optional[str] = None,
     ):
@@ -103,7 +103,7 @@ class Asset(Component):
         self.file_path = file_path
         self.package = package or self.__module__  # default to the caller's module
 
-    def get_path(self) -> Path:
+    def get_path(self) -> AbstractContextManager[Path, bool | None]:
         """
         Create a context manager to access the resource file. When used in a `with` statement, it
         provides a `pathlib.Path` object representing the resource.
@@ -154,8 +154,8 @@ class AssetSpec(FieldSpec[Asset]):
         super().__init__(name=name, required=required, unique=unique, description=description)
         self.file_ext = file_ext
 
-    def validate(self, comp: Asset) -> bool:
+    def validate(self, obj: Asset) -> bool:
         """Check if the asset file extension is allowed."""
         if self.file_ext is None:
             return True
-        return comp.file_path.endswith(self.file_ext)
+        return obj.file_path.endswith(self.file_ext)

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 khimera.components.commands
-==============================
+===========================
 
 Classes defining new commands in plugin models and instances.
 
@@ -33,7 +33,7 @@ class Command(Component):
 
     Attributes
     ----------
-    callable : Callable
+    func : Callable
         Function or method to be executed when the command is invoked.
     group : str, optional
         Name of the sub-command group where the command will be nested.
@@ -46,12 +46,12 @@ class Command(Component):
     def __init__(
         self,
         name: str,
-        callable: Callable,
+        func: Callable,
         group: Optional[str] = None,
         description: Optional[str] = None,
     ):
         super().__init__(name=name, description=description)
-        self.callable = callable
+        self.func = func
         self.group = group
 
 
@@ -97,10 +97,10 @@ class CommandSpec(FieldSpec[Command]):
         self.admits_new_groups = admits_new_groups
         self.admits_top_level = admits_top_level
 
-    def validate(self, comp: Command) -> bool:
+    def validate(self, obj: Command) -> bool:
         """Check if the command group is allowed by the host application."""
-        if comp.group is None and not self.admits_top_level:
+        if obj.group is None and not self.admits_top_level:
             return False
-        if comp.group not in self.groups and not self.admits_new_groups:
+        if obj.group not in self.groups and not self.admits_new_groups:
             return False
         return True

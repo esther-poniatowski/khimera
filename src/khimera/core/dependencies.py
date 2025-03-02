@@ -16,7 +16,7 @@ PredicateDependency
 
 See Also
 --------
-khimera.core.core.Spec
+khimera.core.components.Spec
     Base class representing constraints specifications for plugin components within a plugin model.
 khimera.plugins.create.Plugin
     Class representing a plugin instance, which is a collection of components that adhere to a

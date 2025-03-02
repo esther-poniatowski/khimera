@@ -34,7 +34,7 @@ class Hook(Component):
 
     Attributes
     ----------
-    callable : Callable
+    func : Callable
         Function or method to be executed when the hook is triggered.
 
     Warnings
@@ -43,9 +43,9 @@ class Hook(Component):
     signature defined by the corresponding `HookSpec`.
     """
 
-    def __init__(self, name: str, callable: Callable, description: Optional[str] = None):
+    def __init__(self, name: str, func: Callable, description: Optional[str] = None):
         super().__init__(name=name, description=description)
-        self.callable = callable
+        self.func = func
 
 
 class HookSpec(FieldSpec[Hook]):
@@ -84,14 +84,14 @@ class HookSpec(FieldSpec[Hook]):
     ...     return isinstance(value, int)
     >>> def invalid_hook(value: str, name: str) -> bool:
     ...     return True
-    >>> valid_contrib = Hook(name="valid_hook", callable=valid_hook)
-    >>> invalid_contrib = Hook(name="invalid_hook", callable=invalid_hook)
+    >>> valid_comp = Hook(name="valid_hook", callable=valid_hook)
+    >>> invalid_comp = Hook(name="invalid_hook", callable=invalid_hook)
 
     Validate the components against the hook field:
 
-    >>> print(hook_spec.validate(valid_contrib))
+    >>> print(hook_spec.validate(valid_comp))
     True
-    >>> print(hook_spec.validate(invalid_contrib))
+    >>> print(hook_spec.validate(invalid_comp))
     False
     """
 
@@ -114,17 +114,15 @@ class HookSpec(FieldSpec[Hook]):
         self.allow_var_kwargs = allow_var_kwargs
         self.return_type = return_type
 
-    def validate(self, comp: Hook) -> bool:
+    def validate(self, obj: Hook) -> bool:
         """Validate that the hook function matches the expected signature."""
-        positional, keyword_only, has_var_positional, has_var_keyword, return_annotation = (
-            self.describe_signature(comp.callable)
-        )
-        return self.check_inputs(
-            positional, has_var_positional, has_var_keyword
-        ) and self.check_output(return_annotation)
+        pos, _, has_var_pos, has_var_kw, return_ann = self.describe_signature(obj.func)
+        return self.check_inputs(pos, has_var_pos, has_var_kw) and self.check_output(return_ann)
 
     @staticmethod
-    def describe_signature(fn: Callable) -> Tuple[List[str], List[str], bool, bool, Any]:
+    def describe_signature(
+        fn: Callable,
+    ) -> Tuple[List[Tuple[str, Any]], List[str], bool, bool, Any]:
         """
         Describe the signature of a function or method.
 
@@ -135,8 +133,9 @@ class HookSpec(FieldSpec[Hook]):
 
         Returns
         -------
-        positional : List[str]
-            Names of positional arguments, in order.
+        positional : List[Tuple[str, Any]]
+            Names and types of positional arguments, in order. Types are inferred from type hints,
+            and Any is used if no type hint is provided.
         keyword_only : List[str]
             Names of keyword-only arguments.
         has_var_positional : bool
@@ -149,12 +148,12 @@ class HookSpec(FieldSpec[Hook]):
         sig = inspect.signature(fn)
         params = sig.parameters
         return_annotation = sig.return_annotation
-        positional = []
-        keyword_only = []
+        positional: List[Tuple[str, Any]] = []
+        keyword_only: List[str] = []
         has_var_positional = False
         has_var_keyword = False
         for param in params.values():
-            if param.kind in {
+            if param.kind in {  # check if parameter is positional
                 inspect.Parameter.POSITIONAL_ONLY,
                 inspect.Parameter.POSITIONAL_OR_KEYWORD,
             }:
@@ -168,7 +167,10 @@ class HookSpec(FieldSpec[Hook]):
         return positional, keyword_only, has_var_positional, has_var_keyword, return_annotation
 
     def check_inputs(
-        self, positional: List[str], has_var_positional: bool, has_var_keyword: bool
+        self,
+        positional: List[Tuple[str, Any]],
+        has_var_positional: bool,
+        has_var_keyword: bool,
     ) -> bool:
         """
         Validate if a function matches the signature constraints.
@@ -179,9 +181,14 @@ class HookSpec(FieldSpec[Hook]):
             True if the function matches the constraints, False otherwise.
         """
         # Check exact argument names and order
-        expected_args = list(self.arg_types.items())
-        if positional != expected_args:
+        expected_names, expected_types = zip(*self.arg_types.items())
+        actual_names, actual_types = zip(*positional)
+        if expected_names != actual_names:
             return False
+        # Check argument types (more permissive if not provided)
+        for expected, actual in zip(expected_types, actual_types):
+            if expected is not Any and not issubclass(actual, expected):
+                return False
         # Check *args and **kwargs constraints
         if has_var_positional and not self.allow_var_args:
             return False

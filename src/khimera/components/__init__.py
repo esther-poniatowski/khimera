@@ -17,8 +17,6 @@ according to the host application's requirements.
 
 Modules
 -------
-core
-    Core components of plugins.
 metadata
     Metadata components of plugins.
 commands
@@ -30,9 +28,8 @@ hooks
 assets
     Asset components of plugins.
 
-
 See Also
 --------
-khimera.core.core
+khimera.core.components
     Base components of plugins models and instances.
 """

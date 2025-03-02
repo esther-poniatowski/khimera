@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 khimera.components.api
-=========================
+======================
 
 Classes defining API extensions in plugin models and instances.
 
@@ -61,7 +61,10 @@ class APIExtensionSpec(FieldSpec[APIExtension]):
     Declare an API extension spec for a function:
 
     >>> from types import FunctionType
-    >>> api_extension_spec = APIExtensionSpec(name="test_spec", valid_types=(FunctionType,), check_inheritance=False)
+    >>> api_extension_spec = APIExtensionSpec(
+    ...         name="test_spec", valid_types=(FunctionType,),
+    ...         check_inheritance=False
+    ...     )
     >>> api_extension_spec.valid_types
     (<class 'types.FunctionType'>,)
     >>> api_extension_spec.validate(APIExtension(name="test_extension", extension=lambda: None))
@@ -71,7 +74,11 @@ class APIExtensionSpec(FieldSpec[APIExtension]):
 
     >>> class BaseClass:
     ...     pass
-    >>> api_extension_spec = APIExtensionSpec(name="test_spec", valid_types=(BaseClass,), check_inheritance=True)
+    >>> api_extension_spec = APIExtensionSpec(
+    ...         name="test_spec",
+    ...         valid_types=(BaseClass,),
+    ...         check_inheritance=True
+    ...     )
     >>> api_extension_spec.valid_types
     (<class '__main__.BaseClass'>,)
     >>> class DerivedClass(BaseClass):
@@ -104,13 +111,12 @@ class APIExtensionSpec(FieldSpec[APIExtension]):
         self.valid_types = valid_types
         self.check_inheritance = check_inheritance
 
-    def validate(self, comp: APIExtension) -> bool:
+    def validate(self, obj: APIExtension) -> bool:
         """Check if the extension is of the expected types or subclasses."""
         if self.valid_types is None:
             return True
-        extension = comp.extension
+        extension = obj.extension
         if self.check_inheritance:  # check for inheritance
             return isinstance(extension, type) and issubclass(extension, self.valid_types)
         else:  # check for instance of valid type
             return isinstance(extension, self.valid_types)
-        return False
