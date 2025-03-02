@@ -16,7 +16,7 @@ DeepComparable
 import copy
 from typing import Self
 
-from deepdiff import DeepDiff, DeepHash
+from deepdiff import DeepDiff
 
 
 class DeepCopyable:
@@ -32,6 +32,7 @@ class DeepCopyable:
     --------
     copy.deepcopy
     """
+
     def copy(self) -> Self:
         """Create a deep copy of the object, creating copies of all its nested components."""
         return copy.deepcopy(self)
@@ -50,6 +51,7 @@ class DeepComparable:
     --------
     deepdiff.DeepDiff
     """
+
     def __eq__(self, other):
         """Compare the object with another object by deep comparison."""
         if not isinstance(other, self.__class__):

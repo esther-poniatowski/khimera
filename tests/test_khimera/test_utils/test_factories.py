@@ -14,7 +14,6 @@ khimera.utils.factories
 # pylint: disable=unused-variable
 #   Test functions are used, but pylint does not detect it.
 
-
 from collections import UserDict
 import re
 from typing import Union, List, Dict, Any

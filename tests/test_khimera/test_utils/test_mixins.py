@@ -11,6 +11,12 @@ See Also
 --------
 khimera.utils.mixins
 """
+# --- Silenced Errors ---
+# pylint: disable=unused-variable
+#   Test functions are used, but pylint does not detect it.
+# pylint: disable=unused-import
+#   Importing pytest is necessary for the tests.
+
 import pytest
 
 from khimera.utils.mixins import DeepCopyable, DeepComparable
@@ -18,19 +24,24 @@ from khimera.utils.mixins import DeepCopyable, DeepComparable
 
 # --- Mock Class for Testing Mixins ----------------------------------------------------------------
 
+
 class NestedObject(DeepCopyable, DeepComparable):
     """Class for testing mixins with nested objects."""
+
     def __init__(self, value):
         self.value = value
 
+
 class TestClass(DeepCopyable, DeepComparable):
     """Class which uses the DeepCopyable, DeepComparable, and DeepHashable mixins."""
+
     def __init__(self, nested, *args):
         self.mutable = [*args]
         self.nested = nested
 
 
 # --- Tests for DeepCopyable -----------------------------------------------------------------------
+
 
 def test_deep_copyable():
     """
@@ -52,6 +63,7 @@ def test_deep_copyable():
 
 # --- Tests for DeepComparable ---------------------------------------------------------------------
 
+
 def test_deep_comparable():
     """
     Test the `DeepComparable` mixin.
@@ -66,5 +78,4 @@ def test_deep_comparable():
     obj2 = TestClass(NestedObject(1), 1, 2, 3)
     obj3 = TestClass(NestedObject(2), 1, 2, 3)
     assert obj1 == obj2
-    assert not obj1 == obj3
     assert obj1 != obj3
