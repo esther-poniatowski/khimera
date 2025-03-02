@@ -37,7 +37,7 @@ from typing import List, Optional
 import pytest
 import pytest_mock
 
-from khimera.discovery.strategies import StandardEntryPoint
+from khimera.discovery.strategies import FromInstalledFinder
 from khimera.plugins.create import Plugin
 from khimera.plugins.declare import PluginModel
 
@@ -91,12 +91,12 @@ def patch_entry_points(mocker: pytest_mock.MockFixture, entry_points: List):
     mocker.patch.object(importlib.metadata, "entry_points", return_value=entry_points)
 
 
-# --- Tests for `StandardEntryPoint` -------------------------------------------------------
+# --- Tests for `FromInstalledFinder` -------------------------------------------------------
 
 
 def test_entry_points_finder_init():
     """
-    Test initializing an `StandardEntryPoint` instance.
+    Test initializing an `FromInstalledFinder` instance.
 
     Test Case:
 
@@ -106,12 +106,12 @@ def test_entry_points_finder_init():
     -  `plugins` : empty list.
     """
     app_name = "test_app"
-    finder1 = StandardEntryPoint(app_name=app_name)
+    finder1 = FromInstalledFinder(app_name=app_name)
     assert finder1.app_name == app_name
     assert finder1.entry_point_group == "test_app.plugins"
     assert len(finder1.plugins) == 0
     group = "custom.group"
-    finder2 = StandardEntryPoint(app_name=app_name, entry_point_group=group)
+    finder2 = FromInstalledFinder(app_name=app_name, entry_point_group=group)
     assert finder2.app_name == app_name
     assert finder2.entry_point_group == group
     assert len(finder2.plugins) == 0
@@ -119,7 +119,7 @@ def test_entry_points_finder_init():
 
 def test_entry_points_finder_get_entry_points(mocker: pytest_mock.MockFixture):
     """
-    Test the `get_entry_points` method of `StandardEntryPoint`.
+    Test the `get_entry_points` method of `FromInstalledFinder`.
 
     Test Cases:
 
@@ -127,7 +127,7 @@ def test_entry_points_finder_get_entry_points(mocker: pytest_mock.MockFixture):
     - If entry points exist, they should be returned, otherwise an empty list should be returned.
     - If `importlib.metadata.entry_points` raises an error, it should be handled as `RuntimeError`.
     """
-    finder = StandardEntryPoint(app_name="test_app")
+    finder = FromInstalledFinder(app_name="test_app")
     mock_entry_point = mocker.Mock()  # entry point returned by `importlib.metadata.entry_points`
     # Case 1: Entry points exist
     patch_entry_points(mocker, [mock_entry_point])
@@ -143,7 +143,7 @@ def test_entry_points_finder_get_entry_points(mocker: pytest_mock.MockFixture):
 
 def test_entry_points_finder_discover(mocker: pytest_mock.MockFixture):
     """
-    Test the `discover` method of `StandardEntryPoint`.
+    Test the `discover` method of `FromInstalledFinder`.
 
     Test Cases:
 
@@ -153,7 +153,7 @@ def test_entry_points_finder_discover(mocker: pytest_mock.MockFixture):
     - If an entry point returns an invalid object, a TypeError should be raised.
     - If no valid plugins are discovered, the plugins list should remain empty.
     """
-    finder = StandardEntryPoint(app_name="test_app")
+    finder = FromInstalledFinder(app_name="test_app")
     # Mock entry points
     valid_plugin = mock_plugin(mocker, "valid_plugin")
     invalid_plugin = "invalid_plugin"  # not Plugin

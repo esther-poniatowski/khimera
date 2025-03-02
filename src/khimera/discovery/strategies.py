@@ -8,7 +8,7 @@ Concrete discovery strategies for plugins in the host application.
 
 Classes
 -------
-StandardEntryPoint
+FromInstalledFinder
     Discovery strategy based on entry points declared in `pyproject.toml` files.
 
 See Also
@@ -23,10 +23,10 @@ from khimera.discovery.find import PluginFinder
 from khimera.plugins.create import Plugin
 
 
-# --- Concrete Strategy - StandardEntryPoint -----------------------------------------------
+# --- FromInstalledFinder ---------------------------------------------------------------------------
 
 
-class StandardEntryPoint(PluginFinder):
+class FromInstalledFinder(PluginFinder):
     """
     Discovers plugins for the host application from entry points declared in `pyproject.toml` of the
     plugin packages.
@@ -95,4 +95,7 @@ class StandardEntryPoint(PluginFinder):
         except Exception as exc:
             raise RuntimeError(
                 f"Failed to retrieve entry points for {self.entry_point_group}: {exc}"
-            )
+            ) from exc
+
+
+# --- FromAPIFinder --------------------------------------------------------------------------------

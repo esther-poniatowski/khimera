@@ -131,7 +131,7 @@ class PluginFinder(ABC):
     --------
     Initialize a plugin finder to discover plugins from the `pyproject.toml` files:
 
-    >>> finder = StandardEntryPoint(app_name='myapp')
+    >>> finder = FromInstalledFinder(app_name='myapp')
 
     Discover the plugins provided by the installed packages for the host application:
 
