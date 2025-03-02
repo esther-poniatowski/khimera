@@ -10,6 +10,12 @@ See Also
 --------
 khimera.core.dependencies
 """
+# --- Silenced Errors ---
+# pylint: disable=unused-variable
+#   Test functions are used, but pylint does not detect it.
+# pylint: disable=redefined-outer-name
+#   Redefining fixtures is necessary for the tests.
+
 import pytest
 
 from khimera.core.components import Component
@@ -22,26 +28,27 @@ from khimera.core.dependencies import DependencySpec, PredicateDependency
 class MockComponent(Component):
     """Mock subclass of `Component` for testing."""
 
-    pass
+
+class MockPlugin:
+    """Mock class representing a plugin instance, here as a collection of components."""
+
+    def __init__(self, components):
+        self.components = components
 
 
 class MockDependencySpec(DependencySpec):
     """Mock subclass of `DependencySpec` for testing."""
 
-    def validate(self, plugin) -> bool:
+    def validate(self, obj: MockPlugin) -> bool:
         """Simple validation: return True if plugin has all required dependencies."""
-        return all(dep in plugin.components for dep in self.fields)
-
-
-class MockPlugin:
-    def __init__(self, components):
-        self.components = components
+        return all(dep in obj.components for dep in self.fields)
 
 
 # ---- Tests for DependencySpec --------------------------------------------------------------------
 
 
 def test_dependency_spec_initialization():
+    """Test initialization of `Dependency Spec`."""
     name = "dependency_spec"
     description = "Test dependency specification"
     spec = MockDependencySpec(name=name, fields=["field1", "field2"], description=description)
@@ -51,39 +58,39 @@ def test_dependency_spec_initialization():
     assert spec.description == description
 
 
-# --- Tests for PredicateDependency validation --------------------------------------------------------
+# --- Tests for PredicateDependency validation -----------------------------------------------------
 
 
 def mock_predicate(dep1: Component, dep2: Component) -> bool:
+    """Mock predicate for testing, here checking the names of two dependencies."""
     return dep1.name == "dep1" and dep2.name == "dep2"
 
 
-def test_predicate_dependency_validate_correct():
-    """Test PredicateDependency validation with correct dependencies."""
-    spec = PredicateDependency(
+@pytest.fixture
+def dependency_spec():
+    """Fixture for a `PredicateDependency` instance containing two dependencies and a predicate."""
+    return PredicateDependency(
         name="predicate_dependency", predicate=mock_predicate, fields=["dep1", "dep2"]
     )
+
+
+def test_predicate_dependency_validate_correct(dependency_spec: PredicateDependency):
+    """Test `PredicateDependency` validation with correct dependencies."""
     plugin = MockPlugin(
         components={"dep1": MockComponent(name="dep1"), "dep2": MockComponent(name="dep2")}
     )
-    assert spec.validate(plugin) is True
+    assert dependency_spec.validate(plugin) is True
 
 
-def test_predicate_dependency_validate_incorrect():
-    """Test PredicateDependency validation with incorrect dependencies."""
-    spec = PredicateDependency(
-        name="predicate_dependency", predicate=mock_predicate, fields=["dep1", "dep2"]
-    )
+def test_predicate_dependency_validate_incorrect(dependency_spec: PredicateDependency):
+    """Test `PredicateDependency` validation with incorrect dependencies."""
     plugin = MockPlugin(
         components={"dep1": MockComponent(name="dep1"), "dep2": MockComponent(name="wrong_name")}
     )
-    assert spec.validate(plugin) is False
+    assert dependency_spec.validate(plugin) is False
 
 
-def test_predicate_dependency_validate_missing_dependency():
-    """Test PredicateDependency validation with missing dependencies."""
-    spec = PredicateDependency(
-        name="predicate_dependency", predicate=mock_predicate, fields=["dep1", "dep2"]
-    )
+def test_predicate_dependency_validate_missing_dependency(dependency_spec: PredicateDependency):
+    """Test `PredicateDependency` validation with missing dependencies."""
     plugin = MockPlugin(components={"dep1": MockComponent(name="dep1")})
-    assert spec.validate(plugin) is False
+    assert dependency_spec.validate(plugin) is False

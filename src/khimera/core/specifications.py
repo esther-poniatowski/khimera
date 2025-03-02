@@ -8,18 +8,11 @@ Base classes representing constraints specifications for components within a plu
 
 Classes
 -------
-Component
-    Base class representing a component to a plugin instance.
-ComponentSet
-    Container for multiple components associated with a single field in a plugin instance.
 Spec
     Base class representing constraints specifications for plugin components within a plugin model.
 FieldSpec
     Specialization of `Spec` defining a field in the plugin that is supported by the host
     application.
-DependencySpec
-    Specialization of `Spec` enforcing dependencies between several components in the plugin,
-    ensuring that structural or functional relationships are maintained.
 
 See Also
 --------
@@ -43,13 +36,15 @@ from typing import Optional, Type, TypeVar, Generic
 from khimera.utils.mixins import DeepCopyable, DeepComparable
 from khimera.core.components import Component
 
-# --- Specifications -------------------------------------------------------------------------------
 
-C = TypeVar("C", bound=Component)
-"""Type variable for a component to a plugin instance."""
+# --- Abstract Specifications ----------------------------------------------------------------------
 
 
-class Spec(ABC, DeepCopyable, DeepComparable):
+O = TypeVar("O")
+"""Type variable for an object to be validated (component, full plugin...)."""
+
+
+class Spec(ABC, Generic[O], DeepCopyable, DeepComparable):
     """
     Base class representing constraints specifications for plugin components within a plugin model.
 
@@ -85,24 +80,31 @@ class Spec(ABC, DeepCopyable, DeepComparable):
         return f"{type(self).__name__}('{self.name}')"
 
     @abstractmethod
-    def validate(self, *args, **kwargs) -> bool:
+    def validate(self, obj: O) -> bool:
         """
-        Validates a candidate component against the Spec. To be implemented by subclasses.
+        Validates a candidate object against the Spec. To be implemented by subclasses.
 
         Arguments
         ---------
-        args, kwargs
-            Component instances to validate.
+        obj : O
+            Candidate object to validate (usually, single component or full plugin, depending on the
+            subclass).
 
         Returns
         -------
         bool
-            Whether the component(s) are valid.
+            Whether the candidate object satisfies the specification.
         """
-        pass
 
 
-class FieldSpec(Spec, Generic[C]):
+# --- Field Specifications -------------------------------------------------------------------------
+
+
+C = TypeVar("C", bound=Component)
+"""Type variable for a component to a plugin instance."""
+
+
+class FieldSpec(Spec[C], Generic[C]):
     """
     Specification of a field in the plugin that is supported by the host application.
 
@@ -146,9 +148,8 @@ class FieldSpec(Spec, Generic[C]):
         return f"{type(self).__name__}('{self.name}')"
 
     @abstractmethod
-    def validate(self, comp: C) -> bool:
+    def validate(self, obj: C) -> bool:
         """Validate one component against the specification (narrower signature)."""
-        pass
 
     @property
     def category(self) -> Optional[Type[Component]]:

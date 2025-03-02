@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 # --- Base Class for Dependency Specifications -----------------------------------------------------
 
 
-class DependencySpec(Spec):
+class DependencySpec(Spec["Plugin"]):
     """
     Specification enforcing dependencies between several components in the plugin.
 
@@ -50,15 +50,15 @@ class DependencySpec(Spec):
         self.fields = tuple(fields)
 
     def __str__(self):
-        return f"{self.__class__.__name__}('{self.name}'):[{', '.join(self.fields if self.fields else [])}]"
+        field_str = ", ".join(self.fields) if self.fields else ""
+        return f"{self.__class__.__name__}('{self.name}'):[{field_str}]"
 
     def __repr__(self):
         return f"{self.__class__.__name__}('{self.name}')"
 
     @abstractmethod
-    def validate(self, plugin: "Plugin") -> bool:
+    def validate(self, obj: "Plugin") -> bool:
         """Validate the dependencies globally in the plugin instance."""
-        pass
 
 
 # --- Default Dependency Specification ------------------------------------------------------------
@@ -87,7 +87,11 @@ class PredicateDependency(DependencySpec):
 
     Define the dependency specification:
 
-    >>> hook_asset_spec = PredicateDependency(name="hook_asset", predicate=hook_asset_dependency, fields=("hook", "asset"))
+    >>> hook_asset_spec = PredicateDependency(
+    ...     name="hook_asset",
+    ...     predicate=hook_asset_dependency,
+    ...     fields=("hook", "asset")
+    ... )
 
     Warning
     -------
@@ -106,9 +110,9 @@ class PredicateDependency(DependencySpec):
         super().__init__(name=name, fields=fields, description=description)
         self.predicate = predicate
 
-    def validate(self, plugin: "Plugin") -> bool:
+    def validate(self, obj: "Plugin") -> bool:
         """Validate the dependencies globally in the plugin instance."""
-        components = {field: plugin.components.get(field) for field in self.fields}
+        components = {field: obj.components.get(field) for field in self.fields}
         if None in components.values():
             return False
         return self.predicate(**components)

@@ -10,6 +10,10 @@ See Also
 --------
 khimera.core.specifications
 """
+# --- Silenced Errors ---
+# pylint: disable=unused-variable
+#   Test functions are used, but pylint does not detect it.
+
 import pytest
 
 from khimera.core.components import Component
@@ -28,15 +32,16 @@ class MockFieldSpec(FieldSpec[MockComponent]):
 
     COMPONENT_TYPE = MockComponent
 
-    def validate(self, comp: MockComponent) -> bool:
+    def validate(self, obj: MockComponent) -> bool:
         """Simple validation: return True if name is non-empty."""
-        return bool(comp.name)
+        return bool(obj.name)
 
 
 # ---- Tests for Spec (Abstract Base Class) --------------------------------------------------------
 
 
 def test_spec_initialization():
+    """Test initializing a `Spec` object."""
     name = "test_spec"
     description = "Test field"
     field = MockFieldSpec(name=name, description=description)
@@ -45,7 +50,7 @@ def test_spec_initialization():
 
 
 def test_spec_copy():
-    """Test creating a deep copy of a `pec` object (via mixin `DeepCopyable`)."""
+    """Test creating a deep copy of a `Spec` object (via mixin `DeepCopyable`)."""
     name = "test_spec"
     description = "Test field"
     field = MockFieldSpec(name=name, description=description)
@@ -70,6 +75,7 @@ def test_spec_equality():
 
 
 def test_spec_category():
+    """Test getting the category of a `FieldSpec` object."""
     field = MockFieldSpec(name="test_spec")
     assert field.category == MockComponent
 
@@ -78,6 +84,7 @@ def test_spec_category():
     "required, unique", [(True, False), (False, True), (True, True), (False, False)]
 )
 def test_category_spec_initialization(required, unique):
+    """Test initializing a `FieldSpec` object with required and unique flags."""
     name = "test_spec"
     field = MockFieldSpec(name=name, required=required, unique=unique)
     assert field.name == name
@@ -85,8 +92,9 @@ def test_category_spec_initialization(required, unique):
     assert field.unique == unique
 
 
-@pytest.mark.parametrize("comp_name, expected", [("valid_contrib", True), ("", False)])
+@pytest.mark.parametrize("comp_name, expected", [("valid_comp", True), ("", False)])
 def test_category_spec_validation(comp_name, expected):
+    """Test validating a `FieldSpec` object against a component."""
     field = MockFieldSpec(name="test_spec")
     comp = MockComponent(name=comp_name)
     assert field.validate(comp) == expected

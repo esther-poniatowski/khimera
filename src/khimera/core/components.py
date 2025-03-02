@@ -62,7 +62,7 @@ class Component(ABC, DeepCopyable, DeepComparable):
     def __init__(self, name: str, description: Optional[str] = None):
         self.name = name
         self.description = description
-        self.plugin = None
+        self.plugin: Optional[str] = None
 
     def __str__(self):
         return f"{type(self).__name__}('{self.name}'): {self.description}"
