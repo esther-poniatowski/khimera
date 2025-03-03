@@ -81,7 +81,39 @@ class Component(ABC, DeepCopyable, DeepComparable):
 
 
 class ComponentSet(TypeConstrainedList[Component]):
-    """Container of components in a plugin instance, behaving like a type constrained list."""
+    """
+    Container of components in a plugin instance, behaving like a type constrained list.
+
+    Examples
+    --------
+    Create a component set with a list of components:
+
+    >>> comp1 = Command(name='cmd1', func=lambda: print("Command 1"))
+    >>> comp2 = Command(name='cmd2', func=lambda: print("Command 2"))
+    >>> comp_set = ComponentSet([comp1, comp2])
+    >>> comp_set
+    ComponentSet([Command('cmd1'), Command('cmd2')])
+    >>> comp_set[0]
+    Command('cmd1')
+
+    Create an empty component set and add components to it:
+
+    >>> comp_set = ComponentSet()
+    >>> comp_set
+    ComponentSet([])
+    >>> comp_set.append(Command(name='cmd3', func=lambda: print("Command 3")))
+    >>> comp_set
+    ComponentSet([Command('cmd3')])
+    >>> comp_set.extend([Command(name='cmd4', func=lambda: print("Command 4")),
+    ...                  Command(name='cmd5', func=lambda: print("Command 5")])
+    >>> comp_set
+    ComponentSet([Command('cmd3'), Command('cmd4'), Command('cmd5')])
+
+    See Also
+    --------
+    khimera.utils.factories.TypeConstrainedList
+        Factory class for creating type constrained lists.
+    """
 
     def __init__(self, data=None):
         super().__init__(Component, data)
