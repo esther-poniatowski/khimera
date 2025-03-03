@@ -8,6 +8,7 @@ dependencies:
   - pyyaml                 # YAML file handling
   - types-pyyaml           # type stubs for Pyyaml
   # Development tools
+  - beartype               # runtime type checking
   - black                  # code formatting
   - mypy                   # static type checking
   - mypy_extensions
