@@ -16,7 +16,11 @@ See Also
 khimera.core
 khimera.plugins.declare
 """
-from typing import Optional, Type, Dict, Self
+# --- Silenced Errors ---
+# pylint: disable=disallowed-name
+#   Name `filter` is appropriate for the method in the `Plugin` class.
+
+from typing import Optional, Type, Self
 
 from khimera.utils.factories import TypeConstrainedDict
 from khimera.utils.mixins import DeepCopyable, DeepComparable
@@ -66,14 +70,15 @@ class Plugin(DeepCopyable, DeepComparable):
 
     >>> plugin = Plugin(model=example_model, name='my_plugin', version='1.0.0')
 
-    Provide a command within a predefined sub-command group of the host application ('commands' field
-    key in the model):
+    Provide a command within a predefined sub-command group of the host application ('commands'
+    field key in the model):
 
     >>> def my_command():
     ...     print("Plugin command executed")
     >>> plugin.add('commands', Command(name='my_cmd', callable=my_command, group='sub-command'))
 
-    Provide a function to extend the host application's API ('api-functions' field key in the model):
+    Provide a function to extend the host application's API ('api-functions' field key in the
+    model):
 
     >>> def my_function():
     ...     print("Plugin function executed")
@@ -82,7 +87,7 @@ class Plugin(DeepCopyable, DeepComparable):
     Provide a specific static resource processed by the host application ('input_file' field key in
     the model):
 
-    >>> plugin.add('input_file', Asset(name='my_input', package="my_package", file_path="assets/logo.png"))
+    >>> plugin.add('input_file', Asset(name='my_input', package="my_pkg", file_path="assets/logo.png"))
 
     Notes
     -----
@@ -110,10 +115,16 @@ class Plugin(DeepCopyable, DeepComparable):
 
     def __str__(self):
         fields_str = ", ".join(f"{key}" for key in self.components)
-        return f"{self.__class__.__name__}(name='{self.name}', version='{self.version}', model={self.model}):[{fields_str}]"
+        return (
+            f"{self.__class__.__name__}(name='{self.name}', version='{self.version}', "
+            f"model={self.model}):[{fields_str}]"
+        )
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(name='{self.name}', version='{self.version}', model={self.model})"
+        return (
+            f"{self.__class__.__name__}(name='{self.name}', version='{self.version}', "
+            f"model={self.model})"
+        )
 
     def add(self, key: str, comp: Component) -> Self:
         """
@@ -177,8 +188,8 @@ class Plugin(DeepCopyable, DeepComparable):
             try:
                 comp = next(comp for comp in self.components[key] if comp.name == comp_name)
                 self.components[key].remove(comp)
-            except (ValueError, KeyError, StopIteration):
-                raise KeyError(f"No component '{comp_name}' for key '{key}'")
+            except (ValueError, KeyError, StopIteration) as exc:
+                raise KeyError(f"No component '{comp_name}' for key '{key}'") from exc
         return self
 
     def get(self, key: str, names: bool = False) -> ComponentSet:
@@ -197,12 +208,14 @@ class Plugin(DeepCopyable, DeepComparable):
         ComponentSet
             Components of the plugin stored for the specified field.
         """
-        components = self.components.get(key, [])
+        components = self.components.get(key, ComponentSet())
         if names:
-            return [comp.name for comp in components]
+            return ComponentSet([comp.name for comp in components])
         return components
 
-    def filter(self, category: Optional[Type[Component]] = None) -> Dict[str, ComponentSet]:
+    def filter(
+        self, category: Optional[Type[Component]] = None
+    ) -> TypeConstrainedDict[str, ComponentSet]:
         """
         Get the components of the plugin, optionally filtered by category.
 
@@ -217,9 +230,10 @@ class Plugin(DeepCopyable, DeepComparable):
             Components of the plugin, filtered by category if provided.
         """
         if category:
-            return {
+            data = {  # keep only components in category
                 key: comps
                 for key, comps in self.components.items()
                 if any(isinstance(item, category) for item in comps)
             }
+            return TypeConstrainedDict(str, ComponentSet, data)  # convert to expected type
         return self.components

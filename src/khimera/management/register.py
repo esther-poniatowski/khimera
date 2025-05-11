@@ -13,7 +13,7 @@ PluginRegistry
 See Also
 --------
 """
-from typing import Dict, List, TypeVar, Optional
+from typing import Dict, List, TypeVar, Optional, Callable
 import warnings
 
 from khimera.utils.factories import TypeConstrainedDict
@@ -23,6 +23,9 @@ from khimera.management.validate import PluginValidator
 
 E = TypeVar("E", bound=Plugin | Component)
 """Type variable for elements in the registry."""
+
+
+# --- Conflict Resolver ----------------------------------------------------------------------------
 
 
 class ConflictResolver:
@@ -38,7 +41,7 @@ class ConflictResolver:
 
     def __init__(self, mode: str = "RAISE_ERROR"):
         self.mode = mode
-        self.MODES: Dict[str, callable] = {
+        self.MODES: Dict[str, Callable] = {
             "RAISE_ERROR": self.raise_error,
             "OVERRIDE": self.override,
             "IGNORE": self.ignore,
@@ -62,7 +65,7 @@ class ConflictResolver:
 
     def raise_error(self, new: E) -> None:
         """Fail when conflicts occur."""
-        raise ValueError(f"Already registered.")
+        raise ValueError(f"Aborted: name '{new.name}' already registered.")
 
     def override(self, new: E) -> E:
         """Replace the existing element by the latest registered."""
@@ -73,6 +76,9 @@ class ConflictResolver:
         """Keep the existing element and discard the new one."""
         warnings.warn(f"Ignored: name '{new.name}' already registered.", UserWarning)
         return None
+
+
+# --- Plugin Registry ------------------------------------------------------------------------------
 
 
 class PluginRegistry:

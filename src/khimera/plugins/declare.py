@@ -13,14 +13,31 @@ PluginModel
 
 See Also
 --------
+khimera.core.specifications.FieldSpec
+    Base class for defining constraints specifications for components within a plugin model.
+khimera.core.dependencies.DependencySpec
+    Base class for defining dependencies between components in a plugin model.
+khimera.utils.mixins.DeepCopyable
+    Mixin class for creating deep copies of objects.
+khimera.utils.mixins.DeepComparable
+    Mixin class for comparing objects by deep comparison.
 """
-from typing import Optional, Type, Dict, Callable, Self
+# --- Silenced Errors ---
+# pylint: disable=disallowed-name
+#   Name `filter` is appropriate for the method in the `PluginModel` class.
+
+from typing import Optional, Type, Dict, Callable, Self, TypeAlias
 
 from khimera.utils.factories import TypeConstrainedDict
 from khimera.utils.mixins import DeepCopyable, DeepComparable
 from khimera.core.components import Component
 from khimera.core.specifications import Spec, FieldSpec
 from khimera.core.dependencies import DependencySpec
+
+
+# Type Aliases for `fields` and `dependencies` attributes in `PluginModel` class
+FieldSpecType: TypeAlias = TypeConstrainedDict[str, FieldSpec]
+DependencySpecType: TypeAlias = TypeConstrainedDict[str, DependencySpec]
 
 
 class PluginModel(DeepCopyable, DeepComparable):
@@ -72,30 +89,33 @@ class PluginModel(DeepCopyable, DeepComparable):
     Allow integrating new commands in the host application's CLI, in sub-command groups:
 
     >>> model.add(CommandSpec(name='commands',
-    ...                           required=False,
-    ...                           unique=False,
-    ...                           groups={'setup', 'run'},
-    ...                           admits_new_groups=True,
-    ...                           description="New commands for the CLI"))
+    ...                       required=False,
+    ...                       unique=False,
+    ...                       groups={'setup', 'run'},
+    ...                       admits_new_groups=True,
+    ...                       description="New commands for the CLI"))
 
     Allow extending the host application with new API functions:
 
     >>> model.add(APIExtensionSpec(name='api-functions',
-    ...                                required=False,
-    ...                                unique=False,
-    ...                                description="New functions for the API"))
+    ...                            required=False,
+    ...                            unique=False,
+    ...                            description="New functions for the API"))
 
     Declare a named hook to use at a specific integration point in the host application:
 
-    >>> model.add(HookSpec(name='on_start', required=False, unique=True, description="Hook to run on application start"))
+    >>> model.add(HookSpec(name='on_start',
+                          required=False,
+                          unique=True,
+                          description="Hook to run on application start"))
 
     Declare a static resource processed by the host application:
 
     >>> model.add(AssetSpec(name='input_file',
-    ...                          file_ext={'txt', 'csv'},
-    ...                          required=False,
-    ...                          unique=True,
-    ...                          description="File to process"))
+    ...                     file_ext={'txt', 'csv'},
+    ...                     required=False,
+    ...                     unique=True,
+    ...                     description="File to process"))
 
     Get all the metadata fields in the plugin model:
 
@@ -119,8 +139,8 @@ class PluginModel(DeepCopyable, DeepComparable):
         self.name = name
         self.version = version
         # Initialize model's specifications
-        self.fields = TypeConstrainedDict(str, FieldSpec)
-        self.dependencies = TypeConstrainedDict(str, DependencySpec)
+        self.fields: FieldSpecType = TypeConstrainedDict(str, FieldSpec)
+        self.dependencies: DependencySpecType = TypeConstrainedDict(str, DependencySpec)
 
     def __str__(self) -> str:
         specs_str = ", ".join(str(spec) for spec in self.specs.values())

@@ -41,7 +41,7 @@ khimera.management.register
 pytest_mock.MockFixture
     Mocking fixture for Pytest.
 """
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 import pytest
 import pytest_mock
@@ -56,7 +56,7 @@ from khimera.management.validate import PluginValidator
 # --- Fixtures and Utilities -----------------------------------------------------------------------
 
 
-def mock_component(mocker: pytest_mock.MockFixture, name: str, plugin: str = None):
+def mock_component(mocker: pytest_mock.MockFixture, name: str, plugin: Optional[str] = None):
     """
     Create a mock `Component` instance with a specified name and an optional plugin attribute.
 
@@ -79,7 +79,7 @@ def mock_component(mocker: pytest_mock.MockFixture, name: str, plugin: str = Non
 def mock_plugin(
     mocker: pytest_mock.MockFixture,
     name: str = "mock_plugin",
-    components: Dict[str, List[str]] = None,
+    components: Optional[Dict[str, List[str]]] = None,
 ):
     """
     Create a mock `Plugin` instance with a specified name and components.
@@ -99,16 +99,15 @@ def mock_plugin(
         Sample plugin instance with the specified name and components and a mocked model (required
         by the validator).
     """
-    plugin = mocker.Mock(spec=Plugin)
-    plugin.name = name
-    plugin.model = mocker.Mock(spec=PluginModel)
     if components:
-        plugin.components = {
+        plugin_comps = {
             key: ComponentSet([mock_component(mocker, name) for name in names])
             for key, names in components.items()
         }
     else:
-        plugin.components = {"key1": ComponentSet([mocker.Mock(spec=Component, name="compA")])}
+        plugin_comps = {"key1": ComponentSet([mocker.Mock(spec=Component, name="compA")])}
+    plugin = mocker.Mock(spec=Plugin)
+    plugin.configure_mock(name=name, model=mocker.Mock(spec=PluginModel), components=plugin_comps)
     return plugin
 
 

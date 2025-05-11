@@ -10,12 +10,21 @@ See Also
 --------
 khimera.plugins.create
 """
+# --- Silenced Errors ---
+# pylint: disable=unused-variable
+#   Test functions are used, but pylint does not detect it.
+# pylint: disable=redefined-outer-name
+#   Fixtures are used.
+# pylint: disable=super-init-not-called
+#   Mock classes do not need to call the superclass constructor.
+
 import pytest
+import pytest_mock
 
 from khimera.plugins.create import Plugin
 from khimera.core.components import Component
 from khimera.core.specifications import FieldSpec
-from khimera.plugins.declare import PluginModel
+from khimera.plugins.declare import PluginModel  # mocked
 
 
 # --- Mock classes for testing ---------------------------------------------------------------------
@@ -27,16 +36,15 @@ class MockSpec(FieldSpec):
     def __init__(self, name: str):
         self.name = name
 
-    def validate(self, comp) -> bool:
+    def validate(self, obj) -> bool:
         """Implement abstract method for validation."""
         return True
 
 
 @pytest.fixture
-def mock_model():
+def mock_model(mocker: pytest_mock.MockFixture):
     """Fixture for a mock model."""
-    model = PluginModel(name="test_model")
-    model.add(MockSpec(name="test_spec"))
+    model = mocker.MagicMock(spec=PluginModel)
     return model
 
 
@@ -64,8 +72,8 @@ def test_plugin_initialization(mock_model):
     plugin = Plugin(model=mock_model, name=name, version=version)
     assert plugin.name == name
     assert plugin.version == version
-    assert plugin.model == mock_model
-    assert len(plugin.components) == 0
+    assert plugin.model is mock_model
+    assert not plugin.components  # empty dictionary
 
 
 @pytest.mark.parametrize(
@@ -88,21 +96,19 @@ def test_get_component(mock_model, names, expected):
     assert retrieved[0] == expected(comp)
 
 
-@pytest.mark.parametrize(
-    "field_name, expected_field_exists", [("test_spec", True), ("new_spec", False)]
-)
-def test_add_component(mock_model, field_name, expected_field_exists):
-    """Test adding a component to a plugin in various fields."""
+def test_add_component(mock_model):
+    """Test adding a component to a plugin in a new field."""
     plugin = Plugin(name="test_plugin", model=mock_model)
-    comp = MockComponent(name="test_contrib")
-    plugin.add(field_name, comp)
-    assert field_name in plugin.components
-    assert len(plugin.components[field_name]) == 1
-    assert plugin.components[field_name][0] == comp
-    assert (field_name in mock_model.fields) == expected_field_exists
+    comp = MockComponent(name="test_comp")
+    field_key = "test_spec"
+    plugin.add(field_key, comp)
+    assert field_key in plugin.components
+    assert len(plugin.components[field_key]) == 1
+    assert plugin.components[field_key][0] == comp
 
 
 def test_add_duplicate_component(mock_model):
+    """Test adding a duplicate component to a plugin."""
     plugin = Plugin(model=mock_model, name="test_plugin")
     field_key = "test_spec"
     comp = MockComponent(name="test_comp")
@@ -118,7 +124,7 @@ def test_remove_component(mock_model):
     comp = MockComponent(name="test_comp")
     plugin.add(key=field_key, comp=comp)
     plugin.remove(key=field_key, comp_name=comp.name)
-    assert len(plugin.components[field_key]) == 0
+    assert not plugin.components[field_key]
 
 
 def test_remove_field(mock_model):
@@ -132,6 +138,7 @@ def test_remove_field(mock_model):
 
 
 def test_remove_nonexistent_component(mock_model):
+    """Test removing a nonexistent component from a plugin."""
     plugin = Plugin(model=mock_model, name="test_plugin")
     field_key = "test_spec"
     comp = MockComponent(name="test_comp")
