@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 khimera.components
-=====================
+==================
 
-Components of plugins that contribute to the host application.
+Specific plugin components that typically contribute to a host application.
 
 Each module in this package encapsulates the behavior of one type of plugin components. Each
 inherits from the base classes `Component` and `FieldSpec` and tailors their attributes and methods
