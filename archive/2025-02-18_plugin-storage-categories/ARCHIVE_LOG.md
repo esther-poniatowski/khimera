@@ -2,8 +2,8 @@
 
 ## Archive Details
 
-- Date of archival: [2025-02-18]
-- Last commit hash on `main`: [aefd79d96453b254771f6aefecd85bc2d81ccf27]
+- Date of archival: 2025-02-18
+- Last commit hash on `main`: aefd79d96453b254771f6aefecd85bc2d81ccf27
 
 ## Reason for Archival
 
@@ -23,9 +23,7 @@ Reasons:
 
 ## Contents
 
-`create.py`
-- Original Location: `src/khimera/plugins/create.py`
-- Notes:
+- `create.py` (origin: `src/khimera/plugins/create.py`)
   - Removed the `specific_storage` and `default_storage` attributes.
   - Removed the `get_storage` method.
   - Simplified the initialization of the `Plugin` object, the `add` method, the `get` method, and
