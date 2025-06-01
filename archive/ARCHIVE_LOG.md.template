@@ -3,7 +3,7 @@
 ## Archive Details
 
 - Date of archival: [YYYY-MM-DD]
-- Last commit hash on `main`: [hash]
+- Last commit hash on `main`: [git log -1 --pretty=format:%H]
 
 ## Reason for Archival
 
@@ -11,6 +11,6 @@
 
 ## Contents
 
-[path/to/file]
-- Original Location: 
-- Notes:
+
+- [File] (origin: [path/to/file])
+  - [... Notes ...]
