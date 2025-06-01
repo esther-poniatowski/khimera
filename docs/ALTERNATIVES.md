@@ -1,9 +1,9 @@
-Tox
+# Alternative to Khimera
 
-Buildout
+TODO: Compare with Khimera
 
-Ansible
-
-conda-env-builder
-
-hatch
+- Tox
+- Buildout
+- Ansible
+- conda-env-builder
+- hatch
