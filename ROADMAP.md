@@ -2,6 +2,7 @@
 
 ## TODO
 
+- [ ] Move the `cli`functionality to a separate package.
 - [ ] Review all modules for linting and formatting.
 - [ ] Implement the adapter pattern to add plugin commands to the CLI.
 - [ ] Add an attribute to `Plugin` to specify the host application they are intended for (to prevent
