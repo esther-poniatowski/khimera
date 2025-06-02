@@ -1,0 +1,53 @@
+[project]
+name = "khimera"
+version = "0.1.0"
+description = ""
+authors = [{name = "Esther Poniatowski", email = "esther.poniatowski@ens.psl.eu"}]
+license = {text = "GPL"}
+readme = {file = "README.md", content-type = "text/markdown"}
+keywords = ["plugin-system"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License (GPL)",
+    "Operating System :: OS Independent",
+    "Development Status :: 3 - Alpha"
+]
+dependencies = [
+    "pyyaml",            # YAML file handling
+    "types-pyyaml",      # type stubs for Pyyaml
+    "deepdiff",          # deep object comparison
+    "beartype",          # runtime type checking
+    "typer",             # command-line interface
+    "pyyaml",            # For configuration parsing
+]
+  # Data manipulation and formats
+
+  # Development tools
+
+  - black                  # code formatting
+  - mypy                   # static type checking
+  - mypy_extensions
+  - pylint                 # code linting
+  - pyright                # code linting
+  # Testing
+  - pytest
+  - pytest-mock
+  - pytest-pylint          # Pylint plugin for Pytest
+  # Documentation
+  - sphinx                 # documentation generator
+  - sphinxcontrib-napoleon # for numpydoc-style docstrings
+  - sphinx-rtd-theme       # ReadTheDocs theme
+  - sphinx-needs           # for requirements and specifications in Sphinx
+  - esbonio                # language server for Sphinx
+
+
+[project.urls]
+Documentation = "https://github.com/esther-poniatowski/khimera"
+Source = "https://github.com/esther-poniatowski/khimera"
+
+[project.scripts]
+khimera = "khimera.main:main"
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
