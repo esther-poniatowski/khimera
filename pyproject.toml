@@ -1,54 +1,56 @@
-[project]
-name = "khimera"
-version = "0.1.0"
-description = ""
-authors = [{name = "Esther Poniatowski", email = "esther.poniatowski@ens.psl.eu"}]
-license = {text = "GPL"}
-readme = {file = "README.md", content-type = "text/markdown"}
-keywords = ["plugin-system"]
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU General Public License (GPL)",
-    "Operating System :: OS Independent",
-    "Development Status :: 3 - Alpha"
-]
-dependencies = [
-    "pyyaml",            # YAML file handling
-    "types-pyyaml",      # type stubs for Pyyaml
-    "deepdiff",          # deep object comparison
-    "beartype",          # runtime type checking
-    "typer",             # command-line interface
-    "pyyaml",            # For configuration parsing
-    "cryptography"       # For key management
-]
-  # Data manipulation and formats
+# ==================================================================================================
+# Pyproject Configuration for Khimera Package
+# ==================================================================================================
 
-  # Development tools
-
-  - black                  # code formatting
-  - mypy                   # static type checking
-  - mypy_extensions
-  - pylint                 # code linting
-  - pyright                # code linting
-  # Testing
-  - pytest
-  - pytest-mock
-  - pytest-pylint          # Pylint plugin for Pytest
-  # Documentation
-  - sphinx                 # documentation generator
-  - sphinxcontrib-napoleon # for numpydoc-style docstrings
-  - sphinx-rtd-theme       # ReadTheDocs theme
-  - sphinx-needs           # for requirements and specifications in Sphinx
-  - esbonio                # language server for Sphinx
-
-
-[project.urls]
-Documentation = "https://github.com/esther-poniatowski/khimera"
-Source = "https://github.com/esther-poniatowski/khimera"
-
-[project.scripts]
-khimera = "khimera.main:main"
+# --- Build System Requirements --------------------------------------------------------------------
 
 [build-system]
 requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
+
+
+# --- Package Metadata -----------------------------------------------------------------------------
+
+[project]
+name = "khimera"
+version = "0.1.0"
+authors = [{name = "Esther Poniatowski", email = "esther.poniatowski@ens.psl.eu"}]
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+readme = {file = "README.md", content-type = "text/markdown"}
+description = "Plugin system framework for automating development and integration of package extensions"
+keywords = ["plugin-system", "plugin-development", "dynamic-programming", "extension-framework", "host-app"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Development Status :: 3 - Alpha"
+]
+urls = {homepage = "https://github.com/esther-poniatowski/khimera"}
+
+
+# --- Dependencies ---------------------------------------------------------------------------------
+
+requires-python = ">=3.12"
+
+dependencies = [
+    "deepdiff",          # Deep object comparison
+    "beartype",          # Runtime type checking
+    "pyyaml",            # YAML configuration parsing
+    "types-pyyaml",      # Type stubs for PyYaml
+    "typer",             # CLI interface
+    "rich",              # Improved CLI output formatting
+]
+
+
+# --- Package Source Code --------------------------------------------------------------------------
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# --- CLI Entry Points -----------------------------------------------------------------------------
+
+[project.scripts]
+khimera = "khimera.cli:main"
