@@ -1,4 +1,9 @@
+# ======================================
+# Dictionary for CSpell Extension
+# Topics:
+# - Project-specific names
+# - Project-specific concepts
+# ======================================
 comps
-deepcopy
 khimera
 unsubscripted

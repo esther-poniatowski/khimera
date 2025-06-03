@@ -1,9 +1,16 @@
+# ======================================
+# Dictionary for CSpell Extension
+# Topics:
+# - Python names (functions, modules)
+# - Programming concepts
+# ======================================
 abstractmethod
 contextlib
 copytree
 dataclass
 deepdiff
 docstrings
+deepcopy
 getattr
 hasattr
 isinstance
