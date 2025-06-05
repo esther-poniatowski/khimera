@@ -1,12 +1,58 @@
 # Khimera
 
-Python library for automating plugin system development and usage.
+[![Conda](https://img.shields.io/badge/conda-eresthanaconda--channel-blue)](#installation)
+[![Maintenance](https://img.shields.io/maintenance/yes/2025)]()
+[![Last Commit](https://img.shields.io/github/last-commit/esther-poniatowski/architekta)](https://github.com/esther-poniatowski/architekta/commits/main)
+[![Python](https://img.shields.io/badge/python-supported-blue)](https://www.python.org/)
+[![License: GPL](https://img.shields.io/badge/License-GPL-yellow.svg)](https://opensource.org/licenses/GPL-3.0)
 
-This utility provides standardized procedures for:
+Plugin system framework for automating development and integration of package extensions.
 
-1. Host applications that need to support plugins.
-2. Plugin providers that develop and distribute plugins.
-3. Final users who install and use plugins when they import the host application.
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Documentation](#documentation)
+- [Support](#support)
+- [Contributing](#contributing)
+- [Acknowledgments](#acknowledgments)
+- [License](#license)
+
+## Overview
+
+### Motivation
+
+Designing a plugin system involves two tightly coupled challenges:
+
+- On the host application side: implementing a structured and extensible architecture.
+- On the plugin side: conforming to a standardized interface and integration protocol.
+
+In the absence of a formalized framework, host developers must manually implement plugin discovery, validation, registration, and integration. Plugin developers, in turn, must reverse-engineer the host’s
+expectations. This fragmented process increases complexity and hinders maintainability.
+
+Furthermore, seamless plugin usage by end users requires reliable loading and execution mechanisms
+at runtime, with limited visibility into internal plugin logic.
+
+### Advantages
+
+This framework provides a unified infrastructure to automate plugin management and decouple
+architectural design from application-specific functionality.
+
+It defines standardized procedures for all three actors in the plugin ecosystem:
+
+- **Host applications**: Define and expose plugin interfaces, manage discovery and registration, and
+  coordinate runtime execution.
+- **Plugin developers**: Implement compliant modules with minimal boilerplate, following validated
+  integration specifications.
+- **End users**: Install and activate plugins transparently within the host application environment,
+  without manual configuration.
+
+---
 
 ## Features
 
@@ -18,230 +64,133 @@ This utility provides standardized procedures for:
   with the host application.
 - [ ] **Plugin Registration**: Enable/disable plugins and organizes their resources to make them
   available to the host application flexibly.
-- [X] **Extensible CLI Framework**: Provides a modulat command-line interface (CLI) that can be
+- [X] **Extensible CLI Framework**: Provides a modular command-line interface (CLI) that can be
   extended with new commands provided by plugins. Commands and nested groups can be composed to
   assemble the main application.
 
+---
+
 ## Installation
 
-Khimera is a standalone package that can be installed either by a host application and by plugin
-providers for a host application (that uses `khimera`).
+To install the package and its dependencies, use one of the following methods:
 
-Usually, users interact directly with the host application and the plugin resources without being
-aware of their internal use of the `khimera` library. Optionally, they can also install `khimera` if
-needed for advanced management.
+### Using Pip Installs Packages
 
-Khimera is currently available for installation directly from its GitHub repository.
+Install the package from the GitHub repository URL via `pip`:
 
-To install the package and its dependencies in an activated virtual environment:
-
-```sh
+```bash
 pip install git+https://github.com/esther-poniatowski/khimera.git
 ```
 
-To install a specific version, specify the version tag in the URL:
+### Using Conda
 
-```sh
-pip install git+https://github.com/esther-poniatowski/khimera.git@v0.1.0
+Install the package from the private channel eresthanaconda:
+
+```bash
+conda install khimera -c eresthanaconda
 ```
+
+### From Source
+
+1. Clone the repository:
+
+      ```bash
+      git clone https://github.com/esther-poniatowski/khimera.git
+      ```
+
+2. Create a dedicated virtual environment:
+
+      ```bash
+      cd khimera
+      conda env create -f environment.yml
+      ```
+
+---
 
 ## Usage
 
-### Declaring a Plugin Model
+### Command Line Interface (CLI)
 
-Any host application that supports plugins must define a plugin model that plugins must adhere to:
-
-```python
-from khimera.plugins.declare import PluginModel
-
-model = PluginModel(name='my_plugin', version='1.0.0')
-```
-
-The host application specifies its expectations by adding named fields to the plugin model, each
-associated with a specific type of plugin component (see below). Fields can be required or optional
-in the actual plugin instances, and admit a unique or multiple values.
-
-The `khimera` library standardizes plugins' structure by defining a set of default components that
-satisfy various need of the host application. Each type of component is characterized by its own
-properties and constraints.
-
-- **Metadata**: General information about the plugin.
-- **Commands**: New commands to integrate to the CLI of the host application.
-- **API Extensions**: New functions to enrich the API of the host application.
-- **Hooks**: Functions to be executed at specific points in the application lifecycle.
-- **Assets**: Files to be processed by the host application.
-
-See the documentation of each component for more details about their attributes.
-
-```python
-from khimera.plugins.declare import MetaDataSpec, CommandSpec, APIExtensionSpec, HookSpec, AssetSpec
-
-model.add(MetaDataSpec(name='author', required=True, description="Author of the plugin"))
-
-model.add(CommandSpec(name='commands',
-                      required=False,
-                      unique=False,
-                      groups={'setup', 'run'},
-                      admits_new_groups=True,
-                      description="New commands for the CLI"))
-
-model.add(APIExtensionSpec(name='api-functions',
-                           required=False,
-                           unique=False,
-                           description="New functions for the API"))
-
-model.add(HookSpec(name='on_start',
-                   required=False,
-                   unique=True,
-                   description="Hook to run on application start"))
-
-model.add(AssetSpec(name='input_file',
-                    file_ext={'txt', 'csv'},
-                    required=False,
-                    unique=True,
-                    description="File to process"))
-```
-
-In addition, the host application can specify dependencies between plugin components, such as
-requiring a command to be associated with an asset.
-
-```python
-### Creating a Plugin
-```
-
-A plugin provider creates a plugin instance that conforms to the plugin model:
-
-```python
-from khimera.plugins.declare import Plugin
-from host_app import model
-```
-
-Initialize the main application:
-
-```python
-# cli.py
-from khimera import CliApp
-
-app = CliApp()
-```
-
-Register a command group:
-
-```python
-setup_group = app.add_group("setup", help="Setup project components.")
-
-@setup_group.command("init")
-def setup_project():
-    print("Project initialized!")
-
-if __name__ == "__main__":
-    app()
-```
-
-Run:
+To display the list of available commands and options:
 
 ```sh
-python cli.py setup init
+khimera --help
 ```
 
-### Plugin Discovery & Dynamic Registration
+### Programmatic Usage
 
-Plugins register their commands using the `@register_plugin_command` decorator:
+To use the package programmatically in Python:
 
 ```python
-# external_plugin.py
-from khimera import register_plugin_command
-
-@register_plugin_command("setup", "custom-tool")
-def custom_setup():
-    print("Custom setup logic executed!")
+import khimera
 ```
 
-The main application scans installed plugins and registers their commands automatically:
+---
 
-```python
-# cli.py
-from khimera.plugin_loader import discover_plugins
+## Configuration
 
-discover_plugins()
+### Environment Variables
+
+|Variable|Description|Default|Required|
+|---|---|---|---|
+|`VAR_1`|Description 1|None|Yes|
+|`VAR_2`|Description 2|`false`|No|
+
+### Configuration File
+
+Configuration options are specified in YAML files located in the `config/` directory.
+
+The canonical configuration schema is provided in [`config/default.yaml`](config/default.yaml).
+
+```yaml
+var_1: value1
+var_2: value2
 ```
 
-## Plugin System
+---
 
-The application can integrate both internal and external plugins uniformly.
+## Documentation
 
-### Internal (Built-in) Plugins
+- [User Guide](https://esther-poniatowski.github.io/khimera/guide/)
+- [API Documentation](https://esther-poniatowski.github.io/khimera/api/)
 
-Built-in plugins can be disabled or replaced at runtime:
+> [!NOTE]
+> Documentation can also be browsed locally from the [`docs/`](docs/) directory.
 
-```python
-from khimera import disable_plugin
+## Support
 
-disable_plugin("setup")
-```
+**Issues**: [GitHub Issues](https://github.com/esther-poniatowski/khimera/issues)
 
-### External Plugins
+**Email**: `{{ contact@example.com }}`
 
-Third-party plugins register themselves via `pyproject.toml`:
+---
 
-```toml
-[project.entry-points."khimera.plugins"]
-my_plugin = "my_plugin.commands"
-```
+## Contributing
 
-Once installed:
+Please refer to the [contribution guidelines](CONTRIBUTING.md).
 
-```sh
-pip install my_plugin
-```
+---
 
-The plugin will be discovered automatically.
+## Acknowledgments
+
+### Authors & Contributors
+
+**Author**: @esther-poniatowski
+
+**Contact**: `{{ contact@example.com }}`
+
+For academic use, please cite using the GitHub "Cite this repository" feature to
+generate a citation in various formats.
+
+Alternatively, refer to the [citation metadata](CITATION.cff).
+
+### Third-Party Dependencies
+
+- **[Library A](link)** - Purpose
+- **[Library B](link)** - Purpose
+
+---
 
 ## License
 
-Khimera is licensed under the [GNU License](LICENSE).
-
-## WIP
-
-### Use Cases for Each Discovery Strategy
-
-#### Standard Entry Point Strategy from Installed Pacakages (`importlib.metadata.entry_points`)
-
-- **Purpose:** Automatically discover plugins installed as standard Python packages that declare
-  entry points in `pyproject.toml`.
-- **Execution:** Executed *automatically* when the host application is imported by the user. Handled
-  by the standard package management system for packages installed by the user.
-- **Reasoning:**
-  - The host application knows in advance which entry point group to scan (`{app_name}.plugins`).
-  - Installed plugins are immediately discoverable at runtime without extra configuration.
-- **Best suited for:** Users who rely on packaged and installed plugins.
-
-#### Custom Directory Strategy (User-Specified Search Paths)
-
-- **Purpose:** Discover plugins that are not installed as Python packages but are located in
-  user-defined directories.
-- **Execution:** *Explicitly* triggered by the *user* when using the host application. Manual
-  specification of the directories where plugin modules reside.
-- **Reasoning:**
-  - The host application cannot predict the locations of user-specific plugins.
-  - Different projects may be stored at different custom paths on the user's system.
-  - Users may want to include or exclude specific directories dynamically.
-- **Best suited for:** Advanced use cases where users develop or manage plugins outside of standard
-  packaging and installation workflows.
-
-### Additional Considerations
-
-- **Compatible Supports** If both strategies are used, the discovered plugins are **aggregated** by
-  the host application. Plugins from different sources are treated uniformly via common interfaces
-  (e.g., a `Plugin`, `PluginEntryPoint`, `PluginRegistry`).
-
-### Future Improvements
-
-- **Plugin Caching**: Reduces startup time by avoiding redundant discovery operations in each
-  application call.
-
-Forcing a manual refresh:
-
-```sh
-python cli.py --reload-plugins
-```
+This project is licensed under the terms of the [GNU General Public License v3.0](LICENSE).
