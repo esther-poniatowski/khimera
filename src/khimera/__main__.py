@@ -1,16 +1,16 @@
 """
-Command-line entry point for the `khimera` package.
+Entry point for the `khimera` package, invoked as a module.
 
 Usage
 -----
-To invoke the package::
+To launch the command-line interface, execute::
 
     python -m khimera
 
 
 See Also
 --------
-khimera.cli: Command-line interface module for the package.
+khimera.cli: Module implementing the application's command-line interface.
 """
 from .cli import app
 
