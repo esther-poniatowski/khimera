@@ -53,4 +53,4 @@ where = ["src"]
 # --- CLI Entry Points -----------------------------------------------------------------------------
 
 [project.scripts]
-khimera = "khimera.cli:main"
+khimera = "khimera.cli:app"
