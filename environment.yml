@@ -16,6 +16,7 @@ dependencies:
   - pyright                # code linting
   # Testing
   - pytest
+  - pytest-cov             # coverage reporting
   - pytest-mock
   - pytest-pylint          # Pylint plugin for Pytest
   # Documentation
@@ -23,6 +24,7 @@ dependencies:
   - sphinxcontrib-napoleon # for numpydoc-style docstrings
   - sphinx-rtd-theme       # ReadTheDocs theme
   - sphinx-needs           # for requirements and specifications in Sphinx
+  - myst-parser            # Markdown support for Sphinx
   - esbonio                # language server for Sphinx
   # CLI
   - typer                  # command line interface
