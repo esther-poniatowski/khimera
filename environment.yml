@@ -28,6 +28,7 @@ dependencies:
   - esbonio                # language server for Sphinx
   # CLI
   - typer                  # command line interface
+  - rich
   # Data structures
   - deepdiff               # deep object comparison
 variables:
