@@ -1,7 +1,7 @@
 # Khimera
 
 [![Conda](https://img.shields.io/badge/conda-eresthanaconda--channel-blue)](#installation)
-[![Maintenance](https://img.shields.io/maintenance/yes/2025)]()
+[![Maintenance](https://img.shields.io/maintenance/yes/2026)]()
 [![Last Commit](https://img.shields.io/github/last-commit/esther-poniatowski/khimera)](https://github.com/esther-poniatowski/khimera/commits/main)
 [![Python](https://img.shields.io/badge/python-supported-blue)](https://www.python.org/)
 [![License: GPL](https://img.shields.io/badge/License-GPL-yellow.svg)](https://opensource.org/licenses/GPL-3.0)
@@ -111,18 +111,34 @@ conda install khimera -c eresthanaconda
 
 ### Command Line Interface (CLI)
 
-To display the list of available commands and options:
+Display version and platform diagnostics:
 
 ```sh
-khimera --help
+khimera info
 ```
 
 ### Programmatic Usage
 
-To use the package programmatically in Python:
+Define a plugin model (host application side):
 
 ```python
-import khimera
+from khimera.plugins.declare import PluginModel
+from khimera.core.specifications import FieldSpec
+
+# Define what plugins should provide
+model = PluginModel(name="my_host", version="1.0")
+model.add(FieldSpec(name="commands", unique=False))
+model.add(FieldSpec(name="transforms", unique=True))
+```
+
+Create and populate a plugin (plugin developer side):
+
+```python
+from khimera.plugins.create import Plugin
+
+plugin = Plugin(model=model, name="my_plugin")
+plugin.add("commands", my_command_component)
+plugin.add("transforms", my_transform_component)
 ```
 
 ---

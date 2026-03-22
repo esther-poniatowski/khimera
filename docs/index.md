@@ -4,11 +4,18 @@
 
 ```{toctree}
 :maxdepth: 2
-:caption: Contents
+:caption: User Guide
+
+guide/getting-started
+```
+
+```{toctree}
+:maxdepth: 2
+:caption: Reference
 
 architecture
-alternatives
 dependencies
+api/index
 ```
 
 ```{toctree}
@@ -17,11 +24,7 @@ dependencies
 
 adr/0-alternatives
 adr/1-plugin-declaration
+adr/2-registration-programmatic-elements
 adr/3-registration-static-resources
+adr/adr-template
 ```
-
-## Indices and tables
-
-- {ref}`genindex`
-- {ref}`modindex`
-- {ref}`search`
