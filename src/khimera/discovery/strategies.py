@@ -19,6 +19,7 @@ from typing import Optional
 
 from khimera.discovery.find import PluginFinder, PluginEntryPoint
 from khimera.plugins.create import Plugin
+from khimera.exceptions import KhimeraError
 
 
 # --- FromInstalledFinder --------------------------------------------------------------------------
@@ -87,14 +88,14 @@ class FromInstalledFinder(PluginFinder):
 
         Raises
         ------
-        TypeError
+        KhimeraError
             If a plugin loaded from an entry point is not an instance of `Plugin`.
         """
         entry_points = self.get_entry_points()
         for entry_point in entry_points:
             plugin = entry_point.load()  # expected: `Plugin` instance
             if not isinstance(plugin, Plugin):
-                raise TypeError(
+                raise KhimeraError(
                     f"Invalid plugin loaded from entry point {entry_point.name}. "
                     "Expected `Plugin` instance."
                 )

@@ -2,17 +2,44 @@
 khimera.cli
 ===========
 
-Command line interface integrated in Khimera.
+Command-line interface for the ``khimera`` package.
+
+Defines commands available via ``python -m khimera`` or ``khimera`` if installed as a script.
 
 Modules
 -------
 app
-    Main module for the command line interface.
-plug
-    Add new commands to the command line interface.
+    Custom CLI class extending Typer with structured command registration.
+
+Commands
+--------
+info : Display diagnostic information.
 
 See Also
 --------
 typer.Typer
-    Main class for building command line interfaces.
+    Library for building CLI applications: https://typer.tiangolo.com/
 """
+
+import typer
+from khimera import info, __version__
+
+app = typer.Typer(add_completion=False, no_args_is_help=True)
+
+
+@app.command("info")
+def cli_info() -> None:
+    """Display version and platform diagnostics."""
+    typer.echo(info())
+
+
+@app.callback()
+def main_callback(
+    version: bool = typer.Option(
+        False, "--version", "-v", help="Show the package version and exit."
+    )
+) -> None:
+    """Root command for the package command-line interface."""
+    if version:
+        typer.echo(__version__)
+        raise typer.Exit()

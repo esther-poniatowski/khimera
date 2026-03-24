@@ -21,6 +21,7 @@ from typing import Optional, List
 from khimera.utils.factories import TypeConstrainedList
 from khimera.plugins.declare import PluginModel
 from khimera.plugins.create import Plugin
+from khimera.exceptions import PluginNotFoundError, AmbiguousLookupError
 
 
 # --- Plugin Entry Point ---------------------------------------------------------------------------
@@ -178,9 +179,9 @@ class PluginFinder(ABC):
         """Iterates over the discovered plugins."""
         return iter(self.plugins)
 
-    def get(self, name: str, version: Optional[str]) -> Optional[Plugin | List[Plugin]]:
+    def get(self, name: str, version: Optional[str] = None) -> List[Plugin]:
         """
-        Get a plugin by name, and optionally by version.
+        Get all plugins matching *name* and optionally *version*.
 
         Arguments
         ---------
@@ -191,17 +192,51 @@ class PluginFinder(ABC):
 
         Returns
         -------
-        Plugin | List[Plugin] | None
-            Plugins matching the name and version, or None if no plugin is found.
-            If plugins correctly follow the name and version conventions, a single plugin should be
-            retrieved.
+        List[Plugin]
+            Plugins matching the criteria (may be empty).
         """
-        found = [
+        return [
             plugin
             for plugin in self.plugins
             if plugin.name == name and (version is None or plugin.version == version)
         ]
-        return found[0] if len(found) == 1 else found or None
+
+    def get_one(self, name: str, version: Optional[str] = None) -> Plugin:
+        """
+        Get exactly one plugin matching *name* and optionally *version*.
+
+        Arguments
+        ---------
+        name : str
+            Name of the plugin to get.
+        version : str, optional
+            Version of the plugin to get.
+
+        Returns
+        -------
+        Plugin
+            The single matching plugin.
+
+        Raises
+        ------
+        PluginNotFoundError
+            If no plugin matches.
+        AmbiguousLookupError
+            If multiple plugins match.
+        """
+        found = self.get(name, version)
+        if not found:
+            raise PluginNotFoundError(
+                f"No plugin found with name='{name}'"
+                + (f", version='{version}'" if version else "")
+            )
+        if len(found) > 1:
+            versions = [p.version for p in found]
+            raise AmbiguousLookupError(
+                f"Multiple plugins found with name='{name}': versions {versions}. "
+                "Use get() to retrieve all, or specify a version."
+            )
+        return found[0]
 
     def filter(self, model: Optional[PluginModel]) -> List[Plugin]:
         """

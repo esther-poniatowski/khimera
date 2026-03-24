@@ -44,11 +44,18 @@ from typing import List, Dict, Optional
 import pytest
 import pytest_mock
 
-from khimera.management.register import ConflictResolver, PluginRegistry
+from khimera.management.register import (
+    ConflictResolver,
+    RaiseOnConflict,
+    OverrideOnConflict,
+    IgnoreOnConflict,
+    PluginRegistry,
+)
 from khimera.plugins.create import Plugin
 from khimera.plugins.declare import PluginModel
 from khimera.core.components import Component, ComponentSet
-from khimera.management.validate import PluginValidator
+from khimera.management.validate import PluginValidator, ValidationResult
+from khimera.exceptions import PluginConflictError, PluginValidationError, PluginNotFoundError
 
 
 # --- Fixtures and Utilities -----------------------------------------------------------------------
@@ -109,44 +116,48 @@ def mock_plugin(
     return plugin
 
 
-def patch_validator(mocker: pytest_mock.MockFixture, output: bool = True):
+def patch_validator(mocker: pytest_mock.MockFixture, valid: bool = True):
     """
-    Patch the `validate` method of the `PluginValidator` class to return a specified output.
+    Patch the `validate` method of the `PluginValidator` class to return a ``ValidationResult``.
 
     Arguments
     ---------
-    output : bool, default=True
-        Desired output of the `validate` method.
+    valid : bool, default=True
+        Whether the returned ``ValidationResult`` should represent a valid plugin.
 
     Returns
     -------
     None
     """
-    mocker.patch.object(PluginValidator, "validate", return_value=output)
+    if valid:
+        result = ValidationResult()
+    else:
+        result = ValidationResult(missing=["required_field"])
+    mocker.patch.object(PluginValidator, "validate", return_value=result)
 
 
 # --- Tests for ConflictResolver -------------------------------------------------------------------
 
 
-def test_conflict_resolver(mocker: pytest_mock.MockFixture):
+def test_conflict_resolver_raise(mocker: pytest_mock.MockFixture):
     """
-    Test the conflict resolution strategy in 'RAISE_ERROR' mode.
+    Test the ``RaiseOnConflict`` strategy.
 
-    Expected Behavior: Raises a ValueError.
+    Expected Behavior: Raises ``PluginConflictError``.
     """
-    resolver = ConflictResolver(mode="RAISE_ERROR")
+    resolver = ConflictResolver(RaiseOnConflict())
     plugin = mock_plugin(mocker)
-    with pytest.raises(ValueError):
+    with pytest.raises(PluginConflictError):
         resolver.resolve(plugin)
 
 
 def test_conflict_resolver_override(mocker: pytest_mock.MockFixture):
     """
-    Test the conflict resolution strategy in 'OVERRIDE' mode.
+    Test the ``OverrideOnConflict`` strategy.
 
     Expected Behavior: Returns the plugin instance. Raise a UserWarning.
     """
-    resolver = ConflictResolver(mode="OVERRIDE")
+    resolver = ConflictResolver(OverrideOnConflict())
     plugin = mock_plugin(mocker)
     with pytest.warns(UserWarning, match="Overridden"):
         assert resolver.resolve(plugin) is plugin
@@ -154,14 +165,26 @@ def test_conflict_resolver_override(mocker: pytest_mock.MockFixture):
 
 def test_conflict_resolver_ignore(mocker: pytest_mock.MockFixture):
     """
-    Test the conflict resolution strategy in 'IGNORE' mode.
+    Test the ``IgnoreOnConflict`` strategy.
 
     Expected Behavior: Returns None. Raise a UserWarning.
     """
     sample_plugin = mock_plugin(mocker)
-    resolver = ConflictResolver(mode="IGNORE")
+    resolver = ConflictResolver(IgnoreOnConflict())
     with pytest.warns(UserWarning, match="Ignored"):
         assert resolver.resolve(sample_plugin) is None
+
+
+def test_conflict_resolver_default(mocker: pytest_mock.MockFixture):
+    """
+    Test the default ``ConflictResolver`` (no strategy argument).
+
+    Expected Behavior: Defaults to ``RaiseOnConflict``.
+    """
+    resolver = ConflictResolver()
+    plugin = mock_plugin(mocker)
+    with pytest.raises(PluginConflictError):
+        resolver.resolve(plugin)
 
 
 # --- Tests for PluginRegistry ---------------------------------------------------------------------
@@ -247,7 +270,7 @@ def test_plugin_registry_get(
 @pytest.mark.parametrize(
     "plugin_name, initial_enabled, registered, expected",
     [
-        # Case 1: Enable a plugin that is not registered -> Expect AttributeError
+        # Case 1: Enable a plugin that is not registered -> Expect PluginNotFoundError
         ("unknown_plugin", [], [], None),
         # Case 2: Enable a plugin that is registered but not enabled -> Expect plugin to be added to `enabled`
         ("known_plugin", [], ["known_plugin"], ["known_plugin"]),
@@ -266,7 +289,7 @@ def test_plugin_registry_enable(
     Test for the `enable` method in different scenarios.
 
     Test Cases:
-    - Enable a plugin that is not registered -> Expect AttributeError.
+    - Enable a plugin that is not registered -> Expect PluginNotFoundError.
     - Enable a plugin that is registered but not enabled -> Expect plugin to be added to `enabled`.
     - Enable a plugin that is already enabled -> Expect no change.
 
@@ -279,7 +302,7 @@ def test_plugin_registry_enable(
     registered : list
         Plugins registered in the registry before calling `enable`.
     expected : list or None
-        Expected list of enabled plugins after enabling. If None, expect AttributeError.
+        Expected list of enabled plugins after enabling. If None, expect PluginNotFoundError.
     """
     registry = PluginRegistry()
     registry.enabled = initial_enabled
@@ -288,8 +311,8 @@ def test_plugin_registry_enable(
         plugin = mock_plugin(mocker, name=name)
         registry.plugins[name] = plugin
     # Enable the plugin and check the result
-    if expected is None:  # Expecting an AttributeError
-        with pytest.raises(AttributeError):
+    if expected is None:  # Expecting a PluginNotFoundError
+        with pytest.raises(PluginNotFoundError):
             registry.enable(plugin_name)
     else:
         registry.enable(plugin_name)
@@ -422,13 +445,13 @@ def test_plugin_registry_register(mocker: pytest_mock.MockFixture):
     -----
     Mocking strategy:
 
-    - Patch the `validate` method of the `PluginValidator` to return `True` (bypassing validation
-      logic).
+    - Patch the `validate` method of the `PluginValidator` to return a valid
+      ``ValidationResult`` (bypassing validation logic).
     - Spy the `unpack` and `enable` methods of the registry to ensure they are called.
     """
     registry = PluginRegistry(enable_by_default=True)
-    # Patch the validator to always return True
-    patch_validator(mocker, output=True)
+    # Patch the validator to always return a valid result
+    patch_validator(mocker, valid=True)
     # Spy on `unpack` and `enable`
     mock_unpack = mocker.spy(registry, "unpack")
     mock_enable = mocker.spy(registry, "enable")
@@ -448,21 +471,22 @@ def test_plugin_registry_register_invalid_plugin(mocker):
 
     Test Case:
 
-    - If a plugin is invalid (fails validation), `register` should raise `ValueError`.
+    - If a plugin is invalid (fails validation), `register` should raise
+      ``PluginValidationError``.
     - The plugin should not be stored in `registry.plugins`.
     - The `unpack` method should never be called.
     """
     registry = PluginRegistry()
-    patch_validator(mocker, output=False)  # force invalid plugin
+    patch_validator(mocker, valid=False)  # force invalid plugin
     plugin = mock_plugin(mocker)
-    with pytest.raises(ValueError, match=f"Invalid plugin: {plugin.name}"):
+    with pytest.raises(PluginValidationError):
         registry.register(plugin)
     assert plugin.name not in registry.plugins
 
 
 def test_plugin_registry_register_conflict_override(mocker):
     """
-    Test registering a plugin with conflict resolution set to 'OVERRIDE'.
+    Test registering a plugin with conflict resolution set to ``OverrideOnConflict``.
 
     Test Case:
 
@@ -470,8 +494,8 @@ def test_plugin_registry_register_conflict_override(mocker):
     - A warning should be raised during the override.
     - The `unpack` and `enable` methods should be called for the new plugin.
     """
-    registry = PluginRegistry(resolver=ConflictResolver("OVERRIDE"))
-    patch_validator(mocker, output=True)  # force valid plugin
+    registry = PluginRegistry(resolver=ConflictResolver(OverrideOnConflict()))
+    patch_validator(mocker, valid=True)  # force valid plugin
     # Create two plugin instances with the same name
     name = "test_plugin"
     plugin1 = mock_plugin(mocker, name=name)
@@ -490,7 +514,7 @@ def test_plugin_registry_register_conflict_override(mocker):
 
 def test_plugin_registry_register_conflict_ignore(mocker):
     """
-    Test registering a plugin with conflict resolution set to 'IGNORE'.
+    Test registering a plugin with conflict resolution set to ``IgnoreOnConflict``.
 
     Test Case:
 
@@ -498,8 +522,8 @@ def test_plugin_registry_register_conflict_ignore(mocker):
     - A warning should be raised during the ignore action.
     - The `unpack` method should not be called for the new plugin.
     """
-    registry = PluginRegistry(resolver=ConflictResolver("IGNORE"))
-    patch_validator(mocker, output=True)  # force valid plugin
+    registry = PluginRegistry(resolver=ConflictResolver(IgnoreOnConflict()))
+    patch_validator(mocker, valid=True)  # force valid plugin
     # Create two plugin instances with the same name
     name = "test_plugin"
     plugin1 = mock_plugin(mocker, name=name)

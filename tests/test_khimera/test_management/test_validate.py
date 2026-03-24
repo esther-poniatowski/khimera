@@ -13,7 +13,7 @@ from typing import Any, Callable, Dict, List
 import pytest
 import pytest_mock
 
-from khimera.management.validate import PluginValidator
+from khimera.management.validate import PluginValidator, ValidationResult
 from khimera.core.components import ComponentSet, Component
 from khimera.core.specifications import FieldSpec  # mocked
 from khimera.plugins.create import Plugin  # mocked
@@ -387,7 +387,8 @@ def test_validate(mocker: pytest_mock.MockFixture, check_results: dict, expected
         setattr(validator, attr, value)
     # Run the test
     result = validator.validate()
-    assert result == expected_validity
+    assert isinstance(result, ValidationResult)
+    assert result.is_valid == expected_validity
     # Verify that all check methods were called
     validator.check_required.assert_called_once()
     validator.check_unique.assert_called_once()

@@ -40,6 +40,7 @@ import pytest_mock
 from khimera.discovery.strategies import FromInstalledFinder
 from khimera.plugins.create import Plugin
 from khimera.plugins.declare import PluginModel
+from khimera.exceptions import KhimeraError
 
 
 # --- Fixtures and Utilities -----------------------------------------------------------------------
@@ -150,7 +151,7 @@ def test_entry_points_finder_discover(mocker: pytest_mock.MockFixture):
     - The `get_entry_points` method should be called during discovery.
     - Each entry point should be loaded using `entry_point.load()`.
     - Only valid Plugin instances should be stored.
-    - If an entry point returns an invalid object, a TypeError should be raised.
+    - If an entry point returns an invalid object, a KhimeraError should be raised.
     - If no valid plugins are discovered, the plugins list should remain empty.
     """
     finder = FromInstalledFinder(app_name="test_app")
@@ -169,7 +170,7 @@ def test_entry_points_finder_discover(mocker: pytest_mock.MockFixture):
     # Case 2: Discover invalid plugin
     finder.plugins.clear()  # Reset state
     mocker.patch.object(finder, "get_entry_points", return_value=[entry_point_invalid])
-    with pytest.raises(TypeError, match="Invalid plugin loaded from entry point"):
+    with pytest.raises(KhimeraError, match="Invalid plugin loaded from entry point"):
         finder.discover()
     # Case 3: No entry points found
     finder.plugins.clear()

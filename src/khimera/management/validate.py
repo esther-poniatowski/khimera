@@ -6,6 +6,8 @@ Validate the components of a plugin against its model.
 
 Classes
 -------
+ValidationResult
+    Frozen dataclass holding structured diagnostics from a validation run.
 PluginValidator
     Validates the components of a plugin instance against its model.
 
@@ -16,9 +18,42 @@ khimera.plugins.declare
 khimera.plugins.create
 """
 
+from dataclasses import dataclass, field
 from typing import List, Dict
 
 from khimera.plugins.create import Plugin
+
+
+@dataclass(frozen=True)
+class ValidationResult:
+    """Structured diagnostics produced by :class:`PluginValidator`.
+
+    Attributes
+    ----------
+    missing : List[str]
+        Required fields absent from the plugin instance.
+    unknown : List[str]
+        Fields present in the plugin but not declared in the model.
+    not_unique : List[str]
+        Fields constrained to a unique component that contain more than one.
+    invalid : Dict[str, list]
+        Mapping of field names to lists of components that failed rule validation.
+    deps_unsatisfied : List[str]
+        Dependency specifications that the plugin does not satisfy.
+    """
+
+    missing: List[str] = field(default_factory=list)
+    unknown: List[str] = field(default_factory=list)
+    not_unique: List[str] = field(default_factory=list)
+    invalid: Dict[str, list] = field(default_factory=dict)
+    deps_unsatisfied: List[str] = field(default_factory=list)
+
+    @property
+    def is_valid(self) -> bool:
+        """Whether the validation passed with no diagnostics."""
+        return not (
+            self.missing or self.unknown or self.not_unique or self.invalid or self.deps_unsatisfied
+        )
 
 
 class PluginValidator:
@@ -96,22 +131,26 @@ class PluginValidator:
             if not spec.validate(self.plugin):
                 self.deps_unsatisfied.append(field)
 
-    def validate(self) -> bool:
+    def validate(self) -> ValidationResult:
         """
         Validate the components of the plugin instance against its model.
 
         Returns
         -------
-        bool
-            Whether the entire plugin instance is valid.
+        ValidationResult
+            Frozen dataclass containing all diagnostics, with an ``is_valid`` property.
         """
         self.check_required()
         self.check_unique()
         self.check_unknown()
         self.check_rules()
         self.check_dependencies()
-        return not (
-            self.missing or self.unknown or self.not_unique or self.invalid or self.deps_unsatisfied
+        return ValidationResult(
+            missing=list(self.missing),
+            unknown=list(self.unknown),
+            not_unique=list(self.not_unique),
+            invalid=dict(self.invalid),
+            deps_unsatisfied=list(self.deps_unsatisfied),
         )
 
     def extract(self) -> Plugin:

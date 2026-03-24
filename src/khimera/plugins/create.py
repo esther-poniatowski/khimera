@@ -24,6 +24,7 @@ from khimera.utils.factories import TypeConstrainedDict
 from khimera.utils.mixins import DeepCopyable, DeepComparable
 from khimera.core.components import Component, ComponentSet
 from khimera.plugins.declare import PluginModel
+from khimera.exceptions import ComponentError
 
 
 class Plugin(DeepCopyable, DeepComparable):
@@ -48,8 +49,10 @@ class Plugin(DeepCopyable, DeepComparable):
         Add a component to one of the specified fields in the plugin model.
     remove(key: str, comp_name: Optional[str] = None) -> Self
         Remove a component or all components for a specific key from the plugin.
-    get(key: str, names: bool = False) -> ComponentSet
+    get(key: str) -> ComponentSet
         Get the components of the plugin for a specific field.
+    get_names(key: str) -> list[str]
+        Get the names of the components for a specific field.
     filter(category: Optional[Type[Component]] = None) -> Dict[str, ComponentSet]
         Get the components of the plugin, optionally filtered by category.
     copy() -> Self
@@ -140,16 +143,18 @@ class Plugin(DeepCopyable, DeepComparable):
         Self
             Updated plugin instance, for method chaining.
 
-        Raise
-        -----
+        Raises
+        ------
+        ComponentError
+            If a component with the same name already exists for the given key.
         TypeError
             If the `comp` argument is not a subclass of `Component`. Automatically raised by the
             `TypeConstrainedList` class when adding the component to the list of components.
         """
         if key not in self.components:  # initialize storage for the field
             self.components[key] = ComponentSet()  # automatic type checking
-        if comp.name in self.get(key, names=True):  # check for duplicate component names
-            raise AttributeError(f"Duplicate component '{comp.name}' for field '{key}'")
+        if comp.name in self.get_names(key):  # check for duplicate component names
+            raise ComponentError(f"Duplicate component '{comp.name}' for field '{key}'")
         self.components[key].append(comp)
         comp.attach(self.name)  # keep track of the plugin providing the component
         return self
@@ -173,13 +178,12 @@ class Plugin(DeepCopyable, DeepComparable):
 
         Raises
         ------
-        KeyError
-            If the key is not found in the plugin's components.
-        ValueError
-            If the specified component is not found for the given key.
+        ComponentError
+            If the key is not found in the plugin's components, or if the specified component is
+            not found for the given key.
         """
         if key not in self.components:
-            raise KeyError(f"No key '{key}' in the plugin's components")
+            raise ComponentError(f"No key '{key}' in the plugin's components")
         if comp_name is None:
             del self.components[key]
         else:
@@ -187,10 +191,10 @@ class Plugin(DeepCopyable, DeepComparable):
                 comp = next(comp for comp in self.components[key] if comp.name == comp_name)
                 self.components[key].remove(comp)
             except (ValueError, KeyError, StopIteration) as exc:
-                raise KeyError(f"No component '{comp_name}' for key '{key}'") from exc
+                raise ComponentError(f"No component '{comp_name}' for key '{key}'") from exc
         return self
 
-    def get(self, key: str, names: bool = False) -> ComponentSet:
+    def get(self, key: str) -> ComponentSet:
         """
         Get the components of the plugin for a specific field.
 
@@ -198,18 +202,29 @@ class Plugin(DeepCopyable, DeepComparable):
         ---------
         key : str
             Key of the field in the plugin instance.
-        names : bool, optional
-            If True, return the names of the components instead of the components themselves.
 
         Returns
         -------
         ComponentSet
             Components of the plugin stored for the specified field.
         """
-        components = self.components.get(key, ComponentSet())
-        if names:
-            return ComponentSet([comp.name for comp in components])
-        return components
+        return self.components.get(key, ComponentSet())
+
+    def get_names(self, key: str) -> list[str]:
+        """
+        Get the names of the components for a specific field.
+
+        Arguments
+        ---------
+        key : str
+            Key of the field in the plugin instance.
+
+        Returns
+        -------
+        list[str]
+            Names of the components stored for the specified field.
+        """
+        return [comp.name for comp in self.components.get(key, ComponentSet())]
 
     def filter(
         self, category: Optional[Type[Component]] = None

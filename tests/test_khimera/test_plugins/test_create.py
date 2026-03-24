@@ -23,6 +23,7 @@ from khimera.plugins.create import Plugin
 from khimera.core.components import Component
 from khimera.core.specifications import FieldSpec
 from khimera.plugins.declare import PluginModel  # mocked
+from khimera.exceptions import ComponentError
 
 
 # --- Mock classes for testing ---------------------------------------------------------------------
@@ -74,12 +75,9 @@ def test_plugin_initialization(mock_model):
     assert not plugin.components  # empty dictionary
 
 
-@pytest.mark.parametrize(
-    "names, expected", [(False, lambda comp: comp), (True, lambda comp: comp.name)]
-)
-def test_get_component(mock_model, names, expected):
+def test_get_component(mock_model):
     """
-    Test retrieving a component from a plugin.
+    Test retrieving components from a plugin via ``get()``.
 
     Notes
     -----
@@ -89,9 +87,19 @@ def test_get_component(mock_model, names, expected):
     field_key = "test_spec"
     comp = MockComponent(name="test_comp")
     plugin.add(key=field_key, comp=comp)
-    retrieved = plugin.get(field_key, names=names)
+    retrieved = plugin.get(field_key)
     assert len(retrieved) == 1
-    assert retrieved[0] == expected(comp)
+    assert retrieved[0] == comp
+
+
+def test_get_names(mock_model):
+    """Test retrieving component names from a plugin via ``get_names()``."""
+    plugin = Plugin(model=mock_model, name="test_plugin")
+    field_key = "test_spec"
+    comp = MockComponent(name="test_comp")
+    plugin.add(key=field_key, comp=comp)
+    names = plugin.get_names(field_key)
+    assert names == ["test_comp"]
 
 
 def test_add_component(mock_model):
@@ -111,7 +119,7 @@ def test_add_duplicate_component(mock_model):
     field_key = "test_spec"
     comp = MockComponent(name="test_comp")
     plugin.add(key=field_key, comp=comp)
-    with pytest.raises(AttributeError):
+    with pytest.raises(ComponentError):
         plugin.add(key=field_key, comp=comp)
 
 
@@ -141,7 +149,7 @@ def test_remove_nonexistent_component(mock_model):
     field_key = "test_spec"
     comp = MockComponent(name="test_comp")
     plugin.add(key=field_key, comp=comp)  # initialize the field
-    with pytest.raises(KeyError):
+    with pytest.raises(ComponentError):
         plugin.remove(key=field_key, comp_name="nonexistent")
 
 

@@ -6,74 +6,105 @@ Registers plugins on the host application side.
 
 Classes
 -------
+ConflictResolution (Protocol)
+    Strategy interface for resolving naming conflicts during registration.
+RaiseOnConflict
+    Raises ``PluginConflictError`` when a conflict occurs.
+OverrideOnConflict
+    Replaces the existing element with the new one.
+IgnoreOnConflict
+    Keeps the existing element and discards the new one.
+ConflictResolver
+    Applies a ``ConflictResolution`` strategy to resolve conflicts.
 PluginRegistry
 
 See Also
 --------
 """
-from typing import Dict, List, TypeVar, Optional, Callable
+from typing import Dict, List, TypeVar, Optional, Protocol, runtime_checkable
 import warnings
 
 from khimera.utils.factories import TypeConstrainedDict
 from khimera.plugins.create import Plugin
 from khimera.core.components import Component, ComponentSet
-from khimera.management.validate import PluginValidator
+from khimera.management.validate import PluginValidator, ValidationResult
+from khimera.exceptions import PluginConflictError, PluginValidationError, PluginNotFoundError
 
 E = TypeVar("E", bound=Plugin | Component)
 """Type variable for elements in the registry."""
 
 
-# --- Conflict Resolver ----------------------------------------------------------------------------
+# --- Conflict Resolution Strategies ---------------------------------------------------------------
 
 
-class ConflictResolver:
-    """Implements different strategies for resolving conflicts between plugins.
+@runtime_checkable
+class ConflictResolution(Protocol):
+    """Protocol for conflict resolution strategies.
 
-    Attributes
-    ----------
-    MODES : Dict[str, callable]
-        Mapping of conflict resolution modes to their respective methods.
-    mode : str
-        Strategy to apply to resolve conflicts between plugins.
+    Implementations decide what happens when a newly registered element has the same name as an
+    existing one.
     """
 
-    def __init__(self, mode: str = "RAISE_ERROR"):
-        self.mode = mode
-        self.MODES: Dict[str, Callable] = {
-            "RAISE_ERROR": self.raise_error,
-            "OVERRIDE": self.override,
-            "IGNORE": self.ignore,
-        }
-
-    def resolve(self, new: E) -> E | None:
-        """
-        Select and apply the conflict resolution strategy.
+    def resolve(self, new: Plugin | Component) -> Plugin | Component | None:
+        """Resolve a naming conflict for *new*.
 
         Returns
         -------
-        E
-            Resolved element to register, if any.
+        Plugin | Component | None
+            The element to keep in the registry, or ``None`` to discard the new element.
 
         Raises
         ------
-        ValueError, UserWarning
-            Depending on the conflict resolution strategy.
+        PluginConflictError
+            If the strategy forbids conflicts.
         """
-        return self.MODES[self.mode](new)
+        ...
 
-    def raise_error(self, new: E) -> None:
-        """Fail when conflicts occur."""
-        raise ValueError(f"Aborted: name '{new.name}' already registered.")
 
-    def override(self, new: E) -> E:
-        """Replace the existing element by the latest registered."""
+class RaiseOnConflict:
+    """Raises ``PluginConflictError`` when a conflict occurs."""
+
+    def resolve(self, new: Plugin | Component) -> None:
+        raise PluginConflictError(f"Aborted: name '{new.name}' already registered.")
+
+
+class OverrideOnConflict:
+    """Replaces the existing element with the new one, emitting a warning."""
+
+    def resolve(self, new: Plugin | Component) -> Plugin | Component:
         warnings.warn(f"Overridden: name '{new.name}' already registered.", UserWarning)
         return new
 
-    def ignore(self, new: E) -> None:
-        """Keep the existing element and discard the new one."""
+
+class IgnoreOnConflict:
+    """Keeps the existing element and discards the new one, emitting a warning."""
+
+    def resolve(self, new: Plugin | Component) -> None:
         warnings.warn(f"Ignored: name '{new.name}' already registered.", UserWarning)
         return None
+
+
+class ConflictResolver:
+    """Applies a ``ConflictResolution`` strategy to resolve conflicts.
+
+    Attributes
+    ----------
+    strategy : ConflictResolution
+        Strategy to apply to resolve conflicts between plugins.
+    """
+
+    def __init__(self, strategy: ConflictResolution | None = None):
+        self.strategy: ConflictResolution = strategy or RaiseOnConflict()
+
+    def resolve(self, new: E) -> E | None:
+        """Delegate conflict resolution to the configured strategy.
+
+        Returns
+        -------
+        E | None
+            Resolved element to register, or ``None`` to discard.
+        """
+        return self.strategy.resolve(new)
 
 
 # --- Plugin Registry ------------------------------------------------------------------------------
@@ -86,7 +117,7 @@ class PluginRegistry:
     Attributes
     ----------
     resolver : ConflictResolver
-        Strategy to resolve conflicts when registering plugins.
+        Applies a ``ConflictResolution`` strategy to resolve conflicts when registering plugins.
     validator_type : Type[PluginValidator], default=PluginValidator
         Validator class to check the plugin structure and components against its model.
     enable_by_default : bool
@@ -145,11 +176,11 @@ class PluginRegistry:
 
     def __init__(
         self,
-        resolver=ConflictResolver("RAISE_ERROR"),
+        resolver=None,
         validator_type=PluginValidator,
         enable_by_default=True,
     ):
-        self.resolver = resolver
+        self.resolver = resolver or ConflictResolver()
         self.validator_type = validator_type
         self.enable_by_default = enable_by_default
         self.plugins = TypeConstrainedDict(str, Plugin)
@@ -195,11 +226,11 @@ class PluginRegistry:
 
         Raises
         ------
-        AttributeError
+        PluginNotFoundError
             If the plugin is not registered (i.e. cannot be enabled).
         """
         if not name in self.plugins:
-            raise AttributeError(f"No plugin '{name}' in register.")
+            raise PluginNotFoundError(f"No plugin '{name}' in register.")
         if name not in self.enabled:
             self.enabled.append(name)
 
@@ -215,7 +246,7 @@ class PluginRegistry:
         if name in self.enabled:
             self.enabled.remove(name)
 
-    def register(self, plugin: Plugin):
+    def register(self, plugin: Plugin) -> None:
         """
         Default registering behavior. Override this method to customize the registration process.
 
@@ -226,12 +257,14 @@ class PluginRegistry:
 
         Raises
         ------
-        ValueError
-            If the plugin is invalid.
-            If conflicts occur and the conflict resolution strategy is set to 'RAISE_ERROR'.
+        PluginValidationError
+            If the plugin is invalid (carries the full ``ValidationResult`` diagnostics).
+        PluginConflictError
+            If conflicts occur and the conflict resolution strategy raises.
         """
         validator = self.validator_type(plugin)  # fresh validator for the plugin
-        if validator.validate():
+        result = validator.validate()
+        if result.is_valid:
             new = plugin
             if plugin.name in self.plugins:  # trigger conflict resolution
                 new = self.resolver.resolve(plugin)
@@ -241,7 +274,7 @@ class PluginRegistry:
                 if self.enable_by_default:
                     self.enable(plugin.name)
         else:
-            raise ValueError(f"Invalid plugin: {plugin.name}")
+            raise PluginValidationError(result)
 
     def unpack(self, plugin: Plugin) -> None:
         """

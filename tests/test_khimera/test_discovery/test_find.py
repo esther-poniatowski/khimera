@@ -35,6 +35,7 @@ from khimera.discovery.find import PluginFinder
 from khimera.plugins.create import Plugin
 from khimera.plugins.declare import PluginModel
 from khimera.utils.factories import TypeConstrainedList
+from khimera.exceptions import PluginNotFoundError, AmbiguousLookupError
 
 
 # --- Fixtures and Utilities -----------------------------------------------------------------------
@@ -154,10 +155,10 @@ def test_plugin_finder_get(mocker: pytest_mock.MockerFixture):
 
     Test Cases:
 
-    - Retrieve a plugin by name when only one exists with that name.
-    - Retrieve multiple plugins when multiple versions exist for the same name.
-    - Retrieve a specific version of a plugin.
-    - Return None when no plugin matches the given name.
+    - Retrieve a plugin by name when only one exists with that name -> list with one element.
+    - Retrieve multiple plugins when multiple versions exist -> list with multiple elements.
+    - Retrieve a specific version of a plugin -> list with one element.
+    - Return empty list when no plugin matches the given name.
     """
     finder = ConcreteFinder()
     # Create plugins with different names and versions
@@ -168,15 +169,43 @@ def test_plugin_finder_get(mocker: pytest_mock.MockerFixture):
     finder.store(plugin1)
     finder.store(plugin2)
     finder.store(plugin3)
-    # Case 1: Retrieve a single plugin by name
-    assert finder.get("pluginB", None) == plugin3  # only one exists
+    # Case 1: Retrieve a single plugin by name -> list with one element
+    assert finder.get("pluginB", None) == [plugin3]
     # Case 2: Retrieve multiple plugins with the same name but different versions
     assert finder.get("pluginA", None) == [plugin1, plugin2]
-    # Case 3: Retrieve a specific version
-    assert finder.get("pluginA", "1.0.0") == plugin1
-    assert finder.get("pluginA", "1.1.0") == plugin2
-    # Case 4: Retrieve a plugin that does not exist
-    assert finder.get("pluginX", None) is None
+    # Case 3: Retrieve a specific version -> list with one element
+    assert finder.get("pluginA", "1.0.0") == [plugin1]
+    assert finder.get("pluginA", "1.1.0") == [plugin2]
+    # Case 4: Retrieve a plugin that does not exist -> empty list
+    assert finder.get("pluginX", None) == []
+
+
+def test_plugin_finder_get_one(mocker: pytest_mock.MockerFixture):
+    """
+    Test the `get_one` method of `PluginFinder`.
+
+    Test Cases:
+
+    - Retrieve exactly one plugin by name and version.
+    - Raise PluginNotFoundError when no plugin matches.
+    - Raise AmbiguousLookupError when multiple plugins match.
+    """
+    finder = ConcreteFinder()
+    plugin1 = mock_plugin(mocker, "pluginA", "1.0.0")
+    plugin2 = mock_plugin(mocker, "pluginA", "1.1.0")
+    plugin3 = mock_plugin(mocker, "pluginB", "2.0.0")
+    finder.store(plugin1)
+    finder.store(plugin2)
+    finder.store(plugin3)
+    # Case 1: Exactly one match
+    assert finder.get_one("pluginB") is plugin3
+    assert finder.get_one("pluginA", "1.0.0") is plugin1
+    # Case 2: No match -> PluginNotFoundError
+    with pytest.raises(PluginNotFoundError):
+        finder.get_one("pluginX")
+    # Case 3: Ambiguous match -> AmbiguousLookupError
+    with pytest.raises(AmbiguousLookupError):
+        finder.get_one("pluginA")
 
 
 def test_plugin_finder_iter(mocker: pytest_mock.MockerFixture):
