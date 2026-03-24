@@ -160,7 +160,7 @@ Secondary considerations include:
 - Entry points ensure efficient discovery, enabling plugins to be found dynamically.
 - Metadata in `pyproject.toml` provides structured resource declarations without needing to
   import the module.
-- This approach balances performance, usability, and flexibility.
+- This hybrid approach balances performance, usability, and flexibility.
 
 ### Final Answers
 
@@ -178,7 +178,7 @@ Secondary considerations include:
 
 - PluginFinder must support both entry point discovery and metadata retrieval.
 - Client applications must define their expected metadata schema for plugin validation.
-- Resource registration will be a two-step process:
+- Registering resources will follow two steps:
   1. Discover plugins via entry points.
   2. Load metadata from `pyproject.toml` before importing the module.
 

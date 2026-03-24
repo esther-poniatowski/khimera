@@ -92,7 +92,7 @@ register_service("plugin-function", plugin_function)
 ```
 
 - Commands and services are explicitly registered using Khimera’s registrator.
-- This removes the need for decorators or explicit registration functions inside plugins.
+- This approach removes the need for decorators or explicit registration functions inside plugins.
 
 #### Approach 2: Class-Based Registrator
 
@@ -199,8 +199,8 @@ registrator.register_service("plugin-function", plugin_function)
 
 ## Implications
 
-- Implementation of `PluginRegistrator` is required.
-- Conflict resolution must be handled during registration.
+- `PluginRegistrator` must be implemented.
+- Conflicts must be resolved during registration.
 - Documentation must clearly define how plugins use the registrator.
 - Existing function-based and decorator-based registration should be deprecated in favor of this
   approach.

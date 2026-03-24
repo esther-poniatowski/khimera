@@ -28,7 +28,7 @@ Secondary considerations include:
 
 ## Decision Drivers
 
-- **Modularity**: Static resource registration should be independent of other plugin
+- **Modularity**: Registering static resources should be independent of other plugin
   functionalities.
 - **Extensibility**: The approach should support additional static resource types without major
   refactoring.
@@ -92,8 +92,8 @@ Secondary considerations include:
   registrator.register_template("templates/email.html")
   ```
 
-- This removes the need for manual function calls while keeping explicit control over resource
-  registration.
+- This approach removes the need for manual function calls while keeping explicit control over
+  resource registration.
 
 ---
 
@@ -182,7 +182,7 @@ Secondary considerations include:
 
 ## Implications
 
-- Implementation of `ResourceRegistrator` is required.
+- `ResourceRegistrator` must be implemented.
 - Client applications must retrieve static resources via the resource registry instead of direct
   file access.
 - Validation logic must be added to check registered paths.

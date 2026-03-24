@@ -6,7 +6,7 @@
 [![Python](https://img.shields.io/badge/python-supported-blue)](https://www.python.org/)
 [![License: GPL](https://img.shields.io/badge/License-GPL-yellow.svg)](https://opensource.org/licenses/GPL-3.0)
 
-Plugin system framework for automating development and integration of package extensions.
+Plugin management framework for building extensible Python applications.
 
 ---
 
@@ -29,62 +29,53 @@ Plugin system framework for automating development and integration of package ex
 
 Designing a plugin system involves two tightly coupled challenges:
 
-- On the host application side: implementing a structured and extensible architecture.
+- On the host side: implementing a structured and extensible architecture.
 - On the plugin side: conforming to a standardized interface and integration protocol.
 
-In the absence of a formalized framework, host developers must manually implement plugin discovery, validation, registration, and integration. Plugin developers, in turn, must reverse-engineer the host’s
-expectations. This fragmented process increases complexity and hinders maintainability.
-
-Furthermore, seamless plugin usage by end users requires reliable loading and execution mechanisms
-at runtime, with limited visibility into internal plugin logic.
+Without a formalized framework, host developers must manually discover, validate, and register
+plugins. Plugin developers must reverse-engineer the host’s expectations. End users need to load
+and run plugins reliably at runtime with no visibility into plugin internals.
 
 ### Advantages
 
-This framework provides a unified infrastructure to automate plugin management and decouple
-architectural design from application-specific functionality.
+Khimera decouples plugin infrastructure from logic specific to each application and standardizes
+interactions for all three actors in the plugin ecosystem:
 
-It defines standardized procedures for all three actors in the plugin ecosystem:
-
-- **Host applications**: Define and expose plugin interfaces, manage discovery and registration, and
-  coordinate runtime execution.
-- **Plugin developers**: Implement compliant modules with minimal boilerplate, following validated
-  integration specifications.
-- **End users**: Install and activate plugins transparently within the host application environment,
-  without manual configuration.
+- **Host applications**: Define plugin interfaces, discover and register plugins, and coordinate
+  how plugins run.
+- **Plugin developers**: Implement compliant modules with minimal boilerplate following validated
+  specs.
+- **End users**: Install and activate plugins transparently, without configuring manually.
 
 ---
 
 ## Features
 
-- [X] **Plugin Specification**: Defines a common interface for plugins to ensure compatibility with
-  the host application.
-- [ ] **Plugin Discovery**: Offers various strategies to locate plugins from multiple sources, that
-  can be automatically or manually triggered either by the host application or by the user.
-- [X] **Plugin Validation**: Ensures that plugins conform to the expected schema and are compatible
-  with the host application.
-- [ ] **Plugin Registration**: Enable/disable plugins and organizes their resources to make them
-  available to the host application flexibly.
-- [X] **Extensible CLI Framework**: Provides a modular command-line interface (CLI) that can be
-  extended with new commands provided by plugins. Commands and nested groups can be composed to
-  assemble the main application.
+- [X] **Plugin specification**: Common interface ensuring plugin compatibility with the host
+  application.
+- [ ] **Plugin discovery**: Locates plugins from multiple sources, triggered automatically or
+  manually by the host or the end user.
+- [X] **Plugin validation**: Validates plugin schema conformance and host compatibility.
+- [ ] **Plugin registration**: Enables, disables, and organizes plugins for flexible host
+  integration.
+- [X] **Extensible CLI**: Modular command-line interface extensible with plugin-provided commands
+  and composable command groups.
 
 ---
 
 ## Installation
 
-To install the package and its dependencies, use one of the following methods:
+### Using pip
 
-### Using Pip Installs Packages
-
-Install the package from the GitHub repository URL via `pip`:
+Install from the GitHub repository:
 
 ```bash
 pip install git+https://github.com/esther-poniatowski/khimera.git
 ```
 
-### Using Conda
+### Using conda
 
-Install the package from the private channel eresthanaconda:
+Install from the eresthanaconda channel:
 
 ```bash
 conda install khimera -c eresthanaconda
