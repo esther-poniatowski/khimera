@@ -264,17 +264,21 @@ class PluginRegistry:
         """
         validator = self.validator_type(plugin)  # fresh validator for the plugin
         result = validator.validate()
-        if result.is_valid:
-            new = plugin
-            if plugin.name in self.plugins:  # trigger conflict resolution
-                new = self.resolver.resolve(plugin)
-            if new:  # resolver may return None
-                self.plugins[plugin.name] = plugin  # save the full plugin
-                self.unpack(plugin)  # organize its components
-                if self.enable_by_default:
-                    self.enable(plugin.name)
-        else:
+        if not result.is_valid:
             raise PluginValidationError(result)
+        new = plugin
+        existing_name = plugin.name if plugin.name in self.plugins else None
+        was_enabled = existing_name in self.enabled if existing_name else False
+        if existing_name is not None:  # trigger conflict resolution
+            new = self.resolver.resolve(plugin)
+        if new is None:  # resolver may discard the new plugin
+            return
+        if existing_name is not None:
+            self._remove_plugin(existing_name)
+        self.plugins[new.name] = new
+        self.unpack(new)
+        if self.enable_by_default or was_enabled:
+            self.enable(new.name)
 
     def unpack(self, plugin: Plugin) -> None:
         """
@@ -296,3 +300,15 @@ class PluginRegistry:
             if key not in self.components:
                 self.components[key] = ComponentSet()
             self.components[key].extend(comps)
+
+    def _remove_plugin(self, name: str) -> None:
+        """Remove a plugin and all of its unpacked components from the registry."""
+        if name in self.plugins:
+            del self.plugins[name]
+        self.disable(name)
+        for key in list(self.components):
+            remaining = [comp for comp in self.components[key] if comp.plugin != name]
+            if remaining:
+                self.components[key] = ComponentSet(remaining)
+            else:
+                del self.components[key]

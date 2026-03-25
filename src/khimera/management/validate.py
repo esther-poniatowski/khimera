@@ -100,36 +100,32 @@ class PluginValidator:
     def check_required(self) -> None:
         """Check if all required components are present in the plugin instance."""
         specs = self.model.filter(required=True)
-        for field in specs:
-            if field not in self.plugin.components:
-                self.missing.append(field)
+        self.missing = [field for field in specs if field not in self.plugin.components]
 
     def check_unique(self) -> None:
         """Check if components are unique where required."""
         specs = self.model.filter(unique=True)
-        for field in specs:
-            if len(self.plugin.get(field)) > 1:
-                self.not_unique.append(field)
+        self.not_unique = [field for field in specs if len(self.plugin.get(field)) > 1]
 
     def check_unknown(self) -> None:
         """Check if components are unknown."""
-        for field in self.plugin.components:
-            if field not in self.model.fields:
-                self.unknown.append(field)
+        self.unknown = [field for field in self.plugin.components if field not in self.model.fields]
 
     def check_rules(self) -> None:
         """Validate the components of the plugin instance against the rules of the model."""
+        invalid: Dict = {}
         for field, comps in self.plugin.components.items():  # field: field name, comps: list
             spec = self.model.get(field)  # spec to use for validation
             invalid_components = [item for item in comps if not spec.validate(item)]
             if invalid_components:
-                self.invalid[field] = invalid_components
+                invalid[field] = invalid_components
+        self.invalid = invalid
 
     def check_dependencies(self) -> None:
         """Check if all dependencies are satisfied in the plugin instance."""
-        for field, spec in self.model.dependencies.items():
-            if not spec.validate(self.plugin):
-                self.deps_unsatisfied.append(field)
+        self.deps_unsatisfied = [
+            field for field, spec in self.model.dependencies.items() if not spec.validate(self.plugin)
+        ]
 
     def validate(self) -> ValidationResult:
         """

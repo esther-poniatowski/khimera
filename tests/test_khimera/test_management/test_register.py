@@ -512,6 +512,25 @@ def test_plugin_registry_register_conflict_override(mocker):
     mock_unpack.assert_called_with(plugin2)  # unpack called for the new plugin
 
 
+def test_plugin_registry_register_conflict_override_replaces_components(mocker):
+    """Overriding a plugin should replace its unpacked components as well."""
+    registry = PluginRegistry(resolver=ConflictResolver(OverrideOnConflict()))
+    patch_validator(mocker, valid=True)
+
+    first = mock_plugin(mocker, name="test_plugin", components={"key1": ["compA"]})
+    second = mock_plugin(mocker, name="test_plugin", components={"key1": ["compB"]})
+    for comp in first.components["key1"]:
+        comp.plugin = "test_plugin"
+    for comp in second.components["key1"]:
+        comp.plugin = "test_plugin"
+
+    registry.register(first)
+    with pytest.warns(UserWarning):
+        registry.register(second)
+
+    assert [comp.name for comp in registry.components["key1"]] == ["compB"]
+
+
 def test_plugin_registry_register_conflict_ignore(mocker):
     """
     Test registering a plugin with conflict resolution set to ``IgnoreOnConflict``.

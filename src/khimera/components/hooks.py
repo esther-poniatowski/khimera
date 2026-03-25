@@ -19,11 +19,32 @@ khimera.core.specifications.FieldSpec
     Abstract base class for defining constraints and validations for components in a plugin model.
 """
 from collections import OrderedDict
+from dataclasses import dataclass
 import inspect
-from typing import Any, Callable, Union, Optional, Type, Tuple, List
+from types import UnionType
+from typing import Any, Callable, Union, Optional, Type, Tuple, List, get_args, get_origin
 
 from khimera.core.components import Component
 from khimera.core.specifications import FieldSpec
+
+
+@dataclass(frozen=True)
+class HookParameter:
+    """Normalized description of one positional hook parameter."""
+
+    name: str
+    annotation: Any
+
+
+@dataclass(frozen=True)
+class HookSignature:
+    """Stable hook-signature contract used during validation."""
+
+    positional: tuple[HookParameter, ...]
+    keyword_only: tuple[str, ...]
+    has_var_positional: bool
+    has_var_keyword: bool
+    return_annotation: Any
 
 
 class Hook(Component):
@@ -114,13 +135,11 @@ class HookSpec(FieldSpec[Hook]):
 
     def validate(self, obj: Hook) -> bool:
         """Validate that the hook function matches the expected signature."""
-        pos, _, has_var_pos, has_var_kw, return_ann = self.describe_signature(obj.func)
-        return self.check_inputs(pos, has_var_pos, has_var_kw) and self.check_output(return_ann)
+        signature = self.describe_signature(obj.func)
+        return self.check_inputs(signature) and self.check_output(signature.return_annotation)
 
     @staticmethod
-    def describe_signature(
-        fn: Callable,
-    ) -> Tuple[List[Tuple[str, Any]], List[str], bool, bool, Any]:
+    def describe_signature(fn: Callable) -> HookSignature:
         """
         Describe the signature of a function or method.
 
@@ -131,10 +150,9 @@ class HookSpec(FieldSpec[Hook]):
 
         Returns
         -------
-        positional : List[Tuple[str, Any]]
-            Names and types of positional arguments, in order. Types are inferred from type hints,
-            and Any is used if no type hint is provided.
-        keyword_only : List[str]
+        positional : tuple[HookParameter, ...]
+            Names and types of positional arguments, in order.
+        keyword_only : tuple[str, ...]
             Names of keyword-only arguments.
         has_var_positional : bool
             True if the function has `*args`.
@@ -146,7 +164,7 @@ class HookSpec(FieldSpec[Hook]):
         sig = inspect.signature(fn)
         params = sig.parameters
         return_annotation = sig.return_annotation
-        positional: List[Tuple[str, Any]] = []
+        positional: List[HookParameter] = []
         keyword_only: List[str] = []
         has_var_positional = False
         has_var_keyword = False
@@ -155,21 +173,22 @@ class HookSpec(FieldSpec[Hook]):
                 inspect.Parameter.POSITIONAL_ONLY,
                 inspect.Parameter.POSITIONAL_OR_KEYWORD,
             }:
-                positional.append((param.name, param.annotation))
+                positional.append(HookParameter(param.name, param.annotation))
             elif param.kind == inspect.Parameter.KEYWORD_ONLY:
                 keyword_only.append(param.name)
             elif param.kind == inspect.Parameter.VAR_POSITIONAL:  # *args
                 has_var_positional = True
             elif param.kind == inspect.Parameter.VAR_KEYWORD:  # **kwargs
                 has_var_keyword = True
-        return positional, keyword_only, has_var_positional, has_var_keyword, return_annotation
+        return HookSignature(
+            positional=tuple(positional),
+            keyword_only=tuple(keyword_only),
+            has_var_positional=has_var_positional,
+            has_var_keyword=has_var_keyword,
+            return_annotation=return_annotation,
+        )
 
-    def check_inputs(
-        self,
-        positional: List[Tuple[str, Any]],
-        has_var_positional: bool,
-        has_var_keyword: bool,
-    ) -> bool:
+    def check_inputs(self, signature: HookSignature) -> bool:
         """
         Validate if a function matches the signature constraints.
 
@@ -178,19 +197,22 @@ class HookSpec(FieldSpec[Hook]):
         bool
             True if the function matches the constraints, False otherwise.
         """
+        if signature.keyword_only:
+            return False
         # Check exact argument names and order
         expected_names, expected_types = zip(*self.arg_types.items())
-        actual_names, actual_types = zip(*positional)
+        actual_names = tuple(param.name for param in signature.positional)
+        actual_types = tuple(param.annotation for param in signature.positional)
         if expected_names != actual_names:
             return False
-        # Check argument types (more permissive if not provided)
+        # Check argument types against normalized runtime types.
         for expected, actual in zip(expected_types, actual_types):
-            if expected is not Any and not issubclass(actual, expected):
+            if not self._matches_annotation(actual, expected):
                 return False
         # Check *args and **kwargs constraints
-        if has_var_positional and not self.allow_var_args:
+        if signature.has_var_positional and not self.allow_var_args:
             return False
-        if has_var_keyword and not self.allow_var_kwargs:
+        if signature.has_var_keyword and not self.allow_var_kwargs:
             return False
         return True
 
@@ -200,6 +222,48 @@ class HookSpec(FieldSpec[Hook]):
             return True
         if self.return_type is None:
             return return_annotation in {None, inspect.Signature.empty}
-        if isinstance(self.return_type, tuple):
-            return isinstance(return_annotation, self.return_type)
-        return return_annotation == self.return_type
+        return self._matches_annotation(return_annotation, self.return_type)
+
+    @staticmethod
+    def _annotation_runtime_types(annotation: Any) -> Optional[Tuple[type, ...]]:
+        if annotation in {inspect.Signature.empty, Any}:
+            return None
+        if annotation is None:
+            return (type(None),)
+        if isinstance(annotation, type):
+            return (annotation,)
+        origin = get_origin(annotation)
+        if origin in {Union, UnionType}:
+            resolved: List[type] = []
+            for arg in get_args(annotation):
+                nested = HookSpec._annotation_runtime_types(arg)
+                if nested is None:
+                    return None
+                resolved.extend(nested)
+            return tuple(dict.fromkeys(resolved))
+        if isinstance(origin, type):
+            return (origin,)
+        return None
+
+    @staticmethod
+    def _expected_runtime_types(expected: Union[Type, Tuple[Type, ...]]) -> Tuple[type, ...]:
+        if isinstance(expected, tuple):
+            return expected
+        return (expected,)
+
+    @classmethod
+    def _matches_annotation(
+        cls,
+        actual_annotation: Any,
+        expected_annotation: Union[Type, Tuple[Type, ...], Any],
+    ) -> bool:
+        if expected_annotation is Any:
+            return True
+        actual_types = cls._annotation_runtime_types(actual_annotation)
+        if actual_types is None:
+            return False
+        expected_types = cls._expected_runtime_types(expected_annotation)
+        return all(
+            any(issubclass(actual_type, expected_type) for expected_type in expected_types)
+            for actual_type in actual_types
+        )

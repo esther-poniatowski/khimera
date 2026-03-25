@@ -22,6 +22,7 @@ pathlib.Path
     Object-oriented filesystem paths.
 """
 from contextlib import AbstractContextManager
+import inspect
 from importlib.resources import files, as_file
 from pathlib import Path
 from typing import Optional, Tuple
@@ -99,7 +100,39 @@ class Asset(Component):
     ):
         super().__init__(name=name, description=description)
         self.file_path = file_path
-        self.package = package or self.__module__  # default to the caller's module
+        self.package = package or self.infer_caller_package(stacklevel=2)
+
+    @classmethod
+    def from_caller(
+        cls,
+        name: str,
+        file_path: str,
+        description: Optional[str] = None,
+        stacklevel: int = 1,
+    ) -> "Asset":
+        """Build an asset using the caller module as the package anchor."""
+        return cls(
+            name=name,
+            file_path=file_path,
+            package=cls.infer_caller_package(stacklevel=stacklevel + 1),
+            description=description,
+        )
+
+    @staticmethod
+    def infer_caller_package(stacklevel: int = 1) -> str:
+        """Infer the package anchor from the call site rather than the framework module."""
+        frame = inspect.currentframe()
+        try:
+            for _ in range(stacklevel):
+                if frame is None:
+                    break
+                frame = frame.f_back
+            module = inspect.getmodule(frame) if frame is not None else None
+            if module is None:
+                return __name__
+            return module.__name__
+        finally:
+            del frame
 
     def get_path(self) -> AbstractContextManager[Path, bool | None]:
         """

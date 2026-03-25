@@ -41,7 +41,13 @@ def test_asset_initialization_default_package():
     """Test initialization of `Asset` with default package."""
     mock_file = "test_file.txt"
     asset = Asset(name="test_asset", file_path=mock_file, package=None)
-    assert asset.package == asset.__module__
+    assert asset.package == __name__
+
+
+def test_asset_from_caller_uses_call_site_module():
+    """Test the explicit caller-aware asset factory."""
+    asset = Asset.from_caller(name="test_asset", file_path="test_file.txt")
+    assert asset.package == __name__
 
 
 @pytest.mark.parametrize(

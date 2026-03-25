@@ -397,6 +397,27 @@ def test_validate(mocker: pytest_mock.MockFixture, check_results: dict, expected
     validator.check_dependencies.assert_called_once()
 
 
+def test_validate_recomputes_diagnostics_each_run(mocker: pytest_mock.MockFixture) -> None:
+    """Repeated validation should not leak stale diagnostics between runs."""
+    mock_plugin = mocker.Mock(spec=Plugin, model=mocker.Mock(spec=PluginModel), components={})
+    validator = PluginValidator(mock_plugin)
+    validator.missing = ["stale"]
+
+    mocker.patch.object(validator, "check_required", side_effect=lambda: setattr(validator, "missing", []))
+    mocker.patch.object(validator, "check_unique", side_effect=lambda: setattr(validator, "not_unique", []))
+    mocker.patch.object(validator, "check_unknown", side_effect=lambda: setattr(validator, "unknown", []))
+    mocker.patch.object(validator, "check_rules", side_effect=lambda: setattr(validator, "invalid", {}))
+    mocker.patch.object(
+        validator,
+        "check_dependencies",
+        side_effect=lambda: setattr(validator, "deps_unsatisfied", []),
+    )
+
+    result = validator.validate()
+
+    assert result.is_valid is True
+
+
 @pytest.mark.parametrize(
     "initial_components, invalid, unknown, not_unique, expected_components",
     [

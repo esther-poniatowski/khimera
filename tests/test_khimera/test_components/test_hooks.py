@@ -148,3 +148,29 @@ def test_hook_spec_validate_invalid_output_type():
     hook_spec = HookSpec(name="test_spec", arg_types={"arg1": str, "arg2": int}, return_type=bool)
     hook = Hook(name="invalid_hook", func=invalid_hook)
     assert hook_spec.validate(hook) is False
+
+
+def test_hook_spec_validate_optional_annotation() -> None:
+    """Optional annotations should validate against their expected runtime type."""
+
+    def valid_hook(arg1: str | None, arg2: int) -> bool:
+        return True
+
+    hook_spec = HookSpec(
+        name="test_spec",
+        arg_types={"arg1": (str, type(None)), "arg2": int},
+        return_type=bool,
+    )
+    hook = Hook(name="valid_hook", func=valid_hook)
+    assert hook_spec.validate(hook) is True
+
+
+def test_hook_spec_validate_keyword_only_parameter_rejected() -> None:
+    """Unexpected keyword-only parameters should fail validation."""
+
+    def invalid_hook(arg1: str, *, arg2: int) -> bool:
+        return True
+
+    hook_spec = HookSpec(name="test_spec", arg_types={"arg1": str}, return_type=bool)
+    hook = Hook(name="invalid_hook", func=invalid_hook)
+    assert hook_spec.validate(hook) is False
