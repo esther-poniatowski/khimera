@@ -6,7 +6,7 @@
 [![Python](https://img.shields.io/badge/python-supported-blue)](https://www.python.org/)
 [![License: GPL](https://img.shields.io/badge/License-GPL-yellow.svg)](https://opensource.org/licenses/GPL-3.0)
 
-Plugin management framework for building extensible Python applications.
+Equips Python applications with a structured plugin system.
 
 ---
 

@@ -18,7 +18,7 @@ authors = [{name = "Esther Poniatowski", email = "esther.poniatowski@ens.psl.eu"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
 readme = {file = "README.md", content-type = "text/markdown"}
-description = "Plugin system framework for automating development and integration of package extensions"
+description = "Equips Python applications with a structured plugin system."
 keywords = ["plugin-system", "plugin-development", "dynamic-programming", "extension-framework", "host-app"]
 classifiers = [
     "Programming Language :: Python :: 3",
