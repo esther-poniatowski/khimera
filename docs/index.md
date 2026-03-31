@@ -1,12 +1,13 @@
-# Khimera Documentation
+# Khimera
 
-**Khimera** — Plugin architecture framework.
+Equips Python applications with a structured plugin system.
 
 ```{toctree}
 :maxdepth: 2
 :caption: User Guide
 
-guide/getting-started
+guide/installation
+guide/usage
 ```
 
 ```{toctree}
