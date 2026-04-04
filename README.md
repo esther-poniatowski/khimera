@@ -24,9 +24,9 @@ Equips Python applications with a structured plugin system.
 
 ### Motivation
 
-Designing a plugin system involves two tightly coupled challenges: implementing a
-structured and extensible architecture on the host side, and conforming to a
-standardized interface on the plugin side. Without a formalized framework, host
+A plugin system poses two tightly coupled challenges: implementing a structured and
+extensible architecture on the host side, and conforming to a standardized interface
+on the plugin side. Without a formalized framework, host
 developers must manually discover, validate, and register plugins, while plugin
 developers must reverse-engineer the host's expectations.
 
@@ -42,16 +42,16 @@ developers must reverse-engineer the host's expectations.
 
 ## Features
 
-- [X] **Plugin specification**: Common interface ensuring plugin compatibility with
-  the host application.
+- [X] **Plugin specification**: Define a common interface ensuring plugin compatibility
+  with the host application.
 - [ ] **Plugin discovery**: Locate plugins from multiple sources, triggered
   automatically or manually.
 - [X] **Plugin validation**: Validate plugin schema conformance and host
   compatibility.
 - [ ] **Plugin registration**: Enable, disable, and organize plugins for flexible
   host integration.
-- [X] **Extensible CLI**: Modular command-line interface extensible with
-  plugin-provided commands.
+- [X] **Extensible CLI**: Extend the command-line interface with commands that plugins
+  provide.
 
 ---
 
