@@ -14,8 +14,7 @@ guide/usage
 :maxdepth: 2
 :caption: Reference
 
-architecture
-dependencies
+internals/index
 api/index
 ```
 
