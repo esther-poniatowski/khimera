@@ -4,11 +4,6 @@ khimera.discovery.strategies
 
 Concrete discovery strategies for plugins in the host application.
 
-Classes
--------
-FromInstalledFinder
-    Discovery strategy based on entry points declared in `pyproject.toml` files.
-
 See Also
 --------
 khimera.discovery.find
@@ -33,13 +28,13 @@ class FromInstalledFinder(PluginFinder):
     Typically, this strategy is triggered automatically by the host application itself in its
     `__init__.py` file or by a CLI command that initializes the application.
 
-    Attributes
+    Parameters
     ----------
     app_name : str
         Name of the application requiring plugin discovery.
-    entry_point_group : str, default='{app_name}.plugins'
+    entry_point_group : str, optional
         Entry point group where external packages declare their entry points to plugins for the host
-        application.
+        application. Defaults to ``{app_name}.plugins``.
 
     Examples
     --------
@@ -133,9 +128,9 @@ class FromAPIFinder(PluginFinder):
     Typically, this strategy is triggered by the user in a `main.py` file which imports the host
     application, when the user develops plugins locally.
 
-    Attributes
+    Parameters
     ----------
-    entry_points : List[PluginEntryPoint]
+    *args : PluginEntryPoint
         Entry points for the plugins specified by the user.
 
     Examples

@@ -4,13 +4,6 @@ khimera.components.hooks
 
 Classes defining hooks in plugin models and instances.
 
-Classes
--------
-Hook
-    Represents a hook to be executed by the host application.
-HookSpec
-    Declare a hook expected by the host application.
-
 See Also
 --------
 khimera.core.components.Component
@@ -51,10 +44,14 @@ class Hook(Component):
     """
     Represents a hook to be executed by the host application.
 
-    Attributes
+    Parameters
     ----------
+    name : str
+        Name of the hook.
     func : Callable
         Function or method to be executed when the hook is triggered.
+    description : str, optional
+        Human-readable description.
 
     Warnings
     --------
@@ -71,18 +68,26 @@ class HookSpec(FieldSpec[Hook]):
     """
     Declare a hook expected by the host application.
 
-    Attributes
+    Parameters
     ----------
+    name : str
+        Name of the hook field.
     arg_types : OrderedDict[str, Type]
         Expected names and types of positional arguments, in order.
         If the argument passed at initialization is a bare dictionary, it will be converted to an
         OrderedDict to ensure consistent ordering.
-    allow_var_args : bool
+    allow_var_args : bool, optional
         Allow arbitrary positional arguments.
-    allow_var_kwargs : bool
+    allow_var_kwargs : bool, optional
         Allow arbitrary keyword arguments.
-    return_type : Optional[Type]
+    return_type : Type or Tuple[Type, ...], optional
         Expected return type(s). If None, the function should not return anything.
+    required : bool, optional
+        Whether the hook is required.
+    unique : bool, optional
+        Whether the field admits a single hook. Defaults to ``True``.
+    description : str, optional
+        Human-readable description.
 
     Notes
     -----

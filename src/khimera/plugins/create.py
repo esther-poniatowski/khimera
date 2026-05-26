@@ -4,11 +4,6 @@ khimera.plugins.create
 
 Standardized interface for creating plugins (on the plugin provider side).
 
-Classes
--------
-Plugin
-    Represents the components provided by a plugin to the host application.
-
 See Also
 --------
 khimera.core
@@ -31,35 +26,16 @@ class Plugin(DeepCopyable, DeepComparable):
     """
     Represents the components provided by a plugin to the host application.
 
-    Attributes
+    Parameters
     ----------
     model : PluginModel
         Plugin model specifying the expected structure and components of the plugin.
     name : str
         Name of the plugin.
-    components : Dict[str, ComponentSet]
-        Components of the plugin for each field specified in the plugin model.
-        Keys: Fields declared in the plugin model.
-        Values: Container of component(s) for each field. If the field expects one unique component,
-        the container should include only one element.
-
-    Methods
-    -------
-    add(key: str, comp: Component) -> Self
-        Add a component to one of the specified fields in the plugin model.
-    remove(key: str, comp_name: Optional[str] = None) -> Self
-        Remove a component or all components for a specific key from the plugin.
-    get(key: str) -> ComponentSet
-        Get the components of the plugin for a specific field.
-    get_names(key: str) -> list[str]
-        Get the names of the components for a specific field.
-    filter(category: Optional[Type[Component]] = None) -> Dict[str, ComponentSet]
-        Get the components of the plugin, optionally filtered by category.
-    copy() -> Self
-        Create a deep copy of the plugin (provided by the `DeepCopyable` mixin).
-    __eq__(other: Self) -> bool
-        Compare the plugin with another plugin by deep comparison (provided by the `DeepComparable`
-        mixin).
+    version : str, optional
+        Version of the plugin.
+    **kwargs
+        Initial components to add to the plugin, keyed by field name.
 
     Examples
     --------

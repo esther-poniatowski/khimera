@@ -4,14 +4,6 @@ khimera.core.dependencies
 
 Base and concrete classes for dependency specifications in plugin models.
 
-Classes
--------
-DependencySpec
-    Specialization of `Spec` enforcing dependencies between several components in the plugin,
-    ensuring that structural or functional relationships are maintained.
-PredicateDependency
-    Default dependency specification for a single dependent and dependency component.
-
 See Also
 --------
 khimera.core.components.Spec
@@ -36,11 +28,15 @@ class DependencySpec(Spec["Plugin"]):
     """
     Specification enforcing dependencies between several components in the plugin.
 
-    Attributes
+    Parameters
     ----------
-    fields : Iterable[str], optional
+    name : str
+        Name of the specification.
+    fields : Iterable[str]
         Arbitrary number of field names in the model that are involved in the dependency
         relationship.
+    description : str, optional
+        Human-readable description of the specification.
     """
 
     def __init__(self, name: str, fields: Iterable[str], description: Optional[str] = None):
@@ -66,14 +62,18 @@ class PredicateDependency(DependencySpec):
     """
     Default dependency specification for a single dependent and dependency component.
 
-    Attributes
+    Parameters
     ----------
-    predicate : Callable[..., bool], optional
+    name : str
+        Name of the dependency specification.
+    predicate : Callable[..., bool]
         Validation rule, that admits any number of `ComponentSet` (named by their fields) and
         returns a boolean indicating whether the dependencies are satisfied.
-    fields : Tuple[str], optional
+    fields : Iterable[str]
         Arbitrary number of field names in the model that contain dependent and dependency
         components.
+    description : str, optional
+        Human-readable description of the dependency.
 
     Examples
     --------

@@ -4,14 +4,6 @@ khimera.core.specifications
 
 Base classes representing constraints specifications for components within a plugin model.
 
-Classes
--------
-Spec
-    Base class representing constraints specifications for plugin components within a plugin model.
-FieldSpec
-    Specialization of `Spec` defining a field in the plugin that is supported by the host
-    application.
-
 See Also
 --------
 khimera.components
@@ -46,25 +38,12 @@ class Spec(ABC, Generic[O], DeepCopyable, DeepComparable):
     """
     Base class representing constraints specifications for plugin components within a plugin model.
 
-    Attributes
+    Parameters
     ----------
     name : str
         Unique name of the Spec in the plugin model.
     description : str, optional
         Description of the Spec.
-    category : Type[Component]
-        (Property) Category of the component associated with the specification, if any. If not
-        applicable, returns `None`.
-
-    Methods
-    -------
-    validate(*args, **kwargs) -> bool
-        Validates a candidate component against the Spec.
-    copy() -> Spec
-        Create a deep copy of the specification (provided by the `DeepCopyable` mixin).
-    __eq__(other: Spec) -> bool
-        Compare the specification with another specification by deep comparison (provided by the
-        `DeepComparable` mixin).
     """
 
     def __init__(self, name: str, description: Optional[str] = None):
@@ -106,27 +85,20 @@ class FieldSpec(Spec[C], Generic[C]):
     """
     Specification of a field in the plugin that is supported by the host application.
 
-    Class Attributes
-    ----------------
-    COMPONENT_TYPE : Type[Component]
-        Type of the component associated with the specification.
-
-    Attributes
+    Parameters
     ----------
+    name : str
+        Unique name of the field.
     required : bool, optional
         Whether at least one component is required in the plugin under this name.
     unique : bool, optional
         Whether the component must be unique in the plugin.
-    category : Type[Component]
-        (Property) Category of the component associated with the specification.
-
-    Methods
-    -------
-    validate(comp: C) -> bool
-        Validate one component against the specification.
+    description : str, optional
+        Human-readable description of the field.
     """
 
     COMPONENT_TYPE: Type[C]
+    """Type of the component associated with the specification."""
 
     def __init__(
         self,

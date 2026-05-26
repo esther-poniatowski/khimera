@@ -4,10 +4,6 @@ khimera.cli.app
 
 Provides a custom CLI class which inherits from a `Typer` application, with additional methods for
 structured command registration.
-
-Classes
--------
-CliApp
 """
 from typing import Optional, Self, Dict, Callable
 
@@ -18,22 +14,12 @@ class CliApp(typer.Typer):  # pylint: disable=unused-variable
     """
     Extends Typer with additional functionality for structured command registration.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     app : typer.Typer, optional
         Existing Typer instance to wrap. If None, a new Typer instance is created.
     **kwargs
         Additional keyword arguments to pass to the Typer constructor.
-
-    Attributes
-    ----------
-    groups_index : Dict[str, int]
-        Registry of command groups, storing references to the index of the group in the
-        the application.
-        Keys: Group names. Values: Index of the group in the `Typer.registered_groups` list.
-    commands_index : Dict[str, int]
-        Registry of commands at the main application level.
-        Keys: Group names. Values: Index of the command in the `Typer.registered_commands` list.
 
     Usage
     -----

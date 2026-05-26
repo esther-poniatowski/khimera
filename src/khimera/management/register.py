@@ -1,25 +1,8 @@
 """
 khimera.management.register
-========================
+===========================
 
 Registers plugins on the host application side.
-
-Classes
--------
-ConflictResolution (Protocol)
-    Strategy interface for resolving naming conflicts during registration.
-RaiseOnConflict
-    Raises ``PluginConflictError`` when a conflict occurs.
-OverrideOnConflict
-    Replaces the existing element with the new one.
-IgnoreOnConflict
-    Keeps the existing element and discards the new one.
-ConflictResolver
-    Applies a ``ConflictResolution`` strategy to resolve conflicts.
-PluginRegistry
-
-See Also
---------
 """
 from typing import Dict, List, TypeVar, Optional, Protocol, runtime_checkable
 import warnings
@@ -87,10 +70,11 @@ class IgnoreOnConflict:
 class ConflictResolver:
     """Applies a ``ConflictResolution`` strategy to resolve conflicts.
 
-    Attributes
+    Parameters
     ----------
-    strategy : ConflictResolution
-        Strategy to apply to resolve conflicts between plugins.
+    strategy : ConflictResolution, optional
+        Strategy to apply to resolve conflicts between plugins. Defaults to
+        ``RaiseOnConflict``.
     """
 
     def __init__(self, strategy: ConflictResolution | None = None):
@@ -114,22 +98,15 @@ class PluginRegistry:
     """
     Stores and manage plugins, resolve conflicts and provide components retrieval.
 
-    Attributes
+    Parameters
     ----------
-    resolver : ConflictResolver
+    resolver : ConflictResolver, optional
         Applies a ``ConflictResolution`` strategy to resolve conflicts when registering plugins.
-    validator_type : Type[PluginValidator], default=PluginValidator
+    validator_type : Type[PluginValidator], optional
         Validator class to check the plugin structure and components against its model.
-    enable_by_default : bool
-        Whether to enable plugins by default when registering them.
-    plugins : Dict[str, Plugin]
-        Registered plugins by name.
-    enabled : List[str]
-        List of enabled plugins, whose components are available directly via the `get` method.
-    components : Dict[str, ComponentSet]
-        Mapping of fields' keys (from the model) to the actual components provided by the plugins.
-        Keys: Field for a type of components specified in the model.
-        Values: All the components registered under this key across the validated plugins.
+        Defaults to ``PluginValidator``.
+    enable_by_default : bool, optional
+        Whether to enable plugins by default when registering them. Defaults to ``True``.
 
     Examples
     --------

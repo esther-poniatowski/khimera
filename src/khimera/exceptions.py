@@ -4,21 +4,6 @@ khimera.exceptions
 
 Domain-specific exception hierarchy for the khimera framework.
 
-Classes
--------
-KhimeraError
-    Base exception for all khimera errors.
-PluginValidationError
-    Raised when a plugin fails validation against its model.
-PluginConflictError
-    Raised when a naming conflict occurs during plugin registration.
-PluginNotFoundError
-    Raised when a requested plugin cannot be found.
-ComponentError
-    Raised for component-level errors (duplicates, missing keys).
-AmbiguousLookupError
-    Raised when a lookup matches multiple results where one was expected.
-
 See Also
 --------
 khimera.management.validate : Validation pipeline that produces ValidationResult.
@@ -38,16 +23,11 @@ class KhimeraError(Exception):
 
 
 class PluginValidationError(KhimeraError):
-    """Raised when a plugin fails validation against its model.
-
-    Attributes
-    ----------
-    result : ValidationResult
-        Structured diagnostics from the validation pipeline.
-    """
+    """Raised when a plugin fails validation against its model."""
 
     def __init__(self, result: ValidationResult):
         self.result = result
+        """Structured diagnostics from the validation pipeline."""
         super().__init__(self._format(result))
 
     @staticmethod

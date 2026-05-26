@@ -4,13 +4,6 @@ khimera.components.commands
 
 Classes defining new commands in plugin models and instances.
 
-Classes
--------
-Command
-    Represents a command in the host application's CLI.
-CommandSpec
-    Declare constraints that the commands of the plugins must satisfy.
-
 See Also
 --------
 khimera.core.components.Component
@@ -29,8 +22,10 @@ class Command(Component):
     Represents a command in the host application's CLI, optionally nested in a predefined
     sub-command group.
 
-    Attributes
+    Parameters
     ----------
+    name : str
+        Name of the command.
     func : Callable
         Function or method to be executed when the command is invoked.
     group : str, optional
@@ -39,6 +34,8 @@ class Command(Component):
         application.
         If the group names does not match any predefined group in the host application, a new group
         will be created, if allowed by the host application.
+    description : str, optional
+        Human-readable description.
     """
 
     def __init__(
@@ -58,14 +55,22 @@ class CommandSpec(FieldSpec[Command]):
     Declare constraints that the commands of the plugins must satisfy to be accepted by the host
     application's CLI.
 
-    Attributes
+    Parameters
     ----------
+    name : str
+        Name of the field.
     groups : Set[str], optional
         Allowed sub-command groups where new commands can be nested.
-    admits_new_groups : bool, default=True
-        Whether the plugin can add new sub-command groups.
-    admits_top_level : bool, default=True
-        Whether the plugin can add top-level commands.
+    admits_new_groups : bool, optional
+        Whether the plugin can add new sub-command groups. Defaults to ``True``.
+    admits_top_level : bool, optional
+        Whether the plugin can add top-level commands. Defaults to ``True``.
+    required : bool, optional
+        Whether the field is required.
+    unique : bool, optional
+        Whether the field admits a single command. Defaults to ``False``.
+    description : str, optional
+        Human-readable description.
 
     Notes
     -----

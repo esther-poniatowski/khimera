@@ -1,15 +1,8 @@
 """
 khimera.management.validate
-========================
+===========================
 
 Validate the components of a plugin against its model.
-
-Classes
--------
-ValidationResult
-    Frozen dataclass holding structured diagnostics from a validation run.
-PluginValidator
-    Validates the components of a plugin instance against its model.
 
 See Also
 --------
@@ -26,27 +19,18 @@ from khimera.plugins.create import Plugin
 
 @dataclass(frozen=True)
 class ValidationResult:
-    """Structured diagnostics produced by :class:`PluginValidator`.
-
-    Attributes
-    ----------
-    missing : List[str]
-        Required fields absent from the plugin instance.
-    unknown : List[str]
-        Fields present in the plugin but not declared in the model.
-    not_unique : List[str]
-        Fields constrained to a unique component that contain more than one.
-    invalid : Dict[str, list]
-        Mapping of field names to lists of components that failed rule validation.
-    deps_unsatisfied : List[str]
-        Dependency specifications that the plugin does not satisfy.
-    """
+    """Structured diagnostics produced by :class:`PluginValidator`."""
 
     missing: List[str] = field(default_factory=list)
+    """Required fields absent from the plugin instance."""
     unknown: List[str] = field(default_factory=list)
+    """Fields present in the plugin but not declared in the model."""
     not_unique: List[str] = field(default_factory=list)
+    """Fields constrained to a unique component that contain more than one."""
     invalid: Dict[str, list] = field(default_factory=dict)
+    """Mapping of field names to lists of components that failed rule validation."""
     deps_unsatisfied: List[str] = field(default_factory=list)
+    """Dependency specifications that the plugin does not satisfy."""
 
     @property
     def is_valid(self) -> bool:
@@ -60,32 +44,10 @@ class PluginValidator:
     """
     Validates the components of a plugin instance against its model.
 
-    Attributes
+    Parameters
     ----------
     plugin : Plugin
-        Plugin instance to validate.
-    model : PluginModel
-        Plugin model to validate against (referenced in the plugin instance).
-    missing : List[str]
-        Fields that are required in the model, but are missing in the plugin instance.
-        Names are present in the model, but not in the plugin instance.
-    unknown : List[str]
-        Fields in the plugin instance which are not expected by the model.
-        Names are present in the plugin instance, but not in the model.
-    not_unique : List[str]
-        Fields that are expected to admit a unique component in the model, but contain more than
-        one component in the plugin instance.
-        Names are present in both the model and the plugin instance.
-    invalid : TypeConstrainedDict[str, ComponentSet]
-        Invalid components for each specification field in the plugin model, which do not satisfy
-        pass the `validate` method of the corresponding `Spec` instance.
-        Keys: Names of the fields present both in the model and the plugin instance.
-        Values: Invalid component(s) from the plugin instance.
-    deps_unsatisfied : List[str]
-        Dependencies (`DependencySpec` fields in the model) that are not satisfied in the plugin
-        instance.
-        Names are present in the model only, since they are pure rules which do not expect to be
-        filled by components in the plugin instance.
+        Plugin instance to validate. The plugin's model is used as the validation reference.
     """
 
     def __init__(self, plugin: Plugin):

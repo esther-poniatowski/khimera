@@ -4,13 +4,6 @@ khimera.components.api
 
 Classes defining API extensions in plugin models and instances.
 
-Classes
--------
-APIExtension
-    Represents an API extension (function, class) to enrich the host application.
-APIExtensionSpec
-    Declare an API extension allowed in the host application.
-
 See Also
 --------
 khimera.core.components.Component
@@ -28,10 +21,14 @@ class APIExtension(Component):
     """
     Represents an API extension (function, class) to enrich the host application.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
+    name : str
+        Name of the extension.
     extension : Callable or Type
         Function or class to extend the host application's API.
+    description : str, optional
+        Human-readable description.
     """
 
     def __init__(self, name: str, extension: Callable | Type, description: Optional[str] = None):
@@ -43,16 +40,23 @@ class APIExtensionSpec(FieldSpec[APIExtension]):
     """
     Declare an API extension allowed in the host application.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
+    name : str
+        Name of the field.
     valid_types : Tuple of Types, optional
         Type(s) of the extension expected by the host application. If a tuple is provided, the
         extension must be an instance of one of the types. If not provided, any type is accepted.
-    check_inheritance : bool, default=False
+    check_inheritance : bool, optional
         Determines the type of check to perform relative to the valid type.
         If True, check whether the extension is a subclass of the valid class.
-        If False, check whether the extension is an instance of the valid class (useful for
-        functions, as instances of `types.FunctionType`).
+        If False (default), check whether the extension is an instance of the valid class.
+    required : bool, optional
+        Whether the field is required.
+    unique : bool, optional
+        Whether the field admits a single extension. Defaults to ``False``.
+    description : str, optional
+        Human-readable description.
 
     Examples
     --------

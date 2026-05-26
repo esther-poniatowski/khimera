@@ -18,13 +18,6 @@ For simplicity and consistency, metadata it is treated as a special type of 'com
 is not an active contribution to the host application. However, this approach is useful to define,
 access and validate metadata fields in a plugin model similarly to other components.
 
-Classes
--------
-MetaData
-    Represents metadata specified in a plugin instance.
-MetaDataSpec
-    Declare metadata expected by the host application in the plugin model.
-
 See Also
 --------
 khimera.core.components.Component
@@ -42,10 +35,14 @@ class MetaData(Component):
     """
     Represents metadata specified in a plugin instance.
 
-    Attributes
+    Parameters
     ----------
+    name : str
+        Name of the metadata field.
     value : Any
         Value of the metadata.
+    description : str, optional
+        Human-readable description.
     """
 
     def __init__(self, name: str, value: Any, description: Optional[str] = None):
@@ -57,10 +54,18 @@ class MetaDataSpec(FieldSpec[MetaData]):
     """
     Declare metadata expected by the host application in the plugin model.
 
-    Attributes
+    Parameters
     ----------
+    name : str
+        Name of the metadata field.
     valid_type : type
         Type of the metadata value expected by the host application.
+    required : bool, optional
+        Whether the metadata is required.
+    unique : bool, optional
+        Whether the metadata admits a single value. Defaults to ``True``.
+    description : str, optional
+        Human-readable description.
 
     Notes
     -----

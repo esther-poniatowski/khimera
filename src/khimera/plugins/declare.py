@@ -4,11 +4,6 @@ khimera.plugins.declare
 
 Standardized interface for declaring plugin models (on the host application side).
 
-Classes
--------
-PluginModel
-    Represents the expected structure and components of a plugin.
-
 See Also
 --------
 khimera.core.specifications.FieldSpec
@@ -42,37 +37,12 @@ class PluginModel(DeepCopyable, DeepComparable):
     """
     Represents a plugin model specifying the expected structure and components of a plugin.
 
-    Attributes
+    Parameters
     ----------
     name : str
         Name of the model.
     version : str, optional
         Version of the model.
-    fields : Dict[str, FieldSpec]
-        Specifications for fields in the plugin model, each enforcing constraints on a specific
-        category of components supported by the host application.
-    dependencies : Dict[str, DependencySpec]
-        Specifications enforcing dependencies between several components in the plugin model.
-
-    Methods
-    -------
-    add(spec: Spec) -> Self
-        Declare a `Spec` in the plugin model.
-    remove(name: str) -> Self
-        Remove a spec from the plugin model by name.
-    get(name: str) -> Spec | None
-        Get a `Spec` from the plugin model by name. None if not present in the model.
-    filter(category: Optional[Type[Component]] = None,
-           unique: Optional[bool] = None,
-           required: Optional[bool] = None,
-           custom_filter: Optional[Callable[[FieldSpec], bool]] = None
-          ) -> Dict[str, FieldSpec]
-        Filter the fields in the plugin model based on various criteria.
-    copy() -> Self
-        Create a deep copy of the plugin model (provided by the `DeepCopyable` mixin).
-    __eq__(other: Self) -> bool
-        Compare the plugin model with another plugin model by deep comparison (provided by the
-        `DeepComparable` mixin).
 
     Examples
     --------

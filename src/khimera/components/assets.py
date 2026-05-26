@@ -1,15 +1,8 @@
 """
-khimera.components.
-========================
+khimera.components.assets
+=========================
 
 Classes defining static resources (assets) in plugin models and instances.
-
-Classes
--------
-Asset
-    Represents a static resource to provide to the host application.
-AssetSpec
-    Declare an asset expected by the host application.
 
 See Also
 --------
@@ -36,8 +29,10 @@ class Asset(Component):
     """
     Represents a static resource to provide to the host application.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
+    name : str
+        Name of the asset.
     file_path : str
         Path to the resource file, relative to the package root.
     package : str | ModuleType, optional
@@ -54,6 +49,8 @@ class Asset(Component):
         If not provided, the package is inferred from the caller's module where the `Asset`
         instance is created (`__module__` attribute), which is assumed to be the file where the
         plugin is defined.
+    description : str, optional
+        Human-readable description.
 
     Notes
     -----
@@ -160,11 +157,19 @@ class AssetSpec(FieldSpec[Asset]):
     """
     Declare an asset expected by the host application.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
+    name : str
+        Name of the field.
     file_ext : Tuple of str, optional
         Allowed file extensions for the asset, corresponding to file formats that are supported by
         the host application. If not provided, any extension is accepted.
+    required : bool, optional
+        Whether the field is required.
+    unique : bool, optional
+        Whether the field admits a single asset. Defaults to ``True``.
+    description : str, optional
+        Human-readable description.
 
     Notes
     -----

@@ -3,16 +3,6 @@ khimera.discovery.find
 ======================
 
 Discovers plugins on the host application side.
-
-Classes
--------
-PluginEntryPoint
-    Represents an entry point for a plugin in the host application.
-PluginFinder
-    Abstract base class for plugins discovery strategies.
-
-See Also
---------
 """
 from abc import ABC, abstractmethod
 import importlib.metadata
@@ -32,23 +22,12 @@ class PluginEntryPoint:
     Represents an entry point for a plugin in the host application, inspired by the `EntryPoint`
     class from `importlib.metadata`.
 
-    Attributes
+    Parameters
     ----------
-    path : str or Path
-        Path to the directory on the filesystem containing the plugin package.
+    name : str
+        Name of the entry point.
     value : str
-        Reference pointing to to a `Plugin` instance. Format: 'package.module:object'.
-    module : str
-        Name of the module containing the referenced object.
-        It refers to the full Python import path, including both the package name and the module
-        name. Format: 'package.module'.
-    attr : str
-        Name of the specific `Plugin` object within the module. Format: 'object'.
-
-    Methods
-    -------
-    load()
-        Dynamically imports and returns the referenced `Plugin` object.
+        Reference pointing to a `Plugin` instance. Format: ``package.module:object``.
 
     Examples
     --------
@@ -121,11 +100,6 @@ class PluginFinder(ABC):
     """
     Abstract base class for plugins discovery strategies for the host application.
 
-    Attributes
-    ----------
-    plugins : TypeConstrainedList[Plugin]
-        All the discovered plugins.
-
     Examples
     --------
     Initialize a plugin finder to discover plugins from the `pyproject.toml` files:
@@ -158,7 +132,8 @@ class PluginFinder(ABC):
     """
 
     def __init__(self):
-        self.plugins = TypeConstrainedList(Plugin)  # automatic type checking
+        self.plugins = TypeConstrainedList(Plugin)
+        """All the discovered plugins."""
 
     @abstractmethod
     def discover(self):
