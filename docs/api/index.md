@@ -1,7 +1,38 @@
+<a id="api-reference"></a>
+
 # API Reference
 
-```{eval-rst}
-.. automodule:: khimera
-   :members:
-   :undoc-members:
-```
+* [Top-level package](top-level.md)
+  * [`info()`](top-level.md#khimera.info)
+* [Exceptions](exceptions.md)
+  * [khimera.exceptions](exceptions.md#khimera-exceptions)
+  * [`KhimeraError`](exceptions.md#khimera.exceptions.KhimeraError)
+  * [`PluginValidationError`](exceptions.md#khimera.exceptions.PluginValidationError)
+  * [`PluginConflictError`](exceptions.md#khimera.exceptions.PluginConflictError)
+  * [`PluginNotFoundError`](exceptions.md#khimera.exceptions.PluginNotFoundError)
+  * [`ComponentError`](exceptions.md#khimera.exceptions.ComponentError)
+  * [`AmbiguousLookupError`](exceptions.md#khimera.exceptions.AmbiguousLookupError)
+* [Core](core.md)
+  * [Components](core.md#module-khimera.core.components)
+  * [Specifications](core.md#module-khimera.core.specifications)
+  * [Dependencies](core.md#module-khimera.core.dependencies)
+* [Components](components.md)
+  * [Metadata](components.md#module-khimera.components.metadata)
+  * [Commands](components.md#module-khimera.components.commands)
+  * [API](components.md#module-khimera.components.api)
+  * [Hooks](components.md#module-khimera.components.hooks)
+  * [Assets](components.md#module-khimera.components.assets)
+* [Plugins](plugins.md)
+  * [Declare](plugins.md#module-khimera.plugins.declare)
+  * [Create](plugins.md#module-khimera.plugins.create)
+* [Discovery](discovery.md)
+  * [Find](discovery.md#module-khimera.discovery.find)
+  * [Strategies](discovery.md#module-khimera.discovery.strategies)
+* [Management](management.md)
+  * [Validate](management.md#module-khimera.management.validate)
+  * [Register](management.md#module-khimera.management.register)
+* [Utils](utils.md)
+  * [Factories](utils.md#module-khimera.utils.factories)
+  * [Mixins](utils.md#module-khimera.utils.mixins)
+* [CLI](cli.md)
+  * [App](cli.md#module-khimera.cli.app)

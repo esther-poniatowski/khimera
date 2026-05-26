@@ -2,29 +2,20 @@
 
 Equips Python applications with a structured plugin system.
 
-```{toctree}
-:maxdepth: 2
-:caption: User Guide
+## User Guide
 
-guide/installation
-guide/usage
-```
+- [Installation](guide/installation.md)
+- [Usage](guide/usage.md)
 
-```{toctree}
-:maxdepth: 2
-:caption: Reference
+## Reference
 
-internals/index
-api/index
-```
+- [Internals](internals/index.md)
+- [API Reference](api/index.md)
 
-```{toctree}
-:maxdepth: 1
-:caption: Architecture Decisions
+## Architecture Decisions
 
-adr/0-alternatives
-adr/1-plugin-declaration
-adr/2-registration-programmatic-elements
-adr/3-registration-static-resources
-adr/adr-template
-```
+- [ADR 0: Alternative Tools to Khimera](adr/0-alternatives.md)
+- [ADR 0001: Plugin Declaration and Resources](adr/1-plugin-declaration.md)
+- [ADR 0002: Resources Registration for Commands and Services](adr/2-registration-programmatic-elements.md)
+- [ADR 0003: Resources Registration for Static Resources](adr/3-registration-static-resources.md)
+- [ADR Template](adr/adr-template.md)

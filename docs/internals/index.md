@@ -1,8 +1,4 @@
 # Internals
 
-```{toctree}
-:maxdepth: 2
-
-architecture
-dependencies
-```
+- [Project Structure](architecture.md)
+- [Runtime Dependencies](dependencies.md)

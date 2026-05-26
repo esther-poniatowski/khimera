@@ -25,6 +25,7 @@ dependencies:
   - sphinx-rtd-theme       # ReadTheDocs theme
   - sphinx-needs           # for requirements and specifications in Sphinx
   - myst-parser            # Markdown support for Sphinx
+  - sphinx-markdown-builder # Markdown output builder for the API pipeline
   - esbonio                # language server for Sphinx
   # CLI
   - typer                  # command line interface
